@@ -18,8 +18,8 @@
 - **Authorization Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/`
 - **Token Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/token/`
 - **UserInfo Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/`
-- **Revocation Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/revoke/` (หรือ `/api/v2/oauth2/token/revoke/`)
-- **Introspect / Inspect Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/introspect/` (หรือ `/api/v2/oauth2/token/inspect/`)
+- **Revocation Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/revoke/`
+- **Introspect / Inspect Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/introspect/`
 - **Grant Types Supported:** `authorization_code`, `refresh_token`
 - **Token Endpoint Auth Methods:** `client_secret_basic`, `client_secret_post`
 - **ID Token Signing Algorithm:** `ES256`
@@ -43,8 +43,8 @@
       "ClientSecret": "<YOUR_THAID_CLIENT_SECRET>",
       "AuthorizationUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/",
       "TokenUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/",
-      "InspectUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/inspect/",
-      "RevokeUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/revoke/",
+      "InspectUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/introspect/",
+      "RevokeUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/revoke/",
       "UserInfoUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/",
       "RedirectUri": "https://your-domain.com/api/identity/thaid/callback",
       "Scope": "openid pid given_name family_name birthdate",

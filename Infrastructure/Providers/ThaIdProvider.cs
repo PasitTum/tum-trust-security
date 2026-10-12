@@ -20,8 +20,8 @@ public class ThaIdProvider : IThaIdProvider
     // Official DOPA ThaID default endpoints (can be overridden in appsettings.json)
     private const string DefaultAuthorizationUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/";
     private const string DefaultTokenUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/";
-    private const string DefaultInspectUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/inspect/";
-    private const string DefaultRevokeUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/revoke/";
+    private const string DefaultInspectUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/introspect/";
+    private const string DefaultRevokeUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/revoke/";
     private const string DefaultUserInfoUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/";
 
     /// <inheritdoc />

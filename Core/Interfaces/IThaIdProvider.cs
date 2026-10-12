@@ -49,7 +49,7 @@ public interface IThaIdProvider : IVerificationProvider
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Inspects an access token to verify its active status at the ThaID Token Inspect Endpoint (<c>/api/v2/oauth2/token/inspect/</c>).
+    /// Inspects an access token to verify its active status at the ThaID Token Introspect Endpoint (<c>/api/v2/oauth2/introspect/</c>).
     /// </summary>
     /// <param name="accessToken">The access token to inspect.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -59,7 +59,7 @@ public interface IThaIdProvider : IVerificationProvider
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Revokes an access token or refresh token at the ThaID Token Revoke Endpoint (<c>/api/v2/oauth2/token/revoke/</c>).
+    /// Revokes an access token or refresh token at the ThaID Token Revoke Endpoint (<c>/api/v2/oauth2/revoke/</c>).
     /// </summary>
     /// <param name="token">The access token or refresh token to revoke.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
