@@ -7,14 +7,14 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 
 คุณคือผู้เชี่ยวชาญการเชื่อมต่อระบบยืนยันตัวตนด้วย **Netka.Identity.SDK**
 - **ตำแหน่งของ SDK ต้นทาง:** `d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\Netka.Identity.SDK.csproj`
-- **เอกสารอ้างอิงของแต่ละ Provider:** `d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\docs\providers\` (อ่านไฟล์ในโฟลเดอร์นี้เสมอเพื่อดู Config, Request Fields และ Response Keys ใน `VerificationResult.Data`)
+- **เอกสารอ้างอิงของแต่ละ Provider:** `d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\docs\providers\` (อ่านไฟล์ในโฟลเดอร์นี้เสมอเพื่อดู Config, เมธอดของ Interface, และชื่อ Key ใน `VerificationResult.Data`)
 
 ---
 
 ## 🚨 กฎเหล็กสำคัญที่สุด: ห้ามแก้ไข NuGet Package ของโปรเจกต์ปลายทางเด็ดขาด (Zero Host Mutation Rule)
 
 1. **ห้ามแตะต้อง `<PackageReference>` เดิมของโปรเจกต์ปลายทาง:**
-   - ห้ามอัปเกรด, ดาวน์เกรด, หรือลบ NuGet Package เดิมที่มีอยู่ในโปรเจกต์ปลายทาง (Host Project) โดยเด็ดขาด เพราะอาจทำให้ระบบเดิมของโปรเจกต์ปลายทางพัง
+   - ห้ามอัปเกรด, ดาวน์เกรด, หรือลบ NuGet Package เดิมที่มีอยู่ในโปรเจกต์ปลายทาง (Host Project) โดยเด็ดขาด เพราะจะกระทบระบบเดิมของโปรเจกต์ปลายทาง
 2. **SDK ต้องเป็นฝ่ายปรับตัวตามโปรเจกต์ปลายทางเสมอ:**
    - `Netka.Identity.SDK` รองรับ `net5.0`, `net8.0`, และ `net10.0` โดยใช้ Base Version (`5.0.0`, `8.0.0`, `10.0.0`) เพื่อให้เข้ากับโปรเจกต์ปลายทางได้ทุกเวอร์ชันย่อย
    - หากเกิดกรณีที่โปรเจกต์ปลายทางใช้ TargetFramework อื่น (เช่น `net6.0` หรือ `net7.0`) หรือเกิด Package Conflict ใดๆ **ห้ามแก้ที่โปรเจกต์ปลายทาง** ให้แก้ไขหรือเพิ่ม TargetFramework ที่ไฟล์ `d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\Netka.Identity.SDK.csproj` เท่านั้น
@@ -30,53 +30,53 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 2. ตรวจสอบว่าผู้ใช้ต้องการเชื่อมโยง Provider ตัวใด (เช่น `ThaID`, `DOPA` หรือทั้งคู่)
 3. **อ่านเอกสาร Spec ของ Provider จากโฟลเดอร์ SDK:**
    - อ่าน `d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\docs\providers\README.md`
-   - อ่านไฟล์ของ Provider ที่ต้องใช้ เช่น `docs\providers\thaid.md` และ/หรือ `docs\providers\dopa.md` เพื่อให้ทราบชื่อ Key ใน `appsettings.json`, พารามิเตอร์ขาเข้า `VerificationRequest` และชื่อ Key ขาออกใน `VerificationResult.Data`
+   - อ่านไฟล์ของ Provider ที่ต้องใช้ เช่น `docs\providers\thaid.md` และ/หรือ `docs\providers\dopa.md` เพื่อให้ทราบโครงสร้าง `appsettings.json`, เมธอดของ Interface และชื่อ Key ขาออกใน `VerificationResult.Data`
 
 ### Step 2: ผูก Reference เข้ากับโปรเจกต์ปลายทาง
-- เพิ่ม `<ProjectReference>` ในไฟล์ `.csproj` ของโปรเจกต์ปลายทาง (โดยใช้ Relative Path หรือ Path ที่เหมาะสม และห้ามแก้ไข `<PackageReference>` เดิม):
+- เพิ่ม `<ProjectReference>` ในไฟล์ `.csproj` ของโปรเจกต์ปลายทาง (โดยห้ามแก้ไข `<PackageReference>` เดิม):
   ```xml
   <ProjectReference Include="d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\Netka.Identity.SDK.csproj" />
   ```
 - ทดสอบรัน `dotnet restore` ที่โปรเจกต์ปลายทางเพื่อยืนยันว่าไม่มี Error `NU1605` หรือ `NU1202`
 
 ### Step 3: ตั้งค่า Configuration ใน `appsettings.json`
-เพิ่ม Section `"IdentityVerification"` ลงใน `appsettings.json` (หรือ `appsettings.Development.json`) ของโปรเจกต์ปลายทาง โดยใส่เฉพาะ Provider ที่โปรเจกต์นั้นใช้งาน (อ้างอิงโครงสร้างจาก `docs/providers/<provider>.md`):
+เพิ่ม Section `"IdentityVerification"` ลงใน `appsettings.json` ของโปรเจกต์ปลายทาง:
+- **`EncryptionKey` (บังคับต้องมีเสมอ):** Base64 string ของคีย์ขนาด 32 bytes (256-bit) สำหรับ `AesEncryptionService` (หากในโปรเจกต์ปลายทางยังไม่มี สามารถสร้างคีย์จำลอง Base64 32-byte ใส่ไว้ใน `appsettings.Development.json` เช่น `"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="`)
+- ใส่ Config ของ Provider ตามที่ระบุใน `docs/providers/<provider>.md`:
 
 ```json
 {
   "IdentityVerification": {
-    "EncryptionKey": "",
-    "HmacKey": "",
-    "Providers": {
-      "ThaID": {
-        "ClientId": "<YOUR_THAID_CLIENT_ID>",
-        "ClientSecret": "<YOUR_THAID_CLIENT_SECRET>",
-        "ApiKey": "<YOUR_THAID_API_KEY>",
-        "CallbackUrl": "https://localhost:5001/api/identity/thaid/callback",
-        "AuthorizeEndpoint": "https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/",
-        "TokenEndpoint": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/",
-        "RevokeEndpoint": "https://imauth.bora.dopa.go.th/api/v2/oauth2/revoke/",
-        "IntrospectEndpoint": "https://imauth.bora.dopa.go.th/api/v2/oauth2/introspect/",
-        "Scope": "pid given_name family_name birthdate",
-        "TimeoutSeconds": 30
-      },
-      "DOPA": {
-        "CheckCardEndpoint": "https://api.dopa.go.th/CheckCardStatus",
-        "ApiKey": "<YOUR_DOPA_API_KEY>",
-        "TimeoutSeconds": 30,
-        "AdditionalHeaders": {
-          "ContentType": "form"
-        }
-      }
+    "EncryptionKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+    "ThaId": {
+      "ClientId": "<YOUR_THAID_CLIENT_ID>",
+      "ClientSecret": "<YOUR_THAID_CLIENT_SECRET>",
+      "AuthorizationUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/",
+      "TokenUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/",
+      "InspectUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/inspect/",
+      "RevokeUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/revoke/",
+      "UserInfoUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/",
+      "RedirectUri": "https://localhost:5001/api/identity/thaid/callback",
+      "Scope": "openid pid profile",
+      "AllowUntrustedCertificates": false
+    },
+    "Dopa": {
+      "VerificationUrl": "https://dopa-gateway.your-agency.local/api/v1/card/verify",
+      "LaserVerificationUrl": "https://dopa-gateway.your-agency.local/api/v1/card/verify-laser",
+      "ChipVerificationUrl": "https://dopa-gateway.your-agency.local/api/v1/card/verify-chip",
+      "ApiKey": "<YOUR_DOPA_API_KEY>",
+      "AllowUntrustedCertificates": false
     }
   }
 }
 ```
 
 ### Step 4: ลงทะเบียน Dependency Injection (`Startup.cs` หรือ `Program.cs`)
-เพิ่ม `using Netka.Identity.Infrastructure;` และเรียกใช้งาน `AddIdentityVerification`:
+เพิ่ม `using Netka.Identity.Application;` และเรียกใช้งาน `AddIdentityVerification`:
 - **กรณีโปรเจกต์ .NET 5.0 (`Startup.cs`):**
   ```csharp
+  using Netka.Identity.Application;
+
   public void ConfigureServices(IServiceCollection services)
   {
       services.AddIdentityVerification(Configuration);
@@ -84,59 +84,82 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
   ```
 - **กรณีโปรเจกต์ .NET 8.0 / .NET 10.0 (`Program.cs`):**
   ```csharp
+  using Netka.Identity.Application;
+
   builder.Services.AddIdentityVerification(builder.Configuration);
   ```
 
 ### Step 5: สร้าง Service หรือ Controller เชื่อมต่อตามความต้องการของโปรเจกต์ปลายทาง
 
 #### 5.1 กรณีเชื่อมต่อ ThaID (`IThaIdProvider` + `PkceHelper`)
-- Inject `Netka.Identity.Core.Interfaces.IThaIdProvider`
+- Namespaces ที่ใช้:
+  ```csharp
+  using Netka.Identity.Core.Interfaces;
+  using Netka.Identity.Core.Models;
+  using Netka.Identity.Infrastructure.Helpers;
+  using Netka.Identity.Infrastructure.Security;
+  ```
 - **ตอนเริ่ม Login (`/thaid/login`):**
   ```csharp
-  var pkce = PkceHelper.GeneratePkcePair();
-  var authUrl = await _thaIdProvider.GenerateAuthorizationUrlAsync(
-      state: null, // ให้ SDK สุ่ม State ให้อัตโนมัติ
-      codeChallenge: pkce.CodeChallenge,
-      codeChallengeMethod: pkce.CodeChallengeMethod,
-      cancellationToken: ct);
-  // บันทึก pkce.CodeVerifier ผูกกับ authUrl.State ลงใน Session / DistributedCache / MemoryCache (TTL 5-10 นาที)
-  // แล้ว Redirect ผู้ใช้ไปที่ authUrl.Url
+  string codeVerifier = PkceHelper.GenerateCodeVerifier();
+  string codeChallenge = PkceHelper.GenerateCodeChallenge(codeVerifier);
+  string state = Guid.NewGuid().ToString("N");
+
+  string authUrl = _thaIdProvider.GetAuthorizationUrl(
+      redirectUri: "https://localhost:5001/api/identity/thaid/callback",
+      state: state,
+      codeChallenge: codeChallenge,
+      codeChallengeMethod: "S256");
+
+  // บันทึก codeVerifier ผูกกับ state ลงใน Session / DistributedCache / MemoryCache (TTL 5-10 นาที)
+  // แล้ว Redirect ผู้ใช้ไปที่ authUrl
   ```
 - **ตอนรับ Callback (`/thaid/callback`):**
   ```csharp
   // 1. ตรวจสอบและดึง codeVerifier จาก Session/Cache ด้วยค่า state (แล้วลบทิ้งทันทีเพื่อป้องกัน Replay Attack)
-  // 2. แลก Code เป็นข้อมูลยืนยันตัวตน:
-  var result = await _thaIdProvider.VerifyAsync(new VerificationRequest
-  {
-      AuthorizationCode = code,
-      CodeVerifier = codeVerifier
-  }, ct);
+  // 2. แลก Code เป็น Token และข้อมูลยืนยันตัวตน:
+  VerificationResult result = await _thaIdProvider.ExchangeCodeAsync(
+      authorizationCode: code,
+      redirectUri: "https://localhost:5001/api/identity/thaid/callback",
+      codeVerifier: codeVerifier,
+      cancellationToken: ct);
 
   if (!result.IsSuccess)
   {
-      // จัดการ Error จาก result.ErrorCode และ result.ErrorMessage
+      // จัดการ Error จาก result.ErrorCode, result.Message, และ result.Error?.HttpStatusCode
   }
-  // ดึงข้อมูลจาก result.Data (เช่น result.Data["pid"], result.Data["given_name"])
+
+  // ดึงข้อมูลจาก result.Data (Case-Insensitive OrdinalIgnoreCase หรือใช้ .GetStringValue)
+  string? pid = result.Data.GetStringValue("pid");
+  string? accessToken = result.Data.GetStringValue("access_token");
   ```
 
 #### 5.2 กรณีเชื่อมต่อ DOPA (`IDopaProvider`)
 - Inject `Netka.Identity.Core.Interfaces.IDopaProvider`
+- **ตรวจสอบด้วยข้อมูลหน้าบัตร + เลขหลังบัตร (Laser ID):**
   ```csharp
-  var result = await _dopaProvider.VerifyAsync(new VerificationRequest
-  {
-      NationalId = request.Pid,       // เลขบัตร 13 หลัก
-      FirstName = request.FirstName,  // ชื่อภาษาไทย
-      LastName = request.LastName,    // นามสกุลภาษาไทย
-      BirthDate = request.BirthDay,   // พ.ศ. YYYYMMDD เช่น "25350131"
-      LaserCode = request.LaserCode   // เลขหลังบัตร เช่น "JT0123456789"
-  }, ct);
+  VerificationResult result = await _dopaProvider.VerifyByLaserAsync(
+      pid: request.Pid,           // เลขบัตร 13 หลัก (SDK เช็ค Modulo 11 ให้ในตัว)
+      firstName: request.FirstName,
+      lastName: request.LastName,
+      birthDate: request.BirthDay, // พ.ศ. YYYYMMDD เช่น "25350131"
+      laserId: request.LaserCode,  // เลขหลังบัตร เช่น "ME0123456789"
+      cancellationToken: ct);
+  ```
+- **ตรวจสอบด้วยเลขบัตร + เลขชิปสมาร์ทการ์ด (Smart Card Chip):**
+  ```csharp
+  VerificationResult result = await _dopaProvider.VerifyByChipAsync(
+      pid: request.Pid,
+      chipNo: request.ChipNo,
+      bp1No: request.Bp1No,
+      cancellationToken: ct);
   ```
 
-#### 5.3 กรณีต้องการสลับ Provider แบบ Dynamic (`IdentityVerifierFactory`)
-- Inject `Netka.Identity.Application.IdentityVerifierFactory` แล้วเรียก `_factory.GetProvider("ThaID")` หรือ `_factory.GetProvider("DOPA")`
+#### 5.3 กรณีต้องการดึง Provider จากรายการทั้งหมด (`IEnumerable<IVerificationProvider>`)
+- สามารถ Inject `IEnumerable<IVerificationProvider>` แล้วค้นหาด้วย `providers.FirstOrDefault(p => string.Equals(p.ProviderName, "ThaID", StringComparison.OrdinalIgnoreCase))`
 
 ---
 
-## Step 6: กฎความปลอดภัยและการ Build ยืนยันผล
-1. **ห้าม Log ข้อมูลส่วนบุคคล (PII):** หากต้องเขียน Log ในโปรเจกต์ปลายทาง ให้ใช้ `DataMaskingHelper.MaskNationalId(...)`, `DataMaskingHelper.MaskLaserCode(...)`, หรือ `DataMaskingHelper.MaskFullName(...)` จาก `Netka.Identity.Core.Security` เสมอ
-2. **รัน `dotnet build` ที่โปรเจกต์ปลายทาง:** ยืนยันว่าโปรเจกต์ปลายทาง Build ผ่านเรียบร้อยโดยไม่มี Error และตรวจสอบ `git diff` ของไฟล์ `.csproj` ปลายทางว่าไม่มีการแก้ไข `<PackageReference>` เดิม
+## Step 6: การตรวจสอบและ Build ยืนยันผล
+1. รัน `dotnet build` ที่โปรเจกต์ปลายทาง ยืนยันว่า Build ผ่านเรียบร้อยโดยไม่มี Error
+2. ตรวจสอบ `git diff` ของไฟล์ `.csproj` ในโปรเจกต์ปลายทางว่ามีเฉพาะบรรทัด `<ProjectReference>` ที่เพิ่มเข้าไป โดยไม่มีการแก้ไข `<PackageReference>` เดิม

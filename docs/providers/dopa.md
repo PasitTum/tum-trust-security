@@ -1,9 +1,10 @@
 # เอกสารอ้างอิงการเชื่อมต่อ DOPA (`DOPA`)
 
-- **Provider Key:** `"DOPA"`
-- **Interface:** `Netka.Identity.Core.Interfaces.IDopaProvider` (สืบทอดจาก `IIdentityVerificationProvider`)
+- **ProviderName:** `"DOPA"`
+- **Config Section:** `"IdentityVerification:Dopa"`
+- **Interface:** `Netka.Identity.Core.Interfaces.IDopaProvider` (สืบทอดจาก `IVerificationProvider`)
 - **Implementation:** `Netka.Identity.Infrastructure.Providers.DopaProvider`
-- **มาตรฐานการเชื่อมต่อ:** REST API ตรวจสอบสถานะบัตรประชาชน (CheckCardStatus / Laser ID) รองรับทั้ง `application/x-www-form-urlencoded` และ `application/json`
+- **มาตรฐานการเชื่อมต่อ:** Direct Server-to-Server REST API (`POST application/json` พร้อม `Authorization: Bearer <ApiKey>`) สำหรับตรวจสอบสถานะบัตรประชาชนด้วยรหัสหลังบัตร (Laser ID) หรือเลขชิปสมาร์ทการ์ด (Chip No)
 
 ---
 
@@ -12,44 +13,77 @@
 ```json
 {
   "IdentityVerification": {
-    "Providers": {
-      "DOPA": {
-        "CheckCardEndpoint": "https://api.dopa.go.th/CheckCardStatus",
-        "ApiKey": "<YOUR_BEARER_TOKEN_OR_API_KEY>",
-        "TimeoutSeconds": 30,
-        "AdditionalHeaders": {
-          "ContentType": "form",
-          "X-Custom-Header": "optional-value"
-        }
-      }
+    "EncryptionKey": "<BASE64_32_BYTE_AES_KEY>",
+    "Dopa": {
+      "VerificationUrl": "https://dopa-gateway.your-agency.local/api/v1/card/verify",
+      "LaserVerificationUrl": "https://dopa-gateway.your-agency.local/api/v1/card/verify-laser",
+      "ChipVerificationUrl": "https://dopa-gateway.your-agency.local/api/v1/card/verify-chip",
+      "ApiKey": "<YOUR_DOPA_GATEWAY_API_KEY>",
+      "AllowUntrustedCertificates": false
     }
   }
 }
 ```
-> **หมายเหตุ:**
-> - หาก `AdditionalHeaders["ContentType"]` ตั้งเป็น `"json"` จะส่ง Payload แบบ `application/json`
-> - ค่าเริ่มต้น (Default) คือส่งแบบ `application/x-www-form-urlencoded`
+> **หมายเหตุ:** ต้องกำหนดอย่างน้อย `VerificationUrl` หรือ `LaserUrl` / `LaserVerificationUrl` อย่างใดอย่างหนึ่ง หากไม่ได้แยก URL ของ Laser และ Chip ระบบจะใช้ `VerificationUrl` เป็นค่าเริ่มต้นให้ทั้งคู่
 
 ---
 
-## 2. การรับส่งข้อมูล (`IDopaProvider.VerifyAsync`)
+## 2. เมธอดและการรับส่งข้อมูล (`IDopaProvider`)
 
-### 2.1 พารามิเตอร์ขาเข้า (`VerificationRequest`)
-สามารถส่งผ่าน Property หลักของ `VerificationRequest` หรือส่งผ่าน `AdditionalParameters` (ไม่สนตัวพิมพ์เล็ก-ใหญ่):
+### 2.1 ตรวจสอบด้วยข้อมูลหน้าบัตรและเลขหลังบัตร (`VerifyByLaserAsync`)
+```csharp
+VerificationResult result = await _dopaProvider.VerifyByLaserAsync(
+    pid: "1234567890121",       // เลขบัตรประชาชน 13 หลัก (ตรวจ Checksum Modulo 11 อัตโนมัติ)
+    firstName: "สมชาย",          // ชื่อภาษาไทย
+    lastName: "ใจดี",            // นามสกุลภาษาไทย
+    birthDate: "25350131",      // วันเกิด พ.ศ. รูปแบบ YYYYMMDD
+    laserId: "ME0123456789",    // เลขหลังบัตร (Laser ID)
+    cancellationToken: ct);
+```
 
-| ฟิลด์ที่ส่งให้ DOPA | Property ใน `VerificationRequest` | หรือ Key ใน `AdditionalParameters` | คำอธิบาย |
-| :--- | :--- | :--- | :--- |
-| `PID` | `request.NationalId` | `"PID"` หรือ `"pid"` | เลขประจำตัวประชาชน 13 หลัก (**Required**) |
-| `FirstName` | `request.FirstName` | `"FirstName"` | ชื่อจริงภาษาไทย (**Required**) |
-| `LastName` | `request.LastName` | `"LastName"` | นามสกุลภาษาไทย (**Required**) |
-| `BirthDay` | `request.BirthDate` | `"BirthDay"` | วันเดือนปีเกิด พ.ศ. รูปแบบ `YYYYMMDD` เช่น `"25350131"` (**Required**) |
-| `Laser` | `request.LaserCode` | `"Laser"` | เลขหลังบัตรประชาชน (Laser ID 12 หลัก เช่น `"JT0123456789"`) (**Required**) |
-| *(ฟิลด์เสริมอื่นๆ)* | - | Key ใดก็ได้ใน `AdditionalParameters` | SDK จะแนบต่อท้ายไปให้ DOPA อัตโนมัติ (Pass-Through) |
+### 2.2 ตรวจสอบด้วยเลขบัตรและเลขชิปสมาร์ทการ์ด (`VerifyByChipAsync`)
+```csharp
+VerificationResult result = await _dopaProvider.VerifyByChipAsync(
+    pid: "1234567890121",       // เลขบัตรประชาชน 13 หลัก (ตรวจ Checksum Modulo 11 อัตโนมัติ)
+    chipNo: "0011223344556677", // เลข Chip Number ที่อ่านได้จากเครื่องอ่านบัตรสมาร์ทการ์ด
+    bp1No: "1234567890",        // (Optional) เลขคำขอมีบัตร (BP1)
+    cancellationToken: ct);
+```
 
-### 2.2 ผลลัพธ์ (`VerificationResult` — Pass-Through Dictionary ใน `result.Data`)
-- `result.IsSuccess`: `true` เมื่อ HTTP Status 2xx และไม่พบฟิลด์ `IsError = true` หรือ `error` ใน JSON
-- `result.Data` (เก็บค่า JSON ดิบทั้งหมดที่ DOPA ตอบกลับมา ค้นหา Key แบบ `OrdinalIgnoreCase`):
-  - `"IsError"`: `false` (เมื่อสำเร็จ) หรือ `true` (เมื่อเกิดข้อผิดพลาด)
-  - `"ErrorMessage"`: ข้อความแจ้งข้อผิดพลาดจากกรมการปกครอง (ถ้ามี)
-  - `"Code"` / `"StCode"`: รหัสสถานะบัตร (เช่น `0` = ปกติ)
-  - `"Desc"`: คำอธิบายสถานะบัตรประชาชน (เช่น `"สถานะปกติ"`)
+### 2.3 ตรวจสอบแบบยืดหยุ่นผ่าน Dictionary (`VerifyAsync(VerificationRequest)`)
+ส่งพารามิเตอร์ใดๆ ที่ต้องการไปให้ DOPA Gateway ผ่าน `request.AdditionalParameters` (รองรับ Case-Insensitive `OrdinalIgnoreCase`):
+```csharp
+var request = new VerificationRequest
+{
+    ProviderName = "DOPA",
+    AdditionalParameters =
+    {
+        ["PID"] = "1234567890121",
+        ["FirstName"] = "สมชาย",
+        ["LastName"] = "ใจดี",
+        ["BirthDay"] = "25350131",
+        ["Laser"] = "ME0123456789"
+    }
+};
+VerificationResult result = await _dopaProvider.VerifyAsync(request, ct);
+```
+
+---
+
+## 3. ข้อมูลขาออก (`VerificationResult.Data` — Pass-Through Keys)
+
+- `result.IsSuccess`: เป็น `true` เมื่อ HTTP Status เป็น `2xx` และฟิลด์ `"IsError"` ใน JSON ไม่ได้เป็น `true`
+- `result.Data` (เก็บ JSON ดิบทั้งหมดจาก DOPA ค้นหา Key แบบ `OrdinalIgnoreCase` หรือใช้ `result.Data.GetStringValue(...)`):
+  - `"IsError"`: `false` (เมื่อบัตรปกติ) หรือ `true` (เมื่อสถานะบัตรไม่ปกติ/ข้อมูลไม่ตรง)
+  - `"ErrorMessage"` / `"Desc"` / `"message"`: คำอธิบายผลการตรวจสอบจากกรมการปกครอง (เช่น `"สถานะปกติ"`)
+  - `"Code"` / `"StCode"`: รหัสสถานะบัตรประชาชนตามมาตรฐาน DOPA
+
+---
+
+## 4. รหัสข้อผิดพลาด (`result.ErrorCode`)
+- `INVALID_PID_FORMAT`: เลขประจำตัวประชาชนไม่ครบ 13 หลัก หรือไม่ผ่านการคำนวณ Checksum Modulo 11
+- `MISSING_PARAMETERS`: ข้อมูลบังคับไม่ครบถ้วน
+- `CARD_VERIFICATION_REJECTED`: เชื่อมต่อ DOPA สำเร็จ แต่ DOPA ตอบกลับว่า `"IsError": true` (ข้อมูลดิบยังคงอยู่ใน `result.Data`)
+- `DOPA_API_FAILED`: DOPA ตอบกลับด้วย HTTP Non-2xx (ดู HTTP Status Code ได้จาก `result.Error?.HttpStatusCode`)
+- `INVALID_DOPA_RESPONSE`: JSON ที่ได้รับไม่ถูกต้อง
+- `NETWORK_ERROR`: เกิดข้อผิดพลาดในการเชื่อมต่อโครงข่าย (`HttpRequestException`)
