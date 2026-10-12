@@ -158,6 +158,23 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 #### 5.3 กรณีต้องการดึง Provider จากรายการทั้งหมด (`IEnumerable<IVerificationProvider>`)
 - สามารถ Inject `IEnumerable<IVerificationProvider>` แล้วค้นหาด้วย `providers.FirstOrDefault(p => string.Equals(p.ProviderName, "ThaID", StringComparison.OrdinalIgnoreCase))`
 
+#### 5.4 กรณีผู้ใช้ต้องการทำ Mock Data / Sandbox สำหรับทดสอบในโปรเจกต์ปลายทาง (Optional)
+- **กฎความปลอดภัย:** ห้ามแก้ไขหรือใส่โค้ด Mock เข้าไปในโปรเจกต์ `Netka.Identity.SDK` เด็ดขาด เพื่อป้องกันความเสี่ยง Auth Bypass บน Production
+- หากผู้ใช้ต้องการทดสอบระบบยืนยันตัวตนบนเครื่องนักพัฒนา (ขณะยังไม่มี `ClientId` จริงของ ThaID หรือไม่ได้ต่อ VPN เข้า DOPA Gateway) ให้สร้างคลาส Mock ไว้**เฉพาะภายในโปรเจกต์ปลายทาง** ดังนี้:
+  1. สร้างคลาส `MockThaIdProvider : IThaIdProvider` และ/หรือ `MockDopaProvider : IDopaProvider` ในโปรเจกต์ปลายทาง
+  2. อ่านรายชื่อ Key ขาออกจาก `d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\docs\providers\thaid.md` (ทั้ง 20 Scopes เช่น `pid`, `title`, `given_name`, `family_name`, `name`, `birthdate`, `address`, `house_address`, `access_token`, `id_token`) และ `docs\providers\dopa.md` (`IsError: false`, `Code: 0`, `Desc: "สถานะปกติ"`) เพื่อใส่ใน `VerificationResult.Data` ให้ตรงกับโครงสร้างจริง 100%
+  3. รองรับ Trigger จำลองเคส Error (เช่น หากส่ง `code == "mock_error"` หรือ `laserId == "MOCK_ERROR"` ให้คืนค่า `ProviderHelper.CreateFailureResult(...)`) เพื่อให้ทีมหน้าบ้านทดสอบหน้าจอแจ้งเตือนบนตู้ Kiosk ได้ครบทุกกรณี
+  4. **ล็อกเงื่อนไข DI ใน `Program.cs` / `Startup.cs` ของโปรเจกต์ปลายทางให้ทำงานเฉพาะ `IsDevelopment()` เท่านั้น:**
+     ```csharp
+     services.AddIdentityVerification(configuration);
+
+     if (env.IsDevelopment() && configuration.GetValue<bool>("IdentityVerification:UseMock"))
+     {
+         services.AddTransient<IThaIdProvider, MockThaIdProvider>();
+         services.AddTransient<IDopaProvider, MockDopaProvider>();
+     }
+     ```
+
 ---
 
 ## Step 6: การตรวจสอบและ Build ยืนยันผล
