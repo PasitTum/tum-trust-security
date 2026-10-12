@@ -213,4 +213,255 @@ public class ThaIdProviderTests
         Assert.Equal("INVALID_STATE", result.ErrorCode);
         Assert.Empty(handler.SentRequests);
     }
+
+    [Fact]
+    public async Task EndToEndOAuthRedirectFlow_SimulatesBrowserRedirectCallbackAndPkceVerificationWithAll20Scopes()
+    {
+        // Arrange: Simulate a stateful ThaID OAuth2 Server (Authorize 302 Redirect -> Token PKCE Check -> UserInfo)
+        string? serverStoredChallenge = null;
+        const string issuedAuthCode = "thaid-redirect-auth-code-777";
+
+        var handler = new MockHttpMessageHandler(req =>
+        {
+            var uri = req.RequestUri!;
+
+            // 1. Simulate ThaID Authorization Endpoint (/api/v2/oauth2/auth/) returning HTTP 302 Redirect to Kiosk Callback
+            if (uri.AbsolutePath.Contains("/oauth2/auth"))
+            {
+                var queryParams = ParseQueryString(uri.Query);
+                string clientRedirectUri = queryParams["redirect_uri"];
+                string clientState = queryParams["state"];
+                serverStoredChallenge = queryParams["code_challenge"];
+
+                Assert.Equal("S256", queryParams["code_challenge_method"]);
+                Assert.Equal("test-client-id", queryParams["client_id"]);
+
+                string callbackLocation = $"{clientRedirectUri}?code={Uri.EscapeDataString(issuedAuthCode)}&state={Uri.EscapeDataString(clientState)}";
+                return MockHttpMessageHandler.RedirectResponse(callbackLocation);
+            }
+
+            // 2. Simulate ThaID Token Endpoint (/api/v2/oauth2/token/) validating PKCE code_verifier against stored code_challenge
+            if (uri.AbsolutePath.Contains("/oauth2/token"))
+            {
+                var formBody = req.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+                var formParams = ParseQueryString(formBody);
+
+                string receivedCode = formParams["code"];
+                string receivedVerifier = formParams["code_verifier"];
+
+                if (receivedCode != issuedAuthCode ||
+                    serverStoredChallenge is null ||
+                    !PkceHelper.VerifyCodeChallenge(receivedVerifier, serverStoredChallenge))
+                {
+                    return MockHttpMessageHandler.JsonResponse(
+                        """{"error":"invalid_grant","error_description":"PKCE verification failed"}""",
+                        System.Net.HttpStatusCode.BadRequest);
+                }
+
+                return MockHttpMessageHandler.JsonResponse("""
+                {
+                    "access_token": "thaid-live-access-token",
+                    "refresh_token": "thaid-live-refresh-token",
+                    "id_token": "thaid-live-id-token",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                    "scope": "openid pid address gender birthdate given_name middle_name family_name name given_name_en middle_name_en family_name_en name_en title title_en ial smartcard_code date_of_expiry date_of_issuance house_address",
+                    "pid": "1234567890121",
+                    "title": "นาย",
+                    "title_en": "Mr.",
+                    "given_name": "สมชาย",
+                    "middle_name": "",
+                    "family_name": "ใจดี",
+                    "name": "นาย สมชาย ใจดี",
+                    "given_name_en": "Somchai",
+                    "middle_name_en": "",
+                    "family_name_en": "Jaidee",
+                    "name_en": "Mr. Somchai Jaidee",
+                    "gender": "male",
+                    "birthdate": "1990-01-31",
+                    "address": "99/9 หมู่ 1 ต.คลองหนึ่ง อ.คลองหลวง จ.ปทุมธานี",
+                    "smartcard_code": "ME0123456789",
+                    "date_of_issuance": "2022-01-31",
+                    "date_of_expiry": "2030-01-30",
+                    "ial": 2.3,
+                    "house_address": {
+                        "raw": "99/9 หมู่ 1 ต.คลองหนึ่ง อ.คลองหลวง จ.ปทุมธานี",
+                        "formatted": "99/9 หมู่ 1 ต.คลองหนึ่ง อ.คลองหลวง จ.ปทุมธานี"
+                    }
+                }
+                """);
+            }
+
+            return MockHttpMessageHandler.JsonResponse("{}", System.Net.HttpStatusCode.NotFound);
+        });
+
+        var provider = CreateProvider(handler);
+        using var browserHttpClient = new HttpClient(handler);
+
+        // Step 1: Kiosk generates PKCE pair and Authorization URL
+        string codeVerifier = PkceHelper.GenerateCodeVerifier();
+        string codeChallenge = PkceHelper.GenerateCodeChallenge(codeVerifier);
+        const string originalState = "kiosk-csrf-state-001";
+        const string callbackUri = "https://kiosk.local/callback";
+
+        string authUrl = provider.GetAuthorizationUrl(
+            redirectUri: callbackUri,
+            state: originalState,
+            codeChallenge: codeChallenge,
+            codeChallengeMethod: "S256",
+            nonce: "nonce-001");
+
+        // Step 2: Simulate Browser navigating to authUrl and receiving HTTP 302 Redirect back to Kiosk Callback
+        using var authResponse = await browserHttpClient.GetAsync(authUrl);
+        Assert.Equal(System.Net.HttpStatusCode.Found, authResponse.StatusCode);
+        Assert.NotNull(authResponse.Headers.Location);
+
+        var callbackUriReceived = authResponse.Headers.Location!;
+        var callbackQuery = ParseQueryString(callbackUriReceived.Query);
+        string callbackCode = callbackQuery["code"];
+        string callbackState = callbackQuery["state"];
+
+        // Step 3: Kiosk Callback exchanges code + PKCE code_verifier via VerifyAsync
+        var verifyResult = await provider.VerifyAsync(new VerificationRequest
+        {
+            ProviderName = "ThaID",
+            AuthorizationCode = callbackCode,
+            RedirectUri = callbackUri,
+            State = callbackState,
+            AdditionalParameters = new Dictionary<string, object>
+            {
+                ["expected_state"] = originalState,
+                ["code_verifier"] = codeVerifier
+            }
+        });
+
+        // Assert
+        Assert.True(verifyResult.IsSuccess);
+        Assert.Equal("1234567890121", verifyResult.Data["pid"]);
+        Assert.Equal("นาย สมชาย ใจดี", verifyResult.Data["name"]);
+        Assert.Equal("Mr. Somchai Jaidee", verifyResult.Data["name_en"]);
+        Assert.Equal("ME0123456789", verifyResult.Data["smartcard_code"]);
+        Assert.Equal("thaid-live-access-token", verifyResult.Data["access_token"]);
+        Assert.True(verifyResult.Data.ContainsKey("house_address"));
+    }
+
+    [Fact]
+    public async Task EndToEndOAuthRedirectFlow_WhenCitizenDeniesConsent_RedirectsWithErrorAccessDeniedAndFailsMissingCode()
+    {
+        // Arrange: Simulate citizen clicking "Reject / Cancel" in ThaID app -> 302 Redirect with ?error=access_denied
+        var handler = new MockHttpMessageHandler(req =>
+        {
+            var uri = req.RequestUri!;
+            if (uri.AbsolutePath.Contains("/oauth2/auth"))
+            {
+                var queryParams = ParseQueryString(uri.Query);
+                string clientRedirectUri = queryParams["redirect_uri"];
+                string clientState = queryParams["state"];
+
+                string errorRedirectLocation =
+                    $"{clientRedirectUri}?error=access_denied&error_description={Uri.EscapeDataString("User denied consent")}&state={Uri.EscapeDataString(clientState)}";
+                return MockHttpMessageHandler.RedirectResponse(errorRedirectLocation);
+            }
+
+            return MockHttpMessageHandler.JsonResponse("{}", System.Net.HttpStatusCode.NotFound);
+        });
+
+        var provider = CreateProvider(handler);
+        using var browserHttpClient = new HttpClient(handler);
+
+        string authUrl = provider.GetAuthorizationUrl(
+            redirectUri: "https://kiosk.local/callback",
+            state: "kiosk-state-deny-01");
+
+        // Step 1: Browser follows authorization URL and gets 302 Redirect with error=access_denied (no code)
+        using var authResponse = await browserHttpClient.GetAsync(authUrl);
+        Assert.Equal(System.Net.HttpStatusCode.Found, authResponse.StatusCode);
+
+        var callbackQuery = ParseQueryString(authResponse.Headers.Location!.Query);
+        Assert.Equal("access_denied", callbackQuery["error"]);
+        Assert.False(callbackQuery.ContainsKey("code"));
+
+        // Step 2: If Callback passes empty/missing code to VerifyAsync, SDK returns MISSING_AUTH_CODE
+        var verifyResult = await provider.VerifyAsync(new VerificationRequest
+        {
+            ProviderName = "ThaID",
+            AuthorizationCode = callbackQuery.TryGetValue("code", out var code) ? code : null,
+            RedirectUri = "https://kiosk.local/callback",
+            State = callbackQuery["state"]
+        });
+
+        Assert.False(verifyResult.IsSuccess);
+        Assert.Equal("MISSING_AUTH_CODE", verifyResult.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ExchangeCodeAsync_WhenCodeExpiredOrInvalidGrant_ReturnsTokenExchangeFailedWithHttp400()
+    {
+        // Arrange (UC-THAID-03)
+        var handler = new MockHttpMessageHandler(_ =>
+            MockHttpMessageHandler.JsonResponse(
+                """{"error":"invalid_grant","error_description":"Authorization code has expired"}""",
+                System.Net.HttpStatusCode.BadRequest));
+        var provider = CreateProvider(handler);
+
+        // Act
+        var result = await provider.ExchangeCodeAsync("expired-code", "https://kiosk.local/callback");
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("TOKEN_EXCHANGE_FAILED", result.ErrorCode);
+        Assert.Equal(400, result.Error?.HttpStatusCode);
+    }
+
+    [Fact]
+    public async Task ExchangeCodeAsync_WhenNetworkTimeoutOccurs_ReturnsNetworkError()
+    {
+        // Arrange (UC-THAID-04)
+        var handler = new MockHttpMessageHandler(_ =>
+            throw new HttpRequestException("Simulated connection timeout to imauth.bora.dopa.go.th"));
+        var provider = CreateProvider(handler);
+
+        // Act
+        var result = await provider.ExchangeCodeAsync("valid-code", "https://kiosk.local/callback");
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("NETWORK_ERROR", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task InspectTokenAsync_WhenTokenIsExpired_ReturnsActiveFalse()
+    {
+        // Arrange (UC-THAID-05)
+        var handler = new MockHttpMessageHandler(_ =>
+            MockHttpMessageHandler.JsonResponse("""{"active":false}"""));
+        var provider = CreateProvider(handler);
+
+        // Act
+        var result = await provider.InspectTokenAsync("expired-access-token");
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(false, result.Data["active"]);
+    }
+
+    private static Dictionary<string, string> ParseQueryString(string query)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var trimmed = query.TrimStart('?');
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return result;
+        }
+
+        foreach (var pair in trimmed.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = pair.Split('=', 2);
+            var key = Uri.UnescapeDataString(parts[0]);
+            var value = parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : string.Empty;
+            result[key] = value;
+        }
+
+        return result;
+    }
 }

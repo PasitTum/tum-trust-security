@@ -151,4 +151,68 @@ public class DopaProviderTests
         Assert.Equal("ไม่พบเลข Laser จาก PID นี้", result.Message);
         Assert.Equal(true, result.Data["IsError"]);
     }
+
+    [Fact]
+    public async Task VerifyByLaserAsync_WithMissingLaserCode_ReturnsMissingParametersWithoutCallingApi()
+    {
+        // Arrange (UC-DOPA-03)
+        var handler = new MockHttpMessageHandler(_ => MockHttpMessageHandler.JsonResponse("{}"));
+        var provider = CreateProvider(handler);
+
+        // Act
+        var result = await provider.VerifyByLaserAsync(
+            pid: "1234567890121",
+            firstName: "สมชาย",
+            lastName: "ใจดี",
+            birthDate: "25300101",
+            laserId: "");
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("MISSING_PARAMETERS", result.ErrorCode);
+        Assert.Empty(handler.SentRequests);
+    }
+
+    [Fact]
+    public async Task VerifyByLaserAsync_WhenDopaServerReturnsHttp503_ReturnsDopaApiFailedError()
+    {
+        // Arrange (UC-DOPA-05)
+        var handler = new MockHttpMessageHandler(_ =>
+            MockHttpMessageHandler.JsonResponse(
+                """{"message":"Service Unavailable"}""",
+                System.Net.HttpStatusCode.ServiceUnavailable));
+        var provider = CreateProvider(handler);
+
+        // Act
+        var result = await provider.VerifyByLaserAsync(
+            pid: "1234567890121",
+            firstName: "สมชาย",
+            lastName: "ใจดี",
+            birthDate: "25300101",
+            laserId: "ME0123456789");
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("DOPA_API_FAILED", result.ErrorCode);
+        Assert.Equal(503, result.Error?.HttpStatusCode);
+    }
+
+    [Fact]
+    public async Task VerifyByChipAsync_WhenNetworkTimeoutOccurs_ReturnsNetworkError()
+    {
+        // Arrange (UC-DOPA-06)
+        var handler = new MockHttpMessageHandler(_ =>
+            throw new HttpRequestException("Simulated connection timeout to DOPA Gateway"));
+        var provider = CreateProvider(handler);
+
+        // Act
+        var result = await provider.VerifyByChipAsync(
+            pid: "1234567890121",
+            chipNo: "1234567890123456",
+            bp1No: "123456789012");
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("NETWORK_ERROR", result.ErrorCode);
+    }
 }

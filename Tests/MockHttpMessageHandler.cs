@@ -42,4 +42,11 @@ public sealed class MockHttpMessageHandler : HttpMessageHandler
             Content = new StringContent(json, Encoding.UTF8, "application/json")
         };
     }
+
+    public static HttpResponseMessage RedirectResponse(string redirectLocation, HttpStatusCode statusCode = HttpStatusCode.Found)
+    {
+        var response = new HttpResponseMessage(statusCode);
+        response.Headers.Location = new Uri(redirectLocation);
+        return response;
+    }
 }
