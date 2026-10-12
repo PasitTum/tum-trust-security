@@ -163,72 +163,74 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 - สามารถ Inject `IEnumerable<IVerificationProvider>` แล้วค้นหาด้วย `providers.FirstOrDefault(p => string.Equals(p.ProviderName, "ThaID", StringComparison.OrdinalIgnoreCase))`
 
 #### 6.4 กรณีผู้ใช้ต้องการทำ Mock Data / ทดสอบ Redirect และจำลองการยืนยันตัวตน (เมื่อยังไม่มี Credentials จริง)
-- **กฎเหล็กด้านความปลอดภัย (ป้องกันโค้ด Mock หลุดขึ้น Production 100%):**
+- **กฎเหล็กด้านความปลอดภัย (ไม่ยุ่งกับโค้ดของโปรเจกต์ปลายทาง 100%):**
+  - **ห้าม** สร้างคลาส `MockThaIdProvider`, `MockDopaProvider`, หรือสร้าง Mock Endpoints ใดๆ ลงในโค้ดของโปรเจกต์ปลายทางเด็ดขาด
   - **ห้าม** แก้ไขโค้ดใน `Netka.Identity.SDK` เด็ดขาด
-  - **ห้าม** สร้างคลาส `MockThaIdProvider` หรือ `MockDopaProvider` ไปลงทะเบียนทับ `IThaIdProvider` / `IDopaProvider` ในโค้ด Production ของโปรเจกต์หลักโดยไม่มี `#if DEBUG` เด็ดขาด
-- **ให้ถามผู้ใช้ก่อนเสมอว่าต้องการสร้างระบบ Mock แบบใด (เลือกได้ทั้ง 2 แบบ หรือทำคู่กัน):**
+  - ระบบจำลองทั้งหมดถูกแยกไว้ที่ฝั่ง SDK ของเราเองเรียบร้อยแล้วในโปรเจกต์ **`<SDK_ROOT>/MockServer/Netka.Identity.MockServer.csproj`** (และชุดทดสอบใน `<SDK_ROOT>/Tests/Netka.Identity.SDK.Tests.csproj`)
 
-##### รูปแบบที่ 1 (Mode A): สร้างชุดทดสอบในโปรเจกต์ Test ของระบบปลายทาง (`*.Tests.csproj`) — ปลอดภัย 100% ไม่แตะโปรเจกต์หลัก
-- สามารถดูโค้ดต้นแบบที่สมบูรณ์ได้จาก `<SDK_ROOT>/Tests/MockHttpMessageHandler.cs`, `<SDK_ROOT>/Tests/ThaIdProviderTests.cs`, และ `<SDK_ROOT>/Tests/DopaProviderTests.cs`
-- สร้าง `MockHttpMessageHandler : HttpMessageHandler` ในโปรเจกต์ `*.Tests.csproj` ของระบบปลายทาง โดยรองรับทั้ง:
-  - `JsonResponse(string json, HttpStatusCode statusCode = HttpStatusCode.OK)`
-  - `RedirectResponse(string redirectLocation, HttpStatusCode statusCode = HttpStatusCode.Found)` สำหรับจำลอง `HTTP 302 Found` พร้อม Header `Location`
-- จำลอง **End-to-End OAuth 2.0 Redirect Flow ของ ThaID** ใน Unit/Integration Test:
-  1. เรียก `_thaIdProvider.GetAuthorizationUrl(redirectUri, state, codeChallenge, "S256")`
-  2. ใช้ `HttpClient` ยิงไปที่ `authUrl` แล้วให้ Mock Handler เก็บค่า `code_challenge` (จาก Query String) และตอบกลับ `HTTP 302 Found` ไปยัง `redirect_uri?code=...&state=...` (หรือ `?error=access_denied&state=...` กรณีจำลองผู้ใช้กดปฏิเสธในแอป ThaID)
-  3. นำ `code` และ `state` จาก `response.Headers.Location` ส่งเข้า `_thaIdProvider.VerifyAsync(...)` หรือ `ExchangeCodeAsync(...)` โดยให้ Mock Handler ที่ `/oauth2/token` ตรวจ `PkceHelper.VerifyCodeChallenge(codeVerifier, storedChallenge)` ก่อนคืน JSON ข้อมูลประชาชนครบ 20 Scopes
+##### วิธีใช้งาน Standalone Sandbox Mock Server (`<SDK_ROOT>/MockServer`) ร่วมกับโปรเจกต์ปลายทาง
+1. **รัน Mock Server จากฝั่ง SDK (พอร์ตเริ่มต้น `http://localhost:5199`):**
+   ```powershell
+   dotnet run --project "<SDK_ROOT>/MockServer/Netka.Identity.MockServer.csproj"
+   ```
+   *(สามารถเปิดดูหน้า Dashboard และสถานะได้ที่ `http://localhost:5199`)*
+2. **ชี้ URL ใน `appsettings.Development.json` ของโปรเจกต์ปลายทางมายัง Mock Server (โดยไม่ต้องแก้โค้ด C# ในโปรเจกต์ปลายทางแม้แต่บรรทัดเดียว):**
+   ```json
+   {
+     "IdentityVerification": {
+       "ThaID": {
+         "ClientId": "mock-client-id",
+         "ClientSecret": "mock-client-secret",
+         "AuthorizeUrl": "http://localhost:5199/api/v2/oauth2/auth/",
+         "TokenUrl": "http://localhost:5199/api/v2/oauth2/token/",
+         "InspectUrl": "http://localhost:5199/api/v2/oauth2/introspect/",
+         "RevokeUrl": "http://localhost:5199/api/v2/oauth2/revoke/",
+         "UserInfoUrl": "http://localhost:5199/api/v2/oauth2/userinfo/",
+         "Scope": "openid pid title given_name family_name name birthdate address house_address smartcard_code"
+       },
+       "Dopa": {
+         "LaserUrl": "http://localhost:5199/CheckCardByLaser",
+         "ChipUrl": "http://localhost:5199/CheckCardByCID",
+         "ApiKey": "mock-dopa-api-key"
+       }
+     }
+   }
+   ```
+   *(ส่วนใน `appsettings.json` สำหรับ Production ยังคงใช้ URL จริงของกรมการปกครอง `https://imauth.bora.dopa.go.th/...` ตามปกติ)*
+3. **การทำงานของ OAuth 2.0 Redirect (`HTTP 302 Found`) บน `<SDK_ROOT>/MockServer`:**
+   - เมื่อโปรเจกต์ปลายทาง Redirect ผู้ใช้ไปที่ `http://localhost:5199/api/v2/oauth2/auth/...`:
+     - **กรณีเปิดผ่าน Browser จริง:** จะแสดงหน้าจอจำลองแอป **ThaID Sandbox Simulator** ให้เลือกกดปุ่มจำลองสถานการณ์ (เช่น กดยินยอมสำเร็จ 20 Scopes, กดยกเลิก `access_denied`, จำลอง State ไม่ตรง CSRF, จำลอง Code หมดอายุ, หรือจำลอง Timeout) แล้วทำการ **`HTTP 302 Redirect`** กลับไปยัง `redirect_uri` ของโปรเจกต์ปลายทางทันที
+     - **กรณีเรียกแบบอัตโนมัติ (ส่ง `?auto=true` หรือ `?scenario=success|deny|invalid_state|expired_code|timeout` หรือเรียกผ่าน `HttpClient`):** จะตอบกลับ **`HTTP 302 Found`** พร้อม Header `Location` กลับไปยัง `redirect_uri` ทันทีโดยไม่ต้องกดปุ่ม
 
-##### รูปแบบที่ 2 (Mode B): สร้าง Dev Mock Redirect & Sandbox Endpoints สำหรับกดหน้าเว็บจริงบน Browser (`#if DEBUG` + `IsDevelopment()`)
-- ใช้เมื่อผู้ใช้ต้องการรันแอป Kiosk / Web ของโปรเจกต์ปลายทางขึ้นมาจริงๆ บน Browser แล้วกดปุ่ม Login with ThaID เพื่อให้หน้าเว็บ **Redirect (`HTTP 302`)** ไป-กลับจริงๆ และทดสอบ DOPA ผ่านหน้าจอ UI จริง โดยยังคงเรียกใช้ `ThaIdProvider` และ `DopaProvider` ของจริงจาก SDK 100%:
-- **กลไกป้องกันการหลุดขึ้น Production 3 ชั้น:**
-  1. **ชั้นที่ 1 (`#if DEBUG`):** โค้ดไฟล์ Mock Endpoints ทั้งหมดต้องครอบด้วย `#if DEBUG ... #endif` เสมอ เมื่อสั่ง Build/Publish ด้วย `-c Release` คอมไพเลอร์ C# จะตัดโค้ดส่วนนี้ออกจากไฟล์ `.dll` ทันที 100%
-  2. **ชั้นที่ 2 (`env.IsDevelopment()`):** ใน `Program.cs` / `Startup.cs` ให้ Map Endpoint เฉพาะเมื่อ `app.Environment.IsDevelopment()` เท่านั้น
-  3. **ชั้นที่ 3 (`appsettings.Development.json`):** เปลี่ยน URL ของ ThaID และ DOPA ให้ชี้มาที่ Local Mock Endpoints **เฉพาะใน `appsettings.Development.json` เท่านั้น** ส่วน `appsettings.json` หลักต้องคง URL จริงของกรมการปกครอง (`https://imauth.bora.dopa.go.th/...`) ไว้เสมอ
-- **โครงสร้าง Local Dev Mock Endpoints (`#if DEBUG`):**
-  - `GET /dev-mock/thaid/authorize`:
-    - รับ Query `client_id`, `redirect_uri`, `state`, `code_challenge`, `code_challenge_method` (และ `scenario` เสริม เช่น `success`, `deny`, `invalid_state`, `expired_code`)
-    - เก็บ `code_challenge` คู่กับ `code` ไว้ใน Memory ชั่วคราว
-    - ตอบกลับ **`HTTP 302 Redirect`** ไปยัง:
-      - กรณีปกติ: `${redirect_uri}?code=mock-auth-code-001&state=${state}`
-      - กรณีผู้ใช้กดปฏิเสธ (`UC-THAID-06`): `${redirect_uri}?error=access_denied&error_description=User%20denied%20consent&state=${state}`
-      - กรณีทดสอบ CSRF (`UC-THAID-02`): `${redirect_uri}?code=mock-auth-code-001&state=tampered-invalid-state`
-  - `POST /dev-mock/thaid/token`:
-    - รับ Form `grant_type=authorization_code`, `code`, `redirect_uri`, `code_verifier`
-    - ตรวจสอบ `PkceHelper.VerifyCodeChallenge(code_verifier, storedChallenge)`
-    - คืน JSON ข้อมูลประชาชนครบ 20 Scopes ตาม `<SDK_ROOT>/docs/providers/thaid.md` (หรือคืน `HTTP 400 {"error":"invalid_grant"}` ตาม Use Case ที่ทดสอบ)
-  - `POST /dev-mock/thaid/introspect` และ `POST /dev-mock/thaid/revoke`:
-    - คืน `{"active": true}` (หรือ `{"active": false}`) และ `{"message": "revoked"}`
-  - `POST /dev-mock/dopa/CheckCardByLaser` และ `POST /dev-mock/dopa/CheckCardByCID`:
-    - ตรวจสอบข้อมูลจาก Request Body แล้วคืน JSON ตาม `<SDK_ROOT>/docs/providers/dopa.md` (`{"IsError": false, "Code": 0, "Desc": "สถานะปกติ"}` หรือ Error ตามเงื่อนไข)
-
-##### ตารางมาตรฐาน 12 Use Cases ที่ต้องรองรับในการจำลอง (อ้างอิงโครงสร้างจริงจาก `<SDK_ROOT>/docs/providers/thaid.md` และ `dopa.md`)
+##### ตารางมาตรฐาน 12 Use Cases ที่ `<SDK_ROOT>/MockServer` และ `<SDK_ROOT>/Tests` รองรับครบถ้วน
 
 **1) ฝั่ง ThaID (`IThaIdProvider`) — 6 Use Cases:**
 
-| รหัส | ชื่อสถานการณ์ (Scenario) | เงื่อนไขทริกเกอร์ (Trigger) | พฤติกรรมและผลลัพธ์ที่ต้องจำลอง |
+| รหัส | ชื่อสถานการณ์ (Scenario) | เงื่อนไขทริกเกอร์บน MockServer | พฤติกรรมและผลลัพธ์ที่ได้รับ |
 | :--- | :--- | :--- | :--- |
-| **`UC-THAID-01`** | **Happy Path (OAuth 302 Redirect + PKCE + 20 Scopes)** | `code` ปกติ (เช่น `"mock-auth-code-001"`) และ `state` / `code_verifier` ถูกต้อง | `/authorize` Redirect `302 Found` กลับมาพร้อม `code` & `state` -> `/token` ตรวจ PKCE ผ่าน และคืน `VerificationResult.Success(data)` ครบ 20 Scopes (`pid`: `"1234567890121"`, `title`: `"นาย"`, `title_en`: `"Mr."`, `given_name`: `"สมชาย"`, `family_name`: `"ใจดี"`, `name`: `"นาย สมชาย ใจดี"`, `name_en`: `"Mr. Somchai Jaidee"`, `gender`: `"male"`, `birthdate`: `"1990-01-31"`, `address`, `house_address`, `smartcard_code`: `"ME0123456789"`, `date_of_issuance`, `date_of_expiry`, `ial`: `2.3`, `access_token`, `refresh_token`, `id_token`, `token_type`: `"Bearer"`, `expires_in`: `3600`, `scope`) |
-| **`UC-THAID-02`** | **Invalid / Mismatched State (CSRF Protection)** | `State` ไม่ตรงกับ `expected_state` หรือ `code == "mock-invalid-state"` | คืน `VerificationResult.Failure("INVALID_STATE", "Invalid state parameter")` ทันทีโดยไม่แลก Token |
-| **`UC-THAID-03`** | **Expired / Invalid Authorization Code** | `code == "mock-expired-code"` หรือ PKCE `code_verifier` ไม่ตรง | `/token` ตอบกลับ HTTP `400 Bad Request` (`{"error":"invalid_grant","error_description":"Authorization code has expired"}`) -> SDK คืน `ErrorCode = "TOKEN_EXCHANGE_FAILED"`, `HttpStatusCode = 400` |
-| **`UC-THAID-04`** | **ThaID Server / Network Timeout** | `code == "mock-timeout"` | จำลอง `HttpRequestException` / Timeout -> SDK คืน `ErrorCode = "NETWORK_ERROR"` |
-| **`UC-THAID-05`** | **Token Introspection & Revocation** | เรียก `InspectTokenAsync` / `RevokeTokenAsync` | ถ้า `token == "mock-expired-token"` คืน `{"active": false}` / ถ้า Token ปกติคืน `{"active": true, "scope": "openid pid"}` และ Revoke คืน `{"message": "revoked"}` |
-| **`UC-THAID-06`** | **User Denied Consent on Redirect (กดยกเลิกในแอป ThaID)** | ผู้ใช้กดปฏิเสธที่หน้า `/authorize` (`?scenario=deny`) หรือ Callback ไม่มีค่า `code` | `/authorize` Redirect `302 Found` กลับไปที่ `${redirect_uri}?error=access_denied&error_description=User%20denied%20consent&state=${state}` และหากส่งเข้า `VerifyAsync` โดยไม่มี `code` จะคืน `ErrorCode = "MISSING_AUTH_CODE"` |
+| **`UC-THAID-01`** | **Happy Path (OAuth 302 Redirect + PKCE + 20 Scopes)** | เลือกปุ่ม `✅ ยินยอมสำเร็จ` หรือ `?scenario=success` (`code = "mock-auth-code-001"`) | `/api/v2/oauth2/auth/` Redirect `302 Found` กลับไปที่ `redirect_uri` -> `/api/v2/oauth2/token/` ตรวจ PKCE (`S256`) ผ่าน และคืน `VerificationResult.Success(data)` ครบ 20 Scopes (`pid`: `"1234567890121"`, `title`: `"นาย"`, `title_en`: `"Mr."`, `given_name`: `"สมชาย"`, `family_name`: `"ใจดี"`, `name`: `"นาย สมชาย ใจดี"`, `name_en`: `"Mr. Somchai Jaidee"`, `gender`: `"male"`, `birthdate`: `"1990-01-31"`, `address`, `house_address`, `smartcard_code`: `"ME0123456789"`, `date_of_issuance`, `date_of_expiry`, `ial`: `2.3`, `access_token`, `refresh_token`, `id_token`, `token_type`: `"Bearer"`, `expires_in`: `3600`, `scope`) |
+| **`UC-THAID-02`** | **Invalid / Mismatched State (CSRF Protection)** | เลือกปุ่ม `⚠️ จำลองค่า State ไม่ตรง` หรือ `?scenario=invalid_state` | Redirect `302 Found` กลับไปพร้อม `state=tampered-invalid-state` -> SDK คืน `ErrorCode = "INVALID_STATE"` ทันทีโดยไม่แลก Token |
+| **`UC-THAID-03`** | **Expired / Invalid Authorization Code** | เลือกปุ่ม `⏰ จำลอง Code หมดอายุ` หรือ `?scenario=expired_code` (`code = "mock-expired-code"`) | `/api/v2/oauth2/token/` ตอบกลับ HTTP `400 Bad Request` (`{"error":"invalid_grant"}`) -> SDK คืน `ErrorCode = "TOKEN_EXCHANGE_FAILED"`, `HttpStatusCode = 400` |
+| **`UC-THAID-04`** | **ThaID Server / Network Timeout** | เลือกปุ่ม `🔌 จำลองโครงข่ายล่ม` หรือ `?scenario=timeout` (`code = "mock-timeout"`) | `/api/v2/oauth2/token/` ตัดการเชื่อมต่อ -> SDK คืน `ErrorCode = "NETWORK_ERROR"` |
+| **`UC-THAID-05`** | **Token Introspection & Revocation** | เรียก `/api/v2/oauth2/introspect/` หรือ `/api/v2/oauth2/revoke/` | ถ้า `token == "mock-expired-token"` หรือถูก Revoke ไปแล้ว คืน `{"active": false}` / ถ้า Token ปกติคืน `{"active": true, "scope": "..."}` และ Revoke คืน `{"message": "revoked"}` |
+| **`UC-THAID-06`** | **User Denied Consent on Redirect (กดยกเลิกในแอป ThaID)** | เลือกปุ่ม `❌ ประชาชนกดยกเลิก` หรือ `?scenario=deny` | `/api/v2/oauth2/auth/` Redirect `302 Found` กลับไปที่ `${redirect_uri}?error=access_denied&error_description=User%20denied%20consent&state=${state}` และหากส่งเข้า `VerifyAsync` โดยไม่มี `code` จะคืน `ErrorCode = "MISSING_AUTH_CODE"` |
 
 **2) ฝั่ง DOPA (`IDopaProvider`) — 6 Use Cases:**
 
-| รหัส | ชื่อสถานการณ์ (Scenario) | เงื่อนไขทริกเกอร์ (Trigger) | พฤติกรรมและผลลัพธ์ที่ต้องจำลอง |
+| รหัส | ชื่อสถานการณ์ (Scenario) | เงื่อนไขทริกเกอร์บน MockServer / SDK | พฤติกรรมและผลลัพธ์ที่ได้รับ |
 | :--- | :--- | :--- | :--- |
 | **`UC-DOPA-01`** | **Happy Path (สถานะปกติ - ทั้ง Laser และ Chip)** | `pid` ถูกหลัก Modulo 11 (เช่น `"1234567890121"`) และ `laserId` / `chipNo` ปกติ | คืน `VerificationResult.Success(data)` ที่มี `IsError: false`, `Code: 0`, `Desc: "สถานะปกติ"` |
 | **`UC-DOPA-02`** | **Invalid PID Format / Checksum (Modulo 11 ไม่ผ่าน)** | `pid` ไม่ครบ 13 หลัก หรือหลักที่ 13 ไม่ตรงสูตร Modulo 11 (เช่น `"1234567890122"`) | SDK ตรวจจับและคืน `ErrorCode = "INVALID_PID_FORMAT"` ทันทีโดยไม่ยิง API |
 | **`UC-DOPA-03`** | **Missing Parameters (ข้อมูลไม่ครบ)** | ส่ง `firstName`, `lastName`, `birthDate`, `laserId`, `chipNo`, หรือ `bp1No` เป็นค่าว่าง | SDK ตรวจจับและคืน `ErrorCode = "MISSING_PARAMETERS"` ทันทีโดยไม่ยิง API |
-| **`UC-DOPA-04`** | **Card Verification Rejected (เลขหลังบัตรไม่ตรง / บัตรถูกยกเลิก)** | `laserId == "ME9999999999"` หรือ `chipNo == "0000000000000000"` | DOPA API ตอบกลับ `{"IsError": true, "ErrorMessage": "ไม่พบเลข Laser จาก PID นี้"}` -> SDK คืน `IsSuccess = false`, `ErrorCode = "CARD_VERIFICATION_REJECTED"`, พร้อมเก็บ `Data["IsError"] = true` |
-| **`UC-DOPA-05`** | **DOPA Gateway Unavailable (HTTP 500 / 503)** | `laserId == "ME5000000000"` หรือ `chipNo == "5000000000000000"` | DOPA API ตอบกลับ HTTP `503 Service Unavailable` -> SDK คืน `ErrorCode = "DOPA_API_FAILED"`, `HttpStatusCode = 503` |
-| **`UC-DOPA-06`** | **Network / VPN Timeout** | `laserId == "METIMEOUT000"` | จำลอง `HttpRequestException` -> SDK คืน `ErrorCode = "NETWORK_ERROR"` |
+| **`UC-DOPA-04`** | **Card Verification Rejected (เลขหลังบัตรไม่ตรง / บัตรถูกยกเลิก)** | `laserId == "ME9999999999"` หรือ `chipNo == "0000000000000000"` | MockServer ตอบกลับ `{"IsError": true, "ErrorMessage": "ไม่พบเลข Laser จาก PID นี้"}` -> SDK คืน `IsSuccess = false`, `ErrorCode = "CARD_VERIFICATION_REJECTED"` |
+| **`UC-DOPA-05`** | **DOPA Gateway Unavailable (HTTP 503)** | `laserId == "ME5000000000"` หรือ `chipNo == "5000000000000000"` | MockServer ตอบกลับ HTTP `503 Service Unavailable` -> SDK คืน `ErrorCode = "DOPA_API_FAILED"`, `HttpStatusCode = 503` |
+| **`UC-DOPA-06`** | **Network / VPN Timeout** | `laserId == "METIMEOUT000"` หรือ `chipNo == "TIMEOUT000000000"` | MockServer ตัดการเชื่อมต่อ -> SDK คืน `ErrorCode = "NETWORK_ERROR"` |
 
 ---
 
 ## Step 7: การตรวจสอบและ Build ยืนยันผล
-1. รัน `dotnet build` ที่โปรเจกต์ปลายทาง (ทั้ง `-c Debug` และ `-c Release`) ยืนยันว่า Build ผ่านเรียบร้อยโดยไม่มี Error และในโหมด `Release` ไม่มีโค้ด Mock หลงเหลืออยู่
-2. ตรวจสอบ `git diff` ของไฟล์ `.csproj` ในโปรเจกต์ปลายทางว่าใช้ **Relative Path** สำหรับ `<ProjectReference>` และไม่มีการแก้ไข `<PackageReference>` เดิม
+1. รัน `dotnet build` ที่โปรเจกต์ปลายทาง ยืนยันว่า Build ผ่านเรียบร้อยโดยไม่มี Error
+2. ตรวจสอบ `git diff` ของไฟล์ `.csproj` ในโปรเจกต์ปลายทางว่าใช้ **Relative Path** สำหรับ `<ProjectReference>` และไม่มีการแก้ไข `<PackageReference>` เดิม หรือเพิ่มโค้ด Mock ใดๆ ลงในโปรเจกต์ปลายทาง
+
 
 

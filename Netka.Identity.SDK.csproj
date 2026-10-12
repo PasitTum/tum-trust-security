@@ -19,6 +19,9 @@
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
+    <Compile Remove="MockServer\**" />
+    <EmbeddedResource Remove="MockServer\**" />
+    <None Remove="MockServer\**" />
   </ItemGroup>
 
   <!-- Use base x.0.0 minimum versions so consuming apps on any 5.0.x / 8.0.x / 10.0.x patch never hit NU1605 package downgrade errors -->

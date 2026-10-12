@@ -9,6 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netka.Identity.SDK.Tests", "Tests\Netka.Identity.SDK.Tests.csproj", "{DFF7075A-5A44-4CC4-B828-6F61466A23A8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MockServer", "MockServer", "{2E7BEBF4-1607-8F05-7F6C-F1CA76791D36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Netka.Identity.MockServer", "MockServer\Netka.Identity.MockServer.csproj", "{8F0544DB-58C9-4777-B22C-FCF864C389EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,11 +47,24 @@ Global
 		{DFF7075A-5A44-4CC4-B828-6F61466A23A8}.Release|x64.Build.0 = Release|Any CPU
 		{DFF7075A-5A44-4CC4-B828-6F61466A23A8}.Release|x86.ActiveCfg = Release|Any CPU
 		{DFF7075A-5A44-4CC4-B828-6F61466A23A8}.Release|x86.Build.0 = Release|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Debug|x64.Build.0 = Debug|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Debug|x86.Build.0 = Debug|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Release|x64.ActiveCfg = Release|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Release|x64.Build.0 = Release|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Release|x86.ActiveCfg = Release|Any CPU
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DFF7075A-5A44-4CC4-B828-6F61466A23A8} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{8F0544DB-58C9-4777-B22C-FCF864C389EE} = {2E7BEBF4-1607-8F05-7F6C-F1CA76791D36}
 	EndGlobalSection
 EndGlobal
