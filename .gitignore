@@ -1,0 +1,33 @@
+# Build results
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+
+# NuGet
+packages/
+.nuget/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Test coverage
+coverage/
+*.trx
+
+# Build artifacts
+dist/
+release/
+*.nupkg
+
+# Runtime
+appsettings.local.json
+
+# Claude Code (track skills in repo, ignore local settings)
+.claude/*
+!.claude/skills/
