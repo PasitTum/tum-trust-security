@@ -5,11 +5,34 @@
 - **Interface:** `Netka.Identity.Core.Interfaces.IThaIdProvider` (สืบทอดจาก `IVerificationProvider`)
 - **Implementation:** `Netka.Identity.Infrastructure.Providers.ThaIdProvider`
 - **มาตรฐานการเชื่อมต่อ:** OAuth 2.0 Authorization Code Flow + PKCE (`S256`) + HTTP Basic Authentication (`ClientId:ClientSecret`)
-- **เอกสารต้นฉบับ:** [ThaID Developer Docs](https://imauth.bora.dopa.go.th/dev/doc/)
+- **OpenID Connect Discovery (Live URL):** [https://imauth.bora.dopa.go.th/.well-known/openid-configuration](https://imauth.bora.dopa.go.th/.well-known/openid-configuration)
+- **JWKS Endpoint (Live URL):** [https://imauth.bora.dopa.go.th/jwks/](https://imauth.bora.dopa.go.th/jwks/)
+
+> **หมายเหตุ:** เอกสารคู่มือฉบับเต็มของกรมการปกครอง (BORA) จะแจกจ่ายให้เฉพาะหน่วยงานที่ลงทะเบียน Relying Party (RP) เท่านั้น ส่วนลิงก์ `/dev/doc/` เดิมถูกปิดไปแล้ว (`404 Not Found`) ดังนั้นจึงบันทึกข้อมูลโครงสร้างจริงจาก `.well-known/openid-configuration` ของกรมการปกครองไว้ในไฟล์นี้โดยตรง
 
 ---
 
-## 1. การตั้งค่า (`appsettings.json`)
+## 1. ข้อมูลจริงจาก OpenID Configuration ของ ThaID
+
+- **Issuer:** `https://imauth.bora.dopa.go.th`
+- **Authorization Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/`
+- **Token Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/token/`
+- **UserInfo Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/`
+- **Revocation Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/revoke/` (หรือ `/api/v2/oauth2/token/revoke/`)
+- **Introspect / Inspect Endpoint:** `https://imauth.bora.dopa.go.th/api/v2/oauth2/introspect/` (หรือ `/api/v2/oauth2/token/inspect/`)
+- **Grant Types Supported:** `authorization_code`, `refresh_token`
+- **Token Endpoint Auth Methods:** `client_secret_basic`, `client_secret_post`
+- **ID Token Signing Algorithm:** `ES256`
+- **Scopes ที่รองรับทั้งหมด (20 Scopes จริงจากระบบ ThaID):**
+  - `openid`, `pid`, `address`, `gender`, `birthdate`
+  - `given_name`, `middle_name`, `family_name`, `name`
+  - `given_name_en`, `middle_name_en`, `family_name_en`, `name_en`
+  - `title`, `title_en`, `ial`, `smartcard_code`
+  - `date_of_expiry`, `date_of_issuance`, `house_address`
+
+---
+
+## 2. การตั้งค่า (`appsettings.json`)
 
 ```json
 {
@@ -24,19 +47,19 @@
       "RevokeUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/revoke/",
       "UserInfoUrl": "https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/",
       "RedirectUri": "https://your-domain.com/api/identity/thaid/callback",
-      "Scope": "openid pid profile",
+      "Scope": "openid pid given_name family_name birthdate",
       "AllowUntrustedCertificates": false
     }
   }
 }
 ```
-> **หมายเหตุ:** `ClientId` และ `ClientSecret` เป็นค่าบังคับ (Required) ส่วน URL Endpoints และ `Scope` มีค่า Default ของกรมการปกครองเตรียมไว้ให้ใน `ThaIdProvider` แล้ว สามารถละไว้ได้หากใช้ Production Endpoint มาตรฐาน
+> **หมายเหตุ:** `ClientId` และ `ClientSecret` เป็นค่าบังคับ (Required) ส่วน URL Endpoints และ `Scope` มีค่า Default เตรียมไว้ให้ใน `ThaIdProvider` แล้ว สามารถละไว้ได้หากใช้ Endpoint มาตรฐาน
 
 ---
 
-## 2. เมธอดและการรับส่งข้อมูล (`IThaIdProvider`)
+## 3. เมธอดและการรับส่งข้อมูล (`IThaIdProvider`)
 
-### 2.1 สร้าง Authorization URL (`GetAuthorizationUrl`)
+### 3.1 สร้าง Authorization URL (`GetAuthorizationUrl`)
 ```csharp
 string codeVerifier = PkceHelper.GenerateCodeVerifier();
 string codeChallenge = PkceHelper.GenerateCodeChallenge(codeVerifier);
@@ -50,7 +73,7 @@ string authUrl = _thaIdProvider.GetAuthorizationUrl(
     nonce: null);
 ```
 
-### 2.2 แลก Authorization Code เป็น Token (`ExchangeCodeAsync` หรือ `VerifyAsync`)
+### 3.2 แลก Authorization Code เป็น Token (`ExchangeCodeAsync` หรือ `VerifyAsync`)
 - **เรียกตรงผ่าน `ExchangeCodeAsync`:**
   ```csharp
   VerificationResult result = await _thaIdProvider.ExchangeCodeAsync(
@@ -66,15 +89,15 @@ string authUrl = _thaIdProvider.GetAuthorizationUrl(
   - `request.AdditionalParameters["expected_state"]`: ค่า `state` ที่คาดหวัง (หากส่งมา SDK จะตรวจเทียบป้องกัน CSRF ให้ทันที)
   - `request.AdditionalParameters["code_verifier"]`: ค่า PKCE `code_verifier`
 
-### 2.3 เมธอดจัดการ Token และดึงข้อมูลผู้ใช้เพิ่มเติม
+### 3.3 เมธอดจัดการ Token และดึงข้อมูลผู้ใช้เพิ่มเติม
 - **`GetUserInfoAsync(string accessToken, CancellationToken ct)`:** ดึงข้อมูลโปรไฟล์จาก `/api/v2/oauth2/userinfo/` ด้วย `Bearer {accessToken}`
 - **`RefreshTokenAsync(string refreshToken, CancellationToken ct)`:** ขอ Access Token ใหม่ด้วย `grant_type=refresh_token`
-- **`InspectTokenAsync(string accessToken, CancellationToken ct)`:** ตรวจสอบสถานะ Token ที่ `/api/v2/oauth2/token/inspect/`
-- **`RevokeTokenAsync(string token, CancellationToken ct)`:** ยกเลิก Token ที่ `/api/v2/oauth2/token/revoke/`
+- **`InspectTokenAsync(string accessToken, CancellationToken ct)`:** ตรวจสอบสถานะ Token
+- **`RevokeTokenAsync(string token, CancellationToken ct)`:** ยกเลิก Token
 
 ---
 
-## 3. ข้อมูลขาออก (`VerificationResult.Data` — Pass-Through Keys)
+## 4. ข้อมูลขาออก (`VerificationResult.Data` — Pass-Through Keys)
 
 SDK ส่งค่า JSON ดิบจาก ThaID กลับมาใน `result.Data` (ค้นหา Key แบบไม่สนตัวพิมพ์เล็ก-ใหญ่ `OrdinalIgnoreCase` หรือใช้ `result.Data.GetStringValue("key")`):
 
@@ -82,17 +105,20 @@ SDK ส่งค่า JSON ดิบจาก ThaID กลับมาใน `r
 | :--- | :--- | :--- |
 | `"access_token"` | `ExchangeCodeAsync`, `RefreshTokenAsync` | OAuth 2.0 Access Token |
 | `"refresh_token"` | `ExchangeCodeAsync`, `RefreshTokenAsync` | OAuth 2.0 Refresh Token |
-| `"id_token"` | `ExchangeCodeAsync` | OIDC JWT ID Token |
+| `"id_token"` | `ExchangeCodeAsync` | OIDC JWT ID Token (ลงนามด้วย `ES256`) |
 | `"token_type"` | `ExchangeCodeAsync`, `RefreshTokenAsync` | เช่น `"Bearer"` |
 | `"expires_in"` | `ExchangeCodeAsync`, `RefreshTokenAsync` | อายุของ Token (วินาที) |
 | `"scope"` | `ExchangeCodeAsync`, `InspectTokenAsync` | รายการ Scope ที่ได้รับอนุมัติ |
 | `"pid"` | `ExchangeCodeAsync`, `GetUserInfoAsync` | เลขประจำตัวประชาชน 13 หลัก |
-| `"given_name"`, `"family_name"`, `"birthdate"`, `"titleTh"` | `GetUserInfoAsync` / `ExchangeCodeAsync` | ข้อมูลส่วนบุคคลตาม Scope ที่ร้องขอ |
+| `"given_name"`, `"middle_name"`, `"family_name"`, `"name"` | `GetUserInfoAsync` / `ExchangeCodeAsync` | ชื่อ-นามสกุลภาษาไทย |
+| `"given_name_en"`, `"middle_name_en"`, `"family_name_en"`, `"name_en"` | `GetUserInfoAsync` / `ExchangeCodeAsync` | ชื่อ-นามสกุลภาษาอังกฤษ |
+| `"title"`, `"title_en"`, `"gender"`, `"birthdate"` | `GetUserInfoAsync` / `ExchangeCodeAsync` | คำนำหน้าชื่อ, เพศ, วันเกิด |
+| `"address"`, `"house_address"`, `"smartcard_code"`, `"date_of_issuance"`, `"date_of_expiry"`, `"ial"` | `GetUserInfoAsync` / `ExchangeCodeAsync` | ที่อยู่ตามทะเบียนบ้าน, รหัสบัตร, วันออกบัตร/หมดอายุ, ระดับ IAL |
 | `"active"` | `InspectTokenAsync` | สถานะของ Token (`true` / `false`) |
 
 ---
 
-## 4. รหัสข้อผิดพลาด (`result.ErrorCode`)
+## 5. รหัสข้อผิดพลาด (`result.ErrorCode`)
 - `MISSING_AUTH_CODE`: ไม่ได้ส่ง `authorizationCode`
 - `MISSING_REDIRECT_URI`: ไม่ได้ระบุ `redirectUri` ทั้งในพารามิเตอร์และใน Config
 - `INVALID_STATE`: ค่า `request.State` ไม่ตรงกับ `expected_state`
