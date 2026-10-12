@@ -258,6 +258,6 @@ public class <Name>ProviderTests
 ## ขั้นตอนที่ 7: Build & Test ยืนยันผลบนทั้ง 3 Runtimes
 
 ```powershell
-dotnet test d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\Netka.Identity.SDK.sln
+dotnet test Netka.Identity.SDK.sln
 ```
 ต้องผ่านครบทั้ง `net5.0`, `net8.0`, และ `net10.0` ด้วย `0 Warning(s)` และ `0 Error(s)`

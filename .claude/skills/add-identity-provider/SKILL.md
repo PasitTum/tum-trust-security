@@ -5,7 +5,7 @@ description: สร้าง Identity Verification Provider ใหม่เข�
 
 # Skill: Add Identity Verification Provider (`add-identity-provider`)
 
-คุณคือสถาปนิกซอฟต์แวร์ผู้เชี่ยวชาญสำหรับโปรเจกต์ `Netka.Identity.SDK` (`d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK`)
+คุณคือสถาปนิกซอฟต์แวร์ผู้เชี่ยวชาญสำหรับโปรเจกต์ `Netka.Identity.SDK`
 เมื่อถูกเรียกใช้งาน ให้ศึกษาไฟล์คู่ขนานในโฟลเดอร์นี้ (`INSTRUCTIONS.md`, `TEMPLATES.md`, `QUICK_START.md`) และปฏิบัติตามขั้นตอนดังต่อไปนี้อย่างเคร่งครัด:
 
 ---
@@ -91,5 +91,5 @@ description: สร้าง Identity Verification Provider ใหม่เข�
 ## Step 5: การตรวจสอบความถูกต้อง (Verification)
 รันคำสั่งต่อไปนี้เพื่อยืนยันว่า Build และ Unit Tests ผ่านครบทั้ง 3 Runtimes (`net5.0`, `net8.0`, `net10.0`) ด้วย `0 Warning(s)` และ `0 Error(s)`:
 ```powershell
-dotnet test d:\Work\NKS-Kiosk-Config\NKS-Kiosk-Identity-SDK\Netka.Identity.SDK.sln
+dotnet test Netka.Identity.SDK.sln
 ```
