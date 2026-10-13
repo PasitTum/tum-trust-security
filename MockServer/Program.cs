@@ -249,7 +249,6 @@ IResult HandleThaIdAuthorize(HttpContext ctx)
     return Results.Content(consentHtml, "text/html; charset=utf-8");
 }
 
-app.MapGet("/api/v2/oauth2/auth/", (Delegate)HandleThaIdAuthorize);
 app.MapGet("/api/v2/oauth2/auth", (Delegate)HandleThaIdAuthorize);
 
 // ============================================================================
@@ -258,8 +257,27 @@ app.MapGet("/api/v2/oauth2/auth", (Delegate)HandleThaIdAuthorize);
 async Task<IResult> HandleThaIdToken(HttpContext ctx)
 {
     var form = await ctx.Request.ReadFormAsync();
+    string grantType = form["grant_type"].ToString();
     string code = form["code"].ToString();
+    string refreshToken = form["refresh_token"].ToString();
     string codeVerifier = form["code_verifier"].ToString();
+
+    // UC-THAID-05: Refresh Token Grant
+    if (string.Equals(grantType, "refresh_token", StringComparison.OrdinalIgnoreCase))
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return Results.BadRequest(new { error = "invalid_request", error_description = "Missing refresh_token parameter" });
+        }
+        return Results.Json(new
+        {
+            access_token = "mock-thaid-refreshed-token",
+            token_type = "Bearer",
+            expires_in = 3600,
+            refresh_token = "mock-thaid-new-refresh-token",
+            scope = string.Join(' ', officialThaIdScopes)
+        });
+    }
 
     if (string.IsNullOrWhiteSpace(code))
     {
@@ -300,7 +318,6 @@ async Task<IResult> HandleThaIdToken(HttpContext ctx)
     return Results.Json(BuildThaIdCitizenPayload(includeTokens: true));
 }
 
-app.MapPost("/api/v2/oauth2/token/", (Delegate)HandleThaIdToken);
 app.MapPost("/api/v2/oauth2/token", (Delegate)HandleThaIdToken);
 
 // ============================================================================
@@ -326,7 +343,6 @@ async Task<IResult> HandleThaIdIntrospect(HttpContext ctx)
     });
 }
 
-app.MapPost("/api/v2/oauth2/introspect/", (Delegate)HandleThaIdIntrospect);
 app.MapPost("/api/v2/oauth2/introspect", (Delegate)HandleThaIdIntrospect);
 
 // ============================================================================
@@ -344,7 +360,6 @@ async Task<IResult> HandleThaIdRevoke(HttpContext ctx)
     return Results.Json(new { message = "revoked" });
 }
 
-app.MapPost("/api/v2/oauth2/revoke/", (Delegate)HandleThaIdRevoke);
 app.MapPost("/api/v2/oauth2/revoke", (Delegate)HandleThaIdRevoke);
 
 // ============================================================================
@@ -367,7 +382,6 @@ IResult HandleThaIdUserInfo(HttpContext ctx)
     return Results.Json(BuildThaIdCitizenPayload(includeTokens: false));
 }
 
-app.MapGet("/api/v2/oauth2/userinfo/", (Delegate)HandleThaIdUserInfo);
 app.MapGet("/api/v2/oauth2/userinfo", (Delegate)HandleThaIdUserInfo);
 
 // ============================================================================
@@ -375,9 +389,25 @@ app.MapGet("/api/v2/oauth2/userinfo", (Delegate)HandleThaIdUserInfo);
 // ============================================================================
 app.MapPost("/CheckCardByLaser", async (HttpContext ctx) =>
 {
-    using var doc = await JsonDocument.ParseAsync(ctx.Request.Body);
-    var root = doc.RootElement;
-    string laser = root.TryGetProperty("Laser", out var laserProp) ? laserProp.GetString() ?? "" : "";
+    string laser = "";
+    try
+    {
+        using var reader = new StreamReader(ctx.Request.Body, System.Text.Encoding.UTF8);
+        string body = await reader.ReadToEndAsync();
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            using var doc = JsonDocument.Parse(body);
+            laser = doc.RootElement.TryGetProperty("Laser", out var laserProp) ? laserProp.GetString() ?? "" : "";
+        }
+    }
+    catch
+    {
+        if (ctx.Request.HasFormContentType)
+        {
+            var form = await ctx.Request.ReadFormAsync();
+            laser = form["Laser"].ToString();
+        }
+    }
 
     // UC-DOPA-06: Network / VPN Timeout
     if (string.Equals(laser, "METIMEOUT000", StringComparison.OrdinalIgnoreCase))
@@ -420,9 +450,25 @@ app.MapPost("/CheckCardByLaser", async (HttpContext ctx) =>
 // ============================================================================
 app.MapPost("/CheckCardByCID", async (HttpContext ctx) =>
 {
-    using var doc = await JsonDocument.ParseAsync(ctx.Request.Body);
-    var root = doc.RootElement;
-    string chipNo = root.TryGetProperty("ChipNo", out var chipProp) ? chipProp.GetString() ?? "" : "";
+    string chipNo = "";
+    try
+    {
+        using var reader = new StreamReader(ctx.Request.Body, System.Text.Encoding.UTF8);
+        string body = await reader.ReadToEndAsync();
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            using var doc = JsonDocument.Parse(body);
+            chipNo = doc.RootElement.TryGetProperty("ChipNo", out var chipProp) ? chipProp.GetString() ?? "" : "";
+        }
+    }
+    catch
+    {
+        if (ctx.Request.HasFormContentType)
+        {
+            var form = await ctx.Request.ReadFormAsync();
+            chipNo = form["ChipNo"].ToString();
+        }
+    }
 
     // UC-DOPA-06: Network / VPN Timeout
     if (string.Equals(chipNo, "TIMEOUT000000000", StringComparison.OrdinalIgnoreCase))
@@ -457,6 +503,134 @@ app.MapPost("/CheckCardByCID", async (HttpContext ctx) =>
         IsError = false,
         Code = 0,
         Desc = "สถานะปกติ"
+    });
+});
+
+// ============================================================================
+// 9. ThaID JWKS Endpoint (/jwks/ and /.well-known/jwks.json)
+// ============================================================================
+IResult HandleThaIdJwks() => Results.Json(new
+{
+    keys = new[]
+    {
+        new
+        {
+            kty = "EC",
+            crv = "P-256",
+            use = "sig",
+            alg = "ES256",
+            kid = "thaid-mock-key-001"
+        }
+    }
+});
+
+app.MapGet("/jwks", (Delegate)HandleThaIdJwks);
+app.MapGet("/.well-known/jwks.json", (Delegate)HandleThaIdJwks);
+
+// ============================================================================
+// 10. DOPA Face Verification Endpoint (/api/v1/face/verify and /CheckFaceByPID)
+// ============================================================================
+async Task<IResult> HandleDopaFaceVerify(HttpContext ctx)
+{
+    string image = "";
+    try
+    {
+        using var reader = new StreamReader(ctx.Request.Body, System.Text.Encoding.UTF8);
+        string body = await reader.ReadToEndAsync();
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            using var doc = JsonDocument.Parse(body);
+            image = doc.RootElement.TryGetProperty("image", out var imgProp) ? imgProp.GetString() ?? "" : "";
+        }
+    }
+    catch
+    {
+        if (ctx.Request.HasFormContentType)
+        {
+            var form = await ctx.Request.ReadFormAsync();
+            image = form["image"].ToString();
+        }
+    }
+
+    if (image.Contains("TIMEOUT", StringComparison.OrdinalIgnoreCase))
+    {
+        ctx.Abort();
+        return Results.Empty;
+    }
+
+    if (image.Contains("ERROR503", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(
+            new { message = "DOPA Face Gateway Service Unavailable" },
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    if (image.Contains("MISMATCH", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(new
+        {
+            result_code = "1",
+            result_text = "ใบหน้าไม่ตรงกับฐานข้อมูลทะเบียนราษฎร",
+            similarity = 0.42,
+            confidence = 42.0,
+            match = false
+        });
+    }
+
+    return Results.Json(new
+    {
+        result_code = "0",
+        result_text = "ใบหน้าตรงกับฐานข้อมูลทะเบียนราษฎร",
+        similarity = 0.965,
+        confidence = 96.5,
+        match = true
+    });
+}
+
+app.MapPost("/api/v1/face/verify", (Delegate)HandleDopaFaceVerify);
+app.MapPost("/CheckFaceByPID", (Delegate)HandleDopaFaceVerify);
+
+// ============================================================================
+// 11. DOPA OAuth 2.0 Client Credentials Token Endpoint (/oauth/token)
+// ============================================================================
+app.MapPost("/oauth/token", async (HttpContext ctx) =>
+{
+    string grantType = "";
+    string clientId = "";
+
+    if (ctx.Request.HasFormContentType)
+    {
+        var form = await ctx.Request.ReadFormAsync();
+        grantType = form["grant_type"].ToString();
+        clientId = form["client_id"].ToString();
+    }
+    else
+    {
+        try
+        {
+            using var reader = new StreamReader(ctx.Request.Body, System.Text.Encoding.UTF8);
+            string body = await reader.ReadToEndAsync();
+            if (!string.IsNullOrWhiteSpace(body))
+            {
+                using var doc = JsonDocument.Parse(body);
+                grantType = doc.RootElement.TryGetProperty("grant_type", out var g) ? g.GetString() ?? "" : "";
+                clientId = doc.RootElement.TryGetProperty("client_id", out var c) ? c.GetString() ?? "" : "";
+            }
+        }
+        catch { }
+    }
+
+    if (!string.Equals(grantType, "client_credentials", StringComparison.Ordinal) ||
+        string.IsNullOrWhiteSpace(clientId))
+    {
+        return Results.BadRequest(new { error = "invalid_client" });
+    }
+
+    return Results.Json(new
+    {
+        access_token = "mock-dopa-access-token-2026",
+        token_type = "Bearer",
+        expires_in = 3600
     });
 });
 

@@ -39,4 +39,36 @@ public interface IDopaProvider : IVerificationProvider
         string chipNo,
         string? bp1No = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Performs 1:1 biometric face verification with the DOPA Face Verification API using a 13-digit PID and a Base64-encoded face image.
+    /// Automatically strips any <c>data:image/...;base64,</c> prefix before sending to DOPA.
+    /// </summary>
+    /// <param name="pid">13-digit Thai National ID number.</param>
+    /// <param name="faceImageBase64">Base64-encoded JPEG/PNG image of the citizen's face (with or without <c>data:image/...;base64,</c> prefix).</param>
+    /// <param name="threshold">Optional similarity threshold override (0.0 to 1.0). If omitted, uses <see cref="DopaOptions.FaceThreshold"/> (default 0.80).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="VerificationResult"/> containing the raw face verification response (<c>similarity</c>, <c>confidence</c>, <c>match</c>, <c>result_code</c>, <c>result_text</c>).</returns>
+    Task<VerificationResult> VerifyByFaceAsync(
+        string pid,
+        string faceImageBase64,
+        float? threshold = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Requests an OAuth 2.0 <c>client_credentials</c> Bearer access token from the configured DOPA Token Endpoint (<see cref="DopaOptions.TokenUrl"/>).
+    /// Note: <see cref="IDopaProvider"/> automatically requests and caches this token when <see cref="DopaOptions.TokenUrl"/> and <see cref="DopaOptions.ClientId"/> are configured.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="VerificationResult"/> containing the token response (<c>access_token</c>, <c>token_type</c>, <c>expires_in</c>).</returns>
+    Task<VerificationResult> RequestAccessTokenAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Performs an active health check / connectivity test against the configured DOPA Gateway or DGA validation service.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="VerificationResult"/> indicating whether the DOPA service is reachable and responsive.</returns>
+    Task<VerificationResult> HealthCheckAsync(
+        CancellationToken cancellationToken = default);
 }

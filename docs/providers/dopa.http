@@ -1,0 +1,127 @@
+# ============================================================================
+# DOPA (กรมการปกครอง) — VS Code REST Client Test File
+# Extension ที่แนะนำใน VS Code: "REST Client" (humao.rest-client)
+# วิธีใช้งาน:
+#   1. รัน MockServer (ถ้าต้องการทดสอบแบบจำลอง — ไม่ต้องสนตำแหน่ง Path / ย้ายเครื่องก็รันได้ทันที):
+#      - ใน VS Code: กด Ctrl+Shift+P -> Tasks: Run Task -> Run MockServer
+#      - หรือคลิกผ่าน Markdown doc: dopa.md -> [▶️ กดรัน MockServer ทันที]
+#      - หรือดับเบิลคลิก run-mockserver.cmd (Windows) / run-mockserver.ps1 (PowerShell) / ./run-mockserver.sh (Mac/Linux)
+#      - หรือ Terminal คำสั่งเดียวจากโฟลเดอร์ใดก็ได้:
+#        dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/Netka.Identity.MockServer.csproj)"
+#   2. ติดตั้ง Extension "REST Client" (Id: humao.rest-client) ใน VS Code
+#   3. คลิกปุ่ม "Send Request" เหนือหัวข้อ ### ที่ต้องการยิงทดสอบได้ทันที
+# ============================================================================
+
+@baseUrl = http://localhost:5199
+@apiKey = mock-dopa-access-token-2026
+@clientId = mock-dopa-client-id
+@clientSecret = mock-dopa-client-secret
+
+### 1. [Endpoint 1/4] ขอ OAuth 2.0 Access Token ด้วย Client Credentials (RequestAccessTokenAsync)
+POST {{baseUrl}}/oauth/token HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id={{clientId}}&client_secret={{clientSecret}}
+
+### 2. [Endpoint 2/4] ตรวจสอบสถานะบัตรด้วยข้อมูลหน้าบัตร + รหัสหลังบัตร Laser ID — กรณีบัตรปกติ (VerifyByLaserAsync)
+POST {{baseUrl}}/CheckCardByLaser HTTP/1.1
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "PID": "1234567890121",
+  "FirstName": "สมชาย",
+  "LastName": "ใจดี",
+  "BirthDay": "25350131",
+  "Laser": "ME0123456789"
+}
+
+### 2.1 [Endpoint 2/4 - Error Case] ตรวจสอบด้วย Laser ID — กรณีสถานะบัตรไม่ปกติ / เลขหลังบัตรไม่ตรง (UC-DOPA-04)
+POST {{baseUrl}}/CheckCardByLaser HTTP/1.1
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "PID": "1234567890121",
+  "FirstName": "สมชาย",
+  "LastName": "ใจดี",
+  "BirthDay": "25350131",
+  "Laser": "ME9999999999"
+}
+
+### 2.2 [Endpoint 2/4 - Error Case] จำลอง DOPA Gateway ขัดข้อง HTTP 503 (UC-DOPA-05)
+POST {{baseUrl}}/CheckCardByLaser HTTP/1.1
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "PID": "1234567890121",
+  "FirstName": "สมชาย",
+  "LastName": "ใจดี",
+  "BirthDay": "25350131",
+  "Laser": "ME5000000000"
+}
+
+### 3. [Endpoint 3/4] ตรวจสอบสถานะบัตรด้วยเลขบัตร + เลขชิปสมาร์ทการ์ด Chip No — กรณีบัตรปกติ (VerifyByChipAsync)
+POST {{baseUrl}}/CheckCardByCID HTTP/1.1
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "PID": "1234567890121",
+  "ChipNo": "0011223344556677",
+  "bp1no": "1234567890"
+}
+
+### 3.1 [Endpoint 3/4 - Error Case] ตรวจสอบด้วยเลขชิป — กรณีข้อมูลชิปไม่ถูกต้อง (UC-DOPA-04)
+POST {{baseUrl}}/CheckCardByCID HTTP/1.1
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "PID": "1234567890121",
+  "ChipNo": "0000000000000000",
+  "bp1no": "1234567890"
+}
+
+### 4. [Endpoint 4/4] ตรวจสอบเปรียบเทียบใบหน้า 1:1 (Face Verification) — กรณีใบหน้าตรงกัน (VerifyByFaceAsync)
+POST {{baseUrl}}/api/v1/face/verify HTTP/1.1
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "pid": "1234567890121",
+  "image": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/"
+}
+
+### 4.1 [Endpoint 4/4 - Error Case] ตรวจสอบเปรียบเทียบใบหน้า 1:1 — กรณีใบหน้าไม่ตรงกัน (similarity ต่ำกว่าเกณฑ์)
+POST {{baseUrl}}/api/v1/face/verify HTTP/1.1
+Authorization: Bearer {{apiKey}}
+Content-Type: application/json
+
+{
+  "pid": "1234567890121",
+  "image": "MISMATCH_FACE_BASE64_PAYLOAD"
+}
+
+# ============================================================================
+# มาตรฐาน DGA GDX (สำนักงานพัฒนารัฐบาลดิจิทัล - api.egov.go.th)
+# ============================================================================
+
+@dgaBaseUrl = https://api.egov.go.th
+@dgaConsumerKey = YOUR_DGA_CONSUMER_KEY
+@dgaConsumerSecret = YOUR_DGA_CONSUMER_SECRET
+@dgaAgentId = 1234567890121
+@dgaToken = 8e1ac089-0000-aaaa-0000-403c0c9ab867
+
+### 5. [DGA GDX Step 1/2] Government API Validation (ขอ Token Session 60 นาที)
+GET {{dgaBaseUrl}}/ws/auth/validate?ConsumerSecret={{dgaConsumerSecret}}&AgentID={{dgaAgentId}} HTTP/1.1
+Consumer-Key: {{dgaConsumerKey}}
+Content-Type: application/x-www-form-urlencoded; charset=utf-8
+
+### 6. [DGA GDX Step 2/2] ตรวจสอบ Laser Code ผ่าน DGA GDX Gateway
+GET {{dgaBaseUrl}}/ws/dopa/verification/personal?CitizenID=1234567890121&FirstName=%E0%B8%AA%E0%B8%A1%E0%B8%8A%E0%B8%B2%E0%B8%A2&LastName=%E0%B9%83%E0%B8%88%E0%B8%94%E0%B8%B5&BEBirthDate=25381229&LaserCode=JT1234567890 HTTP/1.1
+Consumer-Key: {{dgaConsumerKey}}
+Token: {{dgaToken}}
+Content-Type: application/x-www-form-urlencoded; charset=utf-8
+

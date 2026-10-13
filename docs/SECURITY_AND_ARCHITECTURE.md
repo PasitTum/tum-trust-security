@@ -1,0 +1,91 @@
+# สถาปัตยกรรม ความปลอดภัย PDPA และตารางรหัสข้อผิดพลาด (Architecture, Security & Error Reference)
+**โปรเจกต์:** `Netka.Identity.SDK`  
+
+---
+
+## 1. สถาปัตยกรรมระบบ (Clean Architecture & Pass-Through Design)
+
+`Netka.Identity.SDK` แบ่งโครงสร้างออกเป็น 3 เลเยอร์หลักภายใน Assembly เดียว (`Netka.Identity.SDK.dll`) เพื่อให้สะดวกต่อการแจกจ่ายแบบ Single-DLL:
+
+```text
+┌───────────────────────────────────────────────────────────────────────────┐
+│                     Host Project (Kiosk / Web API)                        │
+│        Controllers / Minimal APIs / Services / EF Core DbContext          │
+└─────────────────────────────────────┬─────────────────────────────────────┘
+                                      │ References libs/Netka.Identity.SDK.dll
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────┐
+│ 1. Application Layer (Netka.Identity.Application)                         │
+│    - DependencyInjection.AddIdentityVerification() (4 Overloads)          │
+│    - IdentityResilienceHandler (Built-in Retry + Circuit Breaker)         │
+├───────────────────────────────────────────────────────────────────────────┤
+│ 2. Core Layer (Netka.Identity.Core)                                       │
+│    - Interfaces: IVerificationProvider, IThaIdProvider, IDopaProvider,    │
+│                  IEncryptionService, IIdentityOptionsProvider             │
+│    - Models: VerificationRequest, VerificationResult, VerificationError,  │
+│              IdentityVerificationOptions, ThaIdOptions, DopaOptions       │
+├───────────────────────────────────────────────────────────────────────────┤
+│ 3. Infrastructure Layer (Netka.Identity.Infrastructure)                   │
+│    - Providers: ThaIdProvider, DopaProvider (Live HTTP + Built-in Mock)   │
+│    - Security: AesEncryptionService (AES-256-CBC + HMAC-SHA256), PkceHelper│
+│    - Helpers: ProviderHelper (Modulo 11 PID Validator, PII Vault Logger)  │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. มาตรฐานความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA & Security)
+
+### 2.1 การเข้ารหัสข้อมูลส่วนบุคคล (AES-256-CBC + HMAC-SHA256 Encrypt-then-MAC)
+- ข้อมูลเลขประจำตัวประชาชน 13 หลัก (`pid`, `PID`, `citizen_id`) จะ**ไม่ถูกบันทึกลง Log เป็น Plaintext เด็ดขาด**
+- ทุกครั้งที่มีการบันทึก Log ผ่าน `ProviderHelper.LogEncryptedPiiIfPresent(...)`:
+  1. เลขบัตรประชาชนจะถูกแปลงเป็นรูปแบบ Masked (`11005*****561`) สำหรับการตรวจสอบเบื้องต้น
+  2. ข้อมูลจริงจะถูกเข้ารหัสด้วย `AesEncryptionService` ซึ่งใช้คีย์ขนาด 256-bit (32 bytes) สุ่ม `IV` ใหม่ทุกครั้ง และคำนวณ `HMAC-SHA256` เพื่อป้องกันการดัดแปลงข้อมูล (Tamper Protection) ก่อนบันทึกลง `[PII-VAULT]`
+
+### 2.2 มาตรฐาน PKCE (RFC 7636) และ CSRF State Validation
+- `PkceHelper.GenerateCodeVerifier()` สร้างรหัสสุ่มขนาด 32 bytes ด้วย `RandomNumberGenerator` (Cryptographically Secure)
+- `PkceHelper.GenerateCodeChallenge(verifier)` คำนวณ SHA-256 และแปลงเป็น Base64Url ตามมาตรฐาน RFC 7636 (`S256`)
+- `ThaIdProvider.VerifyAsync` ตรวจสอบค่า `expected_state` เทียบกับ `request.State` แบบ Ordinal ก่อนอนุญาตให้แลก Token เสมอ
+
+### 2.3 ระบบความทนทานต่อโครงข่ายล่มในตัว (`IdentityResilienceHandler`)
+เพื่อให้ `Netka.Identity.SDK.dll` ไม่มี Dependency ภายนอก (`Zero Third-Party DLLs`) ตัว SDK จึงมี `IdentityResilienceHandler : DelegatingHandler` ฝังอยู่ในตัว:
+- **Exponential Backoff Retry (3 ครั้ง):** เมื่อเจอ HTTP `5xx`, `408 Request Timeout`, `429 Too Many Requests` หรือ `HttpRequestException` ระบบจะลองใหม่อัตโนมัติที่ระยะเวลา `400ms`, `800ms`, และ `1600ms`
+- **Circuit Breaker (ตัดวงจรอัตโนมัติ):** หากเกิดความล้มเหลวระดับโครงข่ายติดต่อกันครบ **5 ครั้ง** ระบบจะเปิดวงจร (Open Circuit) เป็นเวลา **30 วินาที** เพื่อไม่ให้ตู้ Kiosk ค้างรอ Timeout ซ้ำซ้อน
+
+---
+
+## 3. ตารางรหัสข้อผิดพลาดทั้งหมดของ SDK (`ErrorCode` Reference Catalog)
+
+ทุกเมธอดของ `IThaIdProvider` และ `IDopaProvider` จะคืนค่า `VerificationResult` โดยไม่โยน Unhandled Exception ออกมาทำเว็บล่ม หากเกิดข้อผิดพลาดจะมี `IsSuccess = false` และระบุรหัส `ErrorCode` มาตรฐานดังนี้:
+
+### 3.1 รหัสข้อผิดพลาดทั่วไปและการตั้งค่า (Common & Configuration Errors)
+| `ErrorCode` | ความหมายและสาเหตุ | แนวทางแก้ไข |
+| :--- | :--- | :--- |
+| **`MISSING_CONFIGURATION`** | ยังไม่ได้ตั้งค่า `ClientId`, `ClientSecret`, หรือ `LaserUrl`/`ChipUrl` ใน Database หรือ `appsettings.json` (และไม่ได้เปิด `UseMock = true`) | ตั้งค่า Config ใน Database / `appsettings.json` หรือเปิด `UseMock = true` สำหรับโหมดทดสอบ |
+| **`NETWORK_ERROR`** | ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ปลายทางได้ (DNS ไม่เจอ, เน็ตหลุด, VPN กรมการปกครองตัด, หรือ Timeout) | ตรวจสอบการเชื่อมต่อเครือข่าย / VPN หรือสถานะเซิร์ฟเวอร์ต้นทาง |
+| **`INTERNAL_ERROR`** | เกิดข้อผิดพลาดไม่คาดคิดภายในระบบ | ตรวจสอบ Stack Trace ใน Application Log |
+
+### 3.2 รหัสข้อผิดพลาดของ `IThaIdProvider` (DOPA ThaID)
+| `ErrorCode` | ความหมายและสาเหตุ | `HttpStatusCode` |
+| :--- | :--- | :---: |
+| **`INVALID_STATE`** | ค่า `state` ที่ได้รับจาก Callback ไม่ตรงกับ `expected_state` ที่สร้างไว้ตอนแรก (อาจเกิดจาก CSRF หรือ Session หมดอายุ) | `null` |
+| **`MISSING_AUTH_CODE`** | ไม่พบค่า `code` (เช่น ประชาชนกดยกเลิก `error=access_denied` ในแอป ThaID) | `null` |
+| **`MISSING_REDIRECT_URI`** | ไม่ได้ระบุ `redirectUri` ทั้งในพารามิเตอร์และใน Configuration | `null` |
+| **`MISSING_REFRESH_TOKEN`** | เรียก `RefreshTokenAsync` โดยส่งค่าว่าง | `null` |
+| **`MISSING_TOKEN`** | เรียก `InspectTokenAsync` หรือ `RevokeTokenAsync` โดยส่งค่าว่าง | `null` |
+| **`MISSING_ACCESS_TOKEN`** | เรียก `GetUserInfoAsync` โดยส่ง `accessToken` เป็นค่าว่าง | `null` |
+| **`TOKEN_EXCHANGE_FAILED`** | การแลก `authorization_code` ล้มเหลว (เช่น Code หมดอายุ, ใช้ซ้ำ, หรือ `code_verifier` ไม่ตรง) | `400` / `401` |
+| **`TOKEN_REFRESH_FAILED`** | การต่ออายุด้วย `refresh_token` ล้มเหลว | `400` / `401` |
+| **`TOKEN_INSPECT_FAILED`** | การเรียก `/introspect/` ล้มเหลว | `400` / `401` |
+| **`TOKEN_REVOKE_FAILED`** | การเรียก `/revoke/` ล้มเหลว | `400` / `401` |
+| **`USERINFO_FETCH_FAILED`** | การดึงข้อมูล `/userinfo/` ด้วย Access Token ล้มเหลว | `401` / `403` |
+| **`INVALID_THAID_RESPONSE`** | เซิร์ฟเวอร์ต้นทางตอบกลับไม่ใช่รูปแบบ JSON ที่ถูกต้อง | `null` |
+
+### 3.3 รหัสข้อผิดพลาดของ `IDopaProvider` (DOPA Check Card Service)
+| `ErrorCode` | ความหมายและสาเหตุ | `HttpStatusCode` |
+| :--- | :--- | :---: |
+| **`INVALID_PID_FORMAT`** | เลขประจำตัวประชาชน (`pid`) ไม่ใช่ตัวเลข 13 หลัก หรือคำนวณหลักที่ 13 ตามสูตร Modulo 11 ไม่ถูกต้อง | `null` |
+| **`MISSING_PARAMETERS`** | ส่งพารามิเตอร์ที่จำเป็น (`firstName`, `lastName`, `birthDate`, `laserId`, หรือ `chipNo`) เป็นค่าว่าง | `null` |
+| **`CARD_VERIFICATION_REJECTED`** | กรมการปกครองตอบกลับว่า `IsError: true` (เช่น เลขหลังบัตรไม่ตรงกับหน้าบัตร, บัตรหมดอายุ/ถูกยกเลิก, หรือสถานะบัตรไม่ปกติ) โดยดูรายละเอียดเพิ่มได้ใน `result.Data` | `200` |
+| **`DOPA_API_FAILED`** | เซิร์ฟเวอร์ DOPA Gateway ตอบกลับ HTTP Error (เช่น `500`, `502`, `503 Service Unavailable`) | `500` / `503` |
+| **`INVALID_DOPA_RESPONSE`** | เซิร์ฟเวอร์ DOPA ตอบกลับไม่ใช่รูปแบบ JSON ที่ถูกต้อง | `null` |

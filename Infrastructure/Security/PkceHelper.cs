@@ -13,6 +13,47 @@ public static class PkceHelper
     private const int MaxCodeVerifierLength = 128;
 
     /// <summary>
+    /// Generates a cryptographically secure URL-safe Base64 string (without padding) from the specified number of random bytes.
+    /// Useful for generating OAuth 2.0 <c>state</c>, OIDC <c>nonce</c>, or PKCE values.
+    /// </summary>
+    /// <param name="byteLength">Number of random bytes to generate (default: 32 bytes = 256 bits).</param>
+    public static string RandomUrlSafe(int byteLength = 32)
+    {
+        if (byteLength <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(byteLength), "Byte length must be greater than zero.");
+        }
+
+        byte[] bytes = new byte[byteLength];
+        RandomNumberGenerator.Fill(bytes);
+
+        return Convert.ToBase64String(bytes)
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .TrimEnd('=');
+    }
+
+    /// <summary>
+    /// Generates a cryptographically secure URL-safe OAuth 2.0 <c>state</c> string.
+    /// </summary>
+    public static string GenerateState(int byteLength = 32) => RandomUrlSafe(byteLength);
+
+    /// <summary>
+    /// Generates a cryptographically secure URL-safe OpenID Connect <c>nonce</c> string.
+    /// </summary>
+    public static string GenerateNonce(int byteLength = 32) => RandomUrlSafe(byteLength);
+
+    /// <summary>
+    /// Masks a general token, state, or secret string for safe logging (e.g., <c>"abcd…wxyz"</c>).
+    /// </summary>
+    public static string Mask(string? value) => Helpers.ProviderHelper.Mask(value);
+
+    /// <summary>
+    /// Masks a Thai National ID (PID) for safe display/logging (e.g., <c>"1********4561"</c>).
+    /// </summary>
+    public static string MaskPid(string? pid) => Helpers.ProviderHelper.MaskPid(pid);
+
+    /// <summary>
     /// Generates a cryptographically secure random PKCE code verifier (43-128 characters).
     /// </summary>
     public static string GenerateCodeVerifier(int length = MaxCodeVerifierLength)

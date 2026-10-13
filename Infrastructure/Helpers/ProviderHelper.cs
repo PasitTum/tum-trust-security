@@ -49,6 +49,34 @@ public static class ProviderHelper
     }
 
     /// <summary>
+    /// Masks a Thai National ID (PID) for safe display/logging (e.g., <c>"1********4561"</c>).
+    /// </summary>
+    public static string MaskPid(this string? pid)
+    {
+        if (string.IsNullOrEmpty(pid) || pid.Length < 5)
+        {
+            return "***";
+        }
+
+        return pid[..1] + "********" + pid[^4..];
+    }
+
+    /// <summary>
+    /// Masks a general token, state, or secret string for safe logging (e.g., <c>"abcd…wxyz"</c>).
+    /// </summary>
+    public static string Mask(this string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Length <= 8
+            ? "***"
+            : value[..4] + "…" + value[^4..];
+    }
+
+    /// <summary>
     /// Reads a required string value from an <see cref="IConfigurationSection"/> or throws an <see cref="InvalidOperationException"/>.
     /// </summary>
     public static string GetRequiredValue(this IConfigurationSection section, string key)

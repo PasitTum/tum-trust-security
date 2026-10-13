@@ -1,0 +1,90 @@
+# ============================================================================
+# ThaID (DOPA Digital ID) — VS Code REST Client Test File
+# Extension ที่แนะนำใน VS Code: "REST Client" (humao.rest-client)
+# วิธีใช้งาน:
+#   1. รัน MockServer (ถ้าต้องการทดสอบแบบจำลอง — ไม่ต้องสนตำแหน่ง Path / ย้ายเครื่องก็รันได้ทันที):
+#      - ใน VS Code: กด Ctrl+Shift+P -> Tasks: Run Task -> Run MockServer
+#      - หรือคลิกผ่าน Markdown doc: thaid.md -> [▶️ กดรัน MockServer ทันที]
+#      - หรือดับเบิลคลิก run-mockserver.cmd (Windows) / run-mockserver.ps1 (PowerShell) / ./run-mockserver.sh (Mac/Linux)
+#      - หรือ Terminal คำสั่งเดียวจากโฟลเดอร์ใดก็ได้:
+#        dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/Netka.Identity.MockServer.csproj)"
+#   2. ติดตั้ง Extension "REST Client" (Id: humao.rest-client) ใน VS Code
+#   3. คลิกปุ่ม "Send Request" เหนือหัวข้อ ### ที่ต้องการยิงทดสอบได้ทันที
+# ============================================================================
+
+# สลับ @baseUrl ระหว่าง MockServer (Local) กับ Production ของกรมการปกครอง (BORA):
+@baseUrl = http://localhost:5199
+# @baseUrl = https://imauth.bora.dopa.go.th
+
+@clientId = mock-client-id
+@clientSecret = mock-client-secret
+# Base64("mock-client-id:mock-client-secret") = bW9jay1jbGllbnQtaWQ6bW9jay1jbGllbnQtc2VjcmV0
+@basicAuth = bW9jay1jbGllbnQtaWQ6bW9jay1jbGllbnQtc2VjcmV0
+@redirectUri = https://localhost:5001/api/identity/thaid/callback
+@apiKey = mock-gateway-api-key
+@accessToken = mock-thaid-access-token
+@refreshToken = mock-thaid-refresh-token
+
+### 1. [Endpoint 1/8] OpenID Connect Discovery (GetOpenIdConfigurationAsync)
+GET {{baseUrl}}/.well-known/openid-configuration HTTP/1.1
+Accept: application/json
+
+### 2. [Endpoint 2/8] JSON Web Key Set - JWKS (GetJwksAsync / ValidateIdTokenAsync)
+GET {{baseUrl}}/jwks/ HTTP/1.1
+Accept: application/json
+
+### 3. [Endpoint 3/8] Authorization Endpoint - สร้างลิงก์ Redirect / QR Code (GetAuthorizationUrl)
+# หมายเหตุ: เมื่อยิงเข้า MockServer จะตอบกลับ HTTP 302 Redirect พร้อม ?code=mock-auth-code-001&state=state-12345
+GET {{baseUrl}}/api/v2/oauth2/auth/?client_id={{clientId}}&redirect_uri={{redirectUri}}&response_type=code&scope=openid%20pid%20profile&state=state-12345&scenario=success HTTP/1.1
+
+### 4. [Endpoint 4/8] Token Endpoint - แลก Authorization Code เป็น Token + ข้อมูล 20 Scopes (ExchangeCodeAsync)
+POST {{baseUrl}}/api/v2/oauth2/token/ HTTP/1.1
+Authorization: Basic {{basicAuth}}
+x-api-key: {{apiKey}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=mock-auth-code-001&client_id={{clientId}}&client_secret={{clientSecret}}&redirect_uri={{redirectUri}}
+
+### 4.1 [Endpoint 4/8 - Error Case] จำลอง Authorization Code หมดอายุ (UC-THAID-03 -> HTTP 400 invalid_grant)
+POST {{baseUrl}}/api/v2/oauth2/token/ HTTP/1.1
+Authorization: Basic {{basicAuth}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=mock-expired-code&client_id={{clientId}}&client_secret={{clientSecret}}&redirect_uri={{redirectUri}}
+
+### 5. [Endpoint 5/8] Token Endpoint - ต่ออายุ Access Token ด้วย Refresh Token (RefreshTokenAsync)
+POST {{baseUrl}}/api/v2/oauth2/token/ HTTP/1.1
+Authorization: Basic {{basicAuth}}
+x-api-key: {{apiKey}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&refresh_token={{refreshToken}}&code=mock-auth-code-001
+
+### 6. [Endpoint 6/8] Token Introspection Endpoint - ตรวจสอบสถานะ Token (InspectTokenAsync)
+POST {{baseUrl}}/api/v2/oauth2/introspect/ HTTP/1.1
+Authorization: Basic {{basicAuth}}
+x-api-key: {{apiKey}}
+Content-Type: application/x-www-form-urlencoded
+
+token={{accessToken}}
+
+### 6.1 [Endpoint 6/8 - Expired Case] ตรวจสอบ Token ที่หมดอายุ (active: false)
+POST {{baseUrl}}/api/v2/oauth2/introspect/ HTTP/1.1
+Authorization: Basic {{basicAuth}}
+Content-Type: application/x-www-form-urlencoded
+
+token=mock-expired-token
+
+### 7. [Endpoint 7/8] Token Revocation Endpoint - ยกเลิก Token (RevokeTokenAsync)
+POST {{baseUrl}}/api/v2/oauth2/revoke/ HTTP/1.1
+Authorization: Basic {{basicAuth}}
+x-api-key: {{apiKey}}
+Content-Type: application/x-www-form-urlencoded
+
+token=token-to-revoke-001
+
+### 8. [Endpoint 8/8] UserInfo Endpoint - ดึงข้อมูลประชาชน 20 Scopes ด้วย Bearer Token (GetUserInfoAsync)
+GET {{baseUrl}}/api/v2/oauth2/userinfo/ HTTP/1.1
+Authorization: Bearer {{accessToken}}
+x-api-key: {{apiKey}}
+Accept: application/json

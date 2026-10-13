@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Polly;
 
 namespace Netka.Identity.Application;
 
@@ -15,6 +14,7 @@ namespace Netka.Identity.Application;
 /// Dependency Injection registration extensions for the Identity Verification SDK.
 /// Supports <see cref="IConfiguration"/> (appsettings.json), in-memory <see cref="IdentityVerificationOptions"/>,
 /// and dynamic Database-backed configuration via <see cref="IServiceProvider"/> or <see cref="IIdentityOptionsProvider"/>.
+/// Compiled as a zero-third-party-dependency DLL so host projects can reference <c>Netka.Identity.SDK.dll</c> directly.
 /// </summary>
 public static class DependencyInjection
 {
@@ -31,7 +31,7 @@ public static class DependencyInjection
 
         services.TryAddSingleton<IConfiguration>(configuration);
 
-        return services.AddIdentityVerification((sp, _) =>
+        return services.AddIdentityVerification((_, _) =>
         {
             // Options are automatically populated from IConfiguration in DelegateIdentityOptionsProvider
         });
@@ -125,6 +125,8 @@ public static class DependencyInjection
         Func<HttpClient, IServiceProvider, TProvider> factory)
         where TProvider : class
     {
+        var circuitState = new CircuitBreakerState(allowedFailures: 5, breakDuration: TimeSpan.FromSeconds(30));
+
         services.AddHttpClient<TProvider>(client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
@@ -148,28 +150,109 @@ public static class DependencyInjection
 
                 return handler;
             })
-            .AddPolicyHandler(CreateRetryPolicy())
-            .AddPolicyHandler(CreateCircuitBreakerPolicy());
+            .AddHttpMessageHandler(() => new IdentityResilienceHandler(maxRetries: 3, circuitState));
     }
 
-    private static IAsyncPolicy<HttpResponseMessage> CreateRetryPolicy()
+    private sealed class CircuitBreakerState
     {
-        return Policy<HttpResponseMessage>
-            .Handle<HttpRequestException>()
-            .OrResult(response => (int)response.StatusCode >= 500 || (int)response.StatusCode == 408)
-            .WaitAndRetryAsync(
-                retryCount: 3,
-                sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)));
+        private readonly object _lock = new();
+        private readonly int _allowedFailures;
+        private readonly TimeSpan _breakDuration;
+        private int _consecutiveFailures;
+        private DateTimeOffset _blockedUntil = DateTimeOffset.MinValue;
+
+        public CircuitBreakerState(int allowedFailures, TimeSpan breakDuration)
+        {
+            _allowedFailures = allowedFailures;
+            _breakDuration = breakDuration;
+        }
+
+        public void EnsureClosed()
+        {
+            lock (_lock)
+            {
+                if (DateTimeOffset.UtcNow < _blockedUntil)
+                {
+                    throw new HttpRequestException("Circuit breaker is open due to consecutive upstream provider failures.");
+                }
+            }
+        }
+
+        public void RecordSuccess()
+        {
+            lock (_lock)
+            {
+                _consecutiveFailures = 0;
+                _blockedUntil = DateTimeOffset.MinValue;
+            }
+        }
+
+        public void RecordFailure()
+        {
+            lock (_lock)
+            {
+                _consecutiveFailures++;
+                if (_consecutiveFailures >= _allowedFailures)
+                {
+                    _blockedUntil = DateTimeOffset.UtcNow.Add(_breakDuration);
+                }
+            }
+        }
     }
 
-    private static IAsyncPolicy<HttpResponseMessage> CreateCircuitBreakerPolicy()
+    private sealed class IdentityResilienceHandler : DelegatingHandler
     {
-        return Policy<HttpResponseMessage>
-            .Handle<HttpRequestException>()
-            .OrResult(response => (int)response.StatusCode >= 500)
-            .CircuitBreakerAsync(
-                handledEventsAllowedBeforeBreaking: 5,
-                durationOfBreak: TimeSpan.FromSeconds(30));
+        private readonly int _maxRetries;
+        private readonly CircuitBreakerState _circuitState;
+
+        public IdentityResilienceHandler(int maxRetries, CircuitBreakerState circuitState)
+        {
+            _maxRetries = maxRetries;
+            _circuitState = circuitState;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                _circuitState.EnsureClosed();
+
+                try
+                {
+                    var response = await base.SendAsync(request, cancellationToken);
+                    int statusCode = (int)response.StatusCode;
+
+                    if (statusCode >= 500 || statusCode == 408)
+                    {
+                        _circuitState.RecordFailure();
+                        if (attempt < _maxRetries)
+                        {
+                            response.Dispose();
+                            await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1)), cancellationToken);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        _circuitState.RecordSuccess();
+                    }
+
+                    return response;
+                }
+                catch (HttpRequestException)
+                {
+                    _circuitState.RecordFailure();
+                    if (attempt >= _maxRetries)
+                    {
+                        throw;
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1)), cancellationToken);
+                }
+            }
+        }
     }
 
     private sealed class DelegateIdentityOptionsProvider : IIdentityOptionsProvider

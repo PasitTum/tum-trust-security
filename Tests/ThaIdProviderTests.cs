@@ -464,4 +464,162 @@ public class ThaIdProviderTests
 
         return result;
     }
+
+    [Fact]
+    public async Task BuiltInUseMock_WhenEnabled_PerformsLoopbackRedirectAndReturnsAll20ScopesWithoutHttpCalls()
+    {
+        // Arrange: Handler throws if any real HTTP call is attempted; ClientId/ClientSecret are empty
+        var handler = new MockHttpMessageHandler(_ =>
+            throw new InvalidOperationException("HTTP should not be called when UseMock = true"));
+        var options = new ThaIdOptions
+        {
+            UseMock = true,
+            MockScenario = "success",
+            RedirectUri = "https://kiosk.local/api/auth/thaid/callback"
+        };
+        var provider = new ThaIdProvider(
+            options,
+            new HttpClient(handler),
+            new AesEncryptionService(Convert.ToBase64String(new byte[32])),
+            NullLogger<ThaIdProvider>.Instance);
+
+        // Step 1: GetAuthorizationUrl returns Loopback Callback URL directly (suitable for QR Code or Browser Redirect)
+        string loopbackUrl = provider.GetAuthorizationUrl(
+            redirectUri: "https://kiosk.local/api/auth/thaid/callback",
+            state: "mock-state-999");
+
+        Assert.Equal(
+            "https://kiosk.local/api/auth/thaid/callback?code=mock-auth-code-001&state=mock-state-999",
+            loopbackUrl);
+
+        // Step 2: ExchangeCodeAsync returns all 20 scopes in-memory
+        var result = await provider.ExchangeCodeAsync("mock-auth-code-001");
+        Assert.True(result.IsSuccess);
+        Assert.Equal("1100501234561", result.Data["pid"]);
+        Assert.Equal("นาย สมชาย ใจดี", result.Data["name"]);
+        Assert.Equal("Mr. Somchai Jaidee", result.Data["name_en"]);
+        Assert.Equal("1001012345678901", result.Data["smartcard_code"]);
+        Assert.True(result.Data.ContainsKey("address"));
+        Assert.True(result.Data.ContainsKey("house_address"));
+
+        // Step 3: Simulate UC-THAID-03 (Expired Code) and UC-THAID-04 (Timeout) in UseMock mode
+        var expiredResult = await provider.ExchangeCodeAsync("mock-expired-code");
+        Assert.False(expiredResult.IsSuccess);
+        Assert.Equal("TOKEN_EXCHANGE_FAILED", expiredResult.ErrorCode);
+
+        var timeoutResult = await provider.ExchangeCodeAsync("mock-timeout");
+        Assert.False(timeoutResult.IsSuccess);
+        Assert.Equal("NETWORK_ERROR", timeoutResult.ErrorCode);
+
+        // Step 4: Discovery, JWKS, and ValidateIdTokenAsync in UseMock mode
+        var discoveryResult = await provider.GetOpenIdConfigurationAsync();
+        Assert.True(discoveryResult.IsSuccess);
+        Assert.Equal("https://imauth.bora.dopa.go.th", discoveryResult.Data["issuer"]);
+
+        var jwksResult = await provider.GetJwksAsync();
+        Assert.True(jwksResult.IsSuccess);
+        Assert.True(jwksResult.Data.ContainsKey("keys"));
+
+        var idTokenResult = await provider.ValidateIdTokenAsync(
+            result.Data["id_token"].ToString()!,
+            expectedNonce: "nonce-123");
+        Assert.True(idTokenResult.IsSuccess);
+        Assert.Equal("1100501234561", idTokenResult.Data["pid"]);
+        Assert.Equal("nonce-123", idTokenResult.Data["nonce"]);
+    }
+
+    [Fact]
+    public async Task GetOpenIdConfigurationAndJwks_AndValidateIdTokenWithEs256Signature_Succeeds()
+    {
+        // Generate an ephemeral P-256 ECDSA key pair to sign a real ES256 JWT id_token
+        using var ecdsa = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        var ecParams = ecdsa.ExportParameters(includePrivateParameters: false);
+
+        static string ToBase64Url(byte[] bytes) =>
+            Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        var xB64 = ToBase64Url(ecParams.Q.X!);
+        var yB64 = ToBase64Url(ecParams.Q.Y!);
+
+        var jwksJson = $$"""
+        {
+          "keys": [
+            {
+              "kty": "EC",
+              "crv": "P-256",
+              "use": "sig",
+              "alg": "ES256",
+              "kid": "test-es256-key",
+              "x": "{{xB64}}",
+              "y": "{{yB64}}"
+            }
+          ]
+        }
+        """;
+
+        string? capturedApiKeyHeader = null;
+        var handler = new MockHttpMessageHandler(req =>
+        {
+            if (req.Headers.TryGetValues("x-custom-gateway-key", out var values))
+            {
+                capturedApiKeyHeader = values.FirstOrDefault();
+            }
+
+            if (req.RequestUri!.AbsolutePath.EndsWith("openid-configuration", StringComparison.OrdinalIgnoreCase))
+            {
+                return MockHttpMessageHandler.JsonResponse("""{"issuer":"https://imauth.bora.dopa.go.th","jwks_uri":"https://imauth.bora.dopa.go.th/jwks/"}""");
+            }
+
+            return MockHttpMessageHandler.JsonResponse(jwksJson);
+        });
+
+        var options = new ThaIdOptions
+        {
+            ClientId = "test-thaid-client-id",
+            ClientSecret = "test-thaid-client-secret",
+            Issuer = "https://imauth.bora.dopa.go.th",
+            DiscoveryUrl = "https://imauth.bora.dopa.go.th/.well-known/openid-configuration",
+            JwksUrl = "https://imauth.bora.dopa.go.th/jwks/",
+            ApiKey = "secret-gateway-key-999",
+            ApiKeyHeader = "x-custom-gateway-key"
+        };
+
+        var provider = new ThaIdProvider(
+            options,
+            new HttpClient(handler),
+            new AesEncryptionService(Convert.ToBase64String(new byte[32])),
+            NullLogger<ThaIdProvider>.Instance);
+
+        // 1. Test GetOpenIdConfigurationAsync + custom ApiKeyHeader
+        var disc = await provider.GetOpenIdConfigurationAsync();
+        Assert.True(disc.IsSuccess);
+        Assert.Equal("https://imauth.bora.dopa.go.th", disc.Data["issuer"]);
+        Assert.Equal("secret-gateway-key-999", capturedApiKeyHeader);
+
+        // 2. Build & sign a real ES256 JWT
+        var headerB64 = ToBase64Url(System.Text.Encoding.UTF8.GetBytes("""{"alg":"ES256","typ":"JWT","kid":"test-es256-key"}"""));
+        var exp = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds();
+        var payloadB64 = ToBase64Url(System.Text.Encoding.UTF8.GetBytes(
+            $$"""{"iss":"https://imauth.bora.dopa.go.th","aud":"test-thaid-client-id","exp":{{exp}},"nonce":"my-nonce-001","pid":"1100501234561","given_name":"สมชาย"}"""));
+        var signingInput = $"{headerB64}.{payloadB64}";
+        var sigBytes = ecdsa.SignData(System.Text.Encoding.ASCII.GetBytes(signingInput), System.Security.Cryptography.HashAlgorithmName.SHA256);
+        var jwt = $"{signingInput}.{ToBase64Url(sigBytes)}";
+
+        // 3. ValidateIdTokenAsync succeeds with valid ES256 signature and matching nonce
+        var validResult = await provider.ValidateIdTokenAsync(jwt, expectedNonce: "my-nonce-001");
+        Assert.True(validResult.IsSuccess);
+        Assert.Equal("1100501234561", validResult.Data["pid"]);
+        Assert.Equal("สมชาย", validResult.Data["given_name"]);
+
+        // 4. ValidateIdTokenAsync fails when nonce mismatches
+        var wrongNonceResult = await provider.ValidateIdTokenAsync(jwt, expectedNonce: "wrong-nonce");
+        Assert.False(wrongNonceResult.IsSuccess);
+        Assert.Equal("INVALID_NONCE", wrongNonceResult.ErrorCode);
+
+        // 5. ValidateIdTokenAsync fails when signature is tampered
+        var tamperedJwt = $"{signingInput}.{ToBase64Url(new byte[64])}";
+        var badSigResult = await provider.ValidateIdTokenAsync(tamperedJwt, expectedNonce: "my-nonce-001");
+        Assert.False(badSigResult.IsSuccess);
+        Assert.Equal("INVALID_ID_TOKEN_SIGNATURE", badSigResult.ErrorCode);
+    }
 }
