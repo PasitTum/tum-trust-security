@@ -230,11 +230,21 @@ public static class ProviderHelper
         var piiValue = userInfo.GetStringValue(candidateKeys);
         if (!string.IsNullOrWhiteSpace(piiValue))
         {
-            var encryptedPii = encryptionService.Encrypt(piiValue);
-            logger.LogInformation(
-                "[PII-VAULT] Verified {Provider} identity. EncryptedSubject: {EncryptedSubject}",
-                providerName,
-                encryptedPii);
+            try
+            {
+                var encryptedPii = encryptionService.Encrypt(piiValue);
+                logger.LogInformation(
+                    "[PII-VAULT] Verified {Provider} identity. EncryptedSubject: {EncryptedSubject}",
+                    providerName,
+                    encryptedPii);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            {
+                logger.LogWarning(
+                    "Skipped [PII-VAULT] encrypted log for {Provider} because EncryptionKey is not configured or invalid: {Message}",
+                    providerName,
+                    ex.Message);
+            }
         }
     }
 }

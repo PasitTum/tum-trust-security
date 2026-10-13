@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Netka.Identity.Core.Interfaces;
+using Netka.Identity.Core.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -16,36 +17,80 @@ public class AesEncryptionService : IEncryptionService
     private const int IvSizeBytes = 16;  // 128-bit IV
     private const int TagSizeBytes = 32; // 256-bit HMAC-SHA256 tag
 
-    private readonly byte[] _key;
+    private readonly byte[]? _staticKey;
+    private readonly IIdentityOptionsProvider? _optionsProvider;
+    private string? _cachedKeyString;
+    private byte[]? _cachedKeyBytes;
     private readonly ILogger<AesEncryptionService> _logger;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="AesEncryptionService"/>.
+    /// Initializes a new instance of <see cref="AesEncryptionService"/> with a fixed Base64 key.
     /// </summary>
     /// <param name="base64Key">Base64-encoded 32-byte (256-bit) key.</param>
     /// <param name="logger">Optional logger for activity logging.</param>
     public AesEncryptionService(string base64Key, ILogger<AesEncryptionService>? logger = null)
     {
+        _staticKey = ValidateAndDecodeKey(base64Key, nameof(base64Key));
+        _logger = logger ?? NullLogger<AesEncryptionService>.Instance;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="AesEncryptionService"/> that resolves the encryption key dynamically
+    /// from <see cref="IIdentityOptionsProvider"/> (e.g., Database or dynamic configuration).
+    /// </summary>
+    public AesEncryptionService(IIdentityOptionsProvider optionsProvider, ILogger<AesEncryptionService>? logger = null)
+    {
+        _optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
+        _logger = logger ?? NullLogger<AesEncryptionService>.Instance;
+    }
+
+    private static byte[] ValidateAndDecodeKey(string? base64Key, string paramName)
+    {
         if (string.IsNullOrWhiteSpace(base64Key))
         {
-            throw new ArgumentException("Encryption key cannot be null or whitespace.", nameof(base64Key));
+            throw new ArgumentException("Encryption key cannot be null or whitespace.", paramName);
         }
 
+        byte[] key;
         try
         {
-            _key = Convert.FromBase64String(base64Key);
+            key = Convert.FromBase64String(base64Key);
         }
         catch (FormatException ex)
         {
-            throw new ArgumentException("Encryption key must be valid Base64.", nameof(base64Key), ex);
+            throw new ArgumentException("Encryption key must be valid Base64.", paramName, ex);
         }
 
-        if (_key.Length != KeySizeBytes)
+        if (key.Length != KeySizeBytes)
         {
-            throw new ArgumentException($"Encryption key must be exactly {KeySizeBytes} bytes (256 bits).", nameof(base64Key));
+            throw new ArgumentException($"Encryption key must be exactly {KeySizeBytes} bytes (256 bits).", paramName);
         }
 
-        _logger = logger ?? NullLogger<AesEncryptionService>.Instance;
+        return key;
+    }
+
+    private byte[] ResolveActiveKey()
+    {
+        if (_staticKey is not null)
+        {
+            return _staticKey;
+        }
+
+        var currentKeyString = _optionsProvider?.GetOptions()?.EncryptionKey;
+        if (string.IsNullOrWhiteSpace(currentKeyString))
+        {
+            throw new InvalidOperationException("Missing required configuration: IdentityVerification:EncryptionKey");
+        }
+
+        if (string.Equals(_cachedKeyString, currentKeyString, StringComparison.Ordinal) && _cachedKeyBytes is not null)
+        {
+            return _cachedKeyBytes;
+        }
+
+        var decoded = ValidateAndDecodeKey(currentKeyString, nameof(IdentityVerificationOptions.EncryptionKey));
+        _cachedKeyString = currentKeyString;
+        _cachedKeyBytes = decoded;
+        return decoded;
     }
 
     /// <inheritdoc />
@@ -56,12 +101,13 @@ public class AesEncryptionService : IEncryptionService
             throw new ArgumentNullException(nameof(plainText));
         }
 
+        byte[] activeKey = ResolveActiveKey();
         byte[] iv = new byte[IvSizeBytes];
         RandomNumberGenerator.Fill(iv);
         byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
 
         using var aes = Aes.Create();
-        aes.Key = _key;
+        aes.Key = activeKey;
         aes.IV = iv;
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.PKCS7;
@@ -74,7 +120,7 @@ public class AesEncryptionService : IEncryptionService
         Buffer.BlockCopy(iv, 0, ivAndCipher, 0, iv.Length);
         Buffer.BlockCopy(cipherBytes, 0, ivAndCipher, iv.Length, cipherBytes.Length);
 
-        using var hmac = new HMACSHA256(_key);
+        using var hmac = new HMACSHA256(activeKey);
         byte[] tag = hmac.ComputeHash(ivAndCipher);
 
         // Final payload layout: [16-byte IV][CipherText][32-byte HMAC]
@@ -92,6 +138,8 @@ public class AesEncryptionService : IEncryptionService
         {
             throw new ArgumentNullException(nameof(cipherText));
         }
+
+        byte[] activeKey = ResolveActiveKey();
 
         byte[] fullBytes;
         try
@@ -117,7 +165,7 @@ public class AesEncryptionService : IEncryptionService
         Buffer.BlockCopy(fullBytes, ivAndCipherLength, expectedTag, 0, TagSizeBytes);
 
         // 1. Verify HMAC-SHA256 integrity in constant time before decrypting
-        using var hmac = new HMACSHA256(_key);
+        using var hmac = new HMACSHA256(activeKey);
         byte[] actualTag = hmac.ComputeHash(ivAndCipher);
         if (!CryptographicOperations.FixedTimeEquals(expectedTag, actualTag))
         {
@@ -133,7 +181,7 @@ public class AesEncryptionService : IEncryptionService
         Buffer.BlockCopy(ivAndCipher, IvSizeBytes, cipherBytes, 0, cipherLength);
 
         using var aes = Aes.Create();
-        aes.Key = _key;
+        aes.Key = activeKey;
         aes.IV = iv;
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.PKCS7;

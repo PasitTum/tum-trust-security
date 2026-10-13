@@ -27,22 +27,16 @@ public class ThaIdProvider : IThaIdProvider
     /// <inheritdoc />
     public string ProviderName => "ThaID";
 
-    private readonly string _clientId;
-    private readonly string _clientSecret;
-    private readonly string _authorizationUrl;
-    private readonly string _tokenUrl;
-    private readonly string _inspectUrl;
-    private readonly string _revokeUrl;
-    private readonly string _userInfoUrl;
-    private readonly string? _defaultRedirectUri;
-    private readonly string _scope;
+    private readonly IConfiguration? _configuration;
+    private readonly IIdentityOptionsProvider? _optionsProvider;
+    private readonly ThaIdOptions? _staticOptions;
 
     private readonly HttpClient _httpClient;
     private readonly IEncryptionService _encryptionService;
     private readonly ILogger<ThaIdProvider> _logger;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="ThaIdProvider"/>.
+    /// Initializes a new instance of <see cref="ThaIdProvider"/> using <see cref="IConfiguration"/>.
     /// </summary>
     public ThaIdProvider(
         IConfiguration configuration,
@@ -50,28 +44,55 @@ public class ThaIdProvider : IThaIdProvider
         IEncryptionService encryptionService,
         ILogger<ThaIdProvider> logger)
     {
-        if (configuration is null) throw new ArgumentNullException(nameof(configuration));
-        if (httpClient is null) throw new ArgumentNullException(nameof(httpClient));
-        if (encryptionService is null) throw new ArgumentNullException(nameof(encryptionService));
-        if (logger is null) throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        var section = configuration.GetSection("IdentityVerification:ThaId");
+    /// <summary>
+    /// Initializes a new instance of <see cref="ThaIdProvider"/> using a <see cref="ThaIdOptions"/> object (e.g., loaded from a Database).
+    /// </summary>
+    public ThaIdProvider(
+        ThaIdOptions options,
+        HttpClient httpClient,
+        IEncryptionService encryptionService,
+        ILogger<ThaIdProvider> logger)
+    {
+        _staticOptions = options ?? throw new ArgumentNullException(nameof(options));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        _clientId = section.GetRequiredValue("ClientId");
-        _clientSecret = section.GetRequiredValue("ClientSecret");
-        _authorizationUrl = section["AuthorizationUrl"] ?? DefaultAuthorizationUrl;
-        _tokenUrl = section["TokenUrl"] ?? DefaultTokenUrl;
-        _inspectUrl = section["InspectUrl"] ?? DefaultInspectUrl;
-        _revokeUrl = section["RevokeUrl"] ?? DefaultRevokeUrl;
-        _userInfoUrl = section["UserInfoUrl"] ?? DefaultUserInfoUrl;
-        _defaultRedirectUri = section["RedirectUri"];
-        _scope = !string.IsNullOrWhiteSpace(section["Scope"])
-            ? section["Scope"]!
-            : "openid pid profile";
+    /// <summary>
+    /// Initializes a new instance of <see cref="ThaIdProvider"/> using a dynamic <see cref="IIdentityOptionsProvider"/> (e.g., Database-backed configuration).
+    /// </summary>
+    public ThaIdProvider(
+        IIdentityOptionsProvider optionsProvider,
+        HttpClient httpClient,
+        IEncryptionService encryptionService,
+        ILogger<ThaIdProvider> logger)
+    {
+        _optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        _httpClient = httpClient;
-        _encryptionService = encryptionService;
-        _logger = logger;
+    private ThaIdOptions ResolveOptions()
+    {
+        if (_optionsProvider is not null)
+        {
+            return _optionsProvider.GetOptions()?.ThaId ?? new ThaIdOptions();
+        }
+
+        if (_configuration is not null)
+        {
+            return ThaIdOptions.FromSection(_configuration.GetSection("IdentityVerification:ThaId"));
+        }
+
+        return _staticOptions ?? new ThaIdOptions();
     }
 
     /// <inheritdoc />
@@ -88,9 +109,15 @@ public class ThaIdProvider : IThaIdProvider
         string codeChallengeMethod = "S256",
         string? nonce = null)
     {
+        var opts = ResolveOptions();
+        if (string.IsNullOrWhiteSpace(opts.ClientId))
+        {
+            throw new InvalidOperationException("Missing required configuration: IdentityVerification:ThaId:ClientId");
+        }
+
         var targetRedirectUri = !string.IsNullOrWhiteSpace(redirectUri)
             ? redirectUri
-            : _defaultRedirectUri;
+            : opts.RedirectUri;
 
         if (string.IsNullOrWhiteSpace(targetRedirectUri))
         {
@@ -102,23 +129,31 @@ public class ThaIdProvider : IThaIdProvider
             throw new ArgumentException("State cannot be null or whitespace.", nameof(state));
         }
 
+        var scope = !string.IsNullOrWhiteSpace(opts.Scope)
+            ? opts.Scope!
+            : "openid pid profile";
+
+        var authorizationUrl = !string.IsNullOrWhiteSpace(opts.AuthorizeUrl)
+            ? opts.AuthorizeUrl!
+            : DefaultAuthorizationUrl;
+
         var query = new Dictionary<string, string>
         {
-            ["client_id"] = _clientId,
-            ["redirect_uri"] = targetRedirectUri,
+            ["client_id"] = opts.ClientId!,
+            ["redirect_uri"] = targetRedirectUri!,
             ["response_type"] = "code",
-            ["scope"] = _scope,
+            ["scope"] = scope,
             ["state"] = state
         };
 
         if (!string.IsNullOrWhiteSpace(nonce))
         {
-            query["nonce"] = nonce;
+            query["nonce"] = nonce!;
         }
 
         if (!string.IsNullOrWhiteSpace(codeChallenge))
         {
-            query["code_challenge"] = codeChallenge;
+            query["code_challenge"] = codeChallenge!;
             query["code_challenge_method"] = string.IsNullOrWhiteSpace(codeChallengeMethod) ? "S256" : codeChallengeMethod;
         }
 
@@ -126,7 +161,7 @@ public class ThaIdProvider : IThaIdProvider
             $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
 
         _logger.LogInformation("Generated ThaID authorization URL for RedirectUri: {RedirectUri}", targetRedirectUri);
-        return $"{_authorizationUrl}?{queryString}";
+        return $"{authorizationUrl}?{queryString}";
     }
 
     /// <inheritdoc />
@@ -165,9 +200,17 @@ public class ThaIdProvider : IThaIdProvider
             return ProviderHelper.CreateFailureResult("MISSING_AUTH_CODE", "Authorization code is required.");
         }
 
+        var opts = ResolveOptions();
+        if (string.IsNullOrWhiteSpace(opts.ClientId) || string.IsNullOrWhiteSpace(opts.ClientSecret))
+        {
+            return ProviderHelper.CreateFailureResult(
+                "MISSING_CONFIGURATION",
+                "Missing required configuration: IdentityVerification:ThaId:ClientId and ClientSecret are required.");
+        }
+
         var targetRedirectUri = !string.IsNullOrWhiteSpace(redirectUri)
             ? redirectUri
-            : _defaultRedirectUri;
+            : opts.RedirectUri;
 
         if (string.IsNullOrWhiteSpace(targetRedirectUri))
         {
@@ -178,18 +221,21 @@ public class ThaIdProvider : IThaIdProvider
         {
             ["grant_type"] = "authorization_code",
             ["code"] = authorizationCode,
-            ["client_id"] = _clientId,
-            ["client_secret"] = _clientSecret,
-            ["redirect_uri"] = targetRedirectUri
+            ["client_id"] = opts.ClientId!,
+            ["client_secret"] = opts.ClientSecret!,
+            ["redirect_uri"] = targetRedirectUri!
         };
 
         if (!string.IsNullOrWhiteSpace(codeVerifier))
         {
-            formFields["code_verifier"] = codeVerifier;
+            formFields["code_verifier"] = codeVerifier!;
         }
 
+        var tokenUrl = !string.IsNullOrWhiteSpace(opts.TokenUrl) ? opts.TokenUrl! : DefaultTokenUrl;
+
         return await ExecutePostFormAsync(
-            _tokenUrl,
+            tokenUrl,
+            opts,
             formFields,
             "TOKEN_EXCHANGE_FAILED",
             "ThaID token exchange successful",
@@ -207,6 +253,9 @@ public class ThaIdProvider : IThaIdProvider
             return ProviderHelper.CreateFailureResult("MISSING_REFRESH_TOKEN", "Refresh token is required.");
         }
 
+        var opts = ResolveOptions();
+        var tokenUrl = !string.IsNullOrWhiteSpace(opts.TokenUrl) ? opts.TokenUrl! : DefaultTokenUrl;
+
         var formFields = new Dictionary<string, string>
         {
             ["grant_type"] = "refresh_token",
@@ -214,7 +263,8 @@ public class ThaIdProvider : IThaIdProvider
         };
 
         return await ExecutePostFormAsync(
-            _tokenUrl,
+            tokenUrl,
+            opts,
             formFields,
             "TOKEN_REFRESH_FAILED",
             "ThaID token refresh successful",
@@ -232,13 +282,17 @@ public class ThaIdProvider : IThaIdProvider
             return ProviderHelper.CreateFailureResult("MISSING_TOKEN", "Access token is required for inspection.");
         }
 
+        var opts = ResolveOptions();
+        var inspectUrl = !string.IsNullOrWhiteSpace(opts.InspectUrl) ? opts.InspectUrl! : DefaultInspectUrl;
+
         var formFields = new Dictionary<string, string>
         {
             ["token"] = accessToken
         };
 
         return await ExecutePostFormAsync(
-            _inspectUrl,
+            inspectUrl,
+            opts,
             formFields,
             "TOKEN_INSPECT_FAILED",
             "ThaID token inspection successful",
@@ -256,13 +310,17 @@ public class ThaIdProvider : IThaIdProvider
             return ProviderHelper.CreateFailureResult("MISSING_TOKEN", "Token is required for revocation.");
         }
 
+        var opts = ResolveOptions();
+        var revokeUrl = !string.IsNullOrWhiteSpace(opts.RevokeUrl) ? opts.RevokeUrl! : DefaultRevokeUrl;
+
         var formFields = new Dictionary<string, string>
         {
             ["token"] = token
         };
 
         return await ExecutePostFormAsync(
-            _revokeUrl,
+            revokeUrl,
+            opts,
             formFields,
             "TOKEN_REVOKE_FAILED",
             "ThaID token revocation successful",
@@ -275,7 +333,10 @@ public class ThaIdProvider : IThaIdProvider
         string accessToken,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(_userInfoUrl))
+        var opts = ResolveOptions();
+        var userInfoUrl = !string.IsNullOrWhiteSpace(opts.UserInfoUrl) ? opts.UserInfoUrl! : DefaultUserInfoUrl;
+
+        if (string.IsNullOrWhiteSpace(userInfoUrl))
         {
             return ProviderHelper.CreateFailureResult(
                 "MISSING_USERINFO_URL",
@@ -289,7 +350,7 @@ public class ThaIdProvider : IThaIdProvider
 
         try
         {
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Get, _userInfoUrl);
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Get, userInfoUrl);
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
@@ -332,11 +393,19 @@ public class ThaIdProvider : IThaIdProvider
 
     private async Task<VerificationResult> ExecutePostFormAsync(
         string endpointUrl,
+        ThaIdOptions opts,
         IDictionary<string, string> formFields,
         string errorCodeOnFailure,
         string successMessage,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(opts.ClientId) || string.IsNullOrWhiteSpace(opts.ClientSecret))
+        {
+            return ProviderHelper.CreateFailureResult(
+                "MISSING_CONFIGURATION",
+                "Missing required configuration: IdentityVerification:ThaId:ClientId and ClientSecret are required.");
+        }
+
         try
         {
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpointUrl)
@@ -345,7 +414,7 @@ public class ThaIdProvider : IThaIdProvider
                     formFields.Select(kvp => new KeyValuePair<string?, string?>(kvp.Key, kvp.Value)))
             };
 
-            var basicCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
+            var basicCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{opts.ClientId}:{opts.ClientSecret}"));
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", basicCredentials);
 
             using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);

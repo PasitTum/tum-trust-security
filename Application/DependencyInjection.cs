@@ -1,20 +1,26 @@
 using Netka.Identity.Core.Interfaces;
+using Netka.Identity.Core.Models;
 using Netka.Identity.Infrastructure.Providers;
 using Netka.Identity.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
 
 namespace Netka.Identity.Application;
 
 /// <summary>
 /// Dependency Injection registration extensions for the Identity Verification SDK.
+/// Supports <see cref="IConfiguration"/> (appsettings.json), in-memory <see cref="IdentityVerificationOptions"/>,
+/// and dynamic Database-backed configuration via <see cref="IServiceProvider"/> or <see cref="IIdentityOptionsProvider"/>.
 /// </summary>
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers core identity verification services, AES-256 encryption, and verification providers (<see cref="IThaIdProvider"/> &amp; <see cref="IDopaProvider"/>).
+    /// Registers core identity verification services, AES-256 encryption, and verification providers
+    /// (<see cref="IThaIdProvider"/> &amp; <see cref="IDopaProvider"/>) using <see cref="IConfiguration"/>.
     /// </summary>
     public static IServiceCollection AddIdentityVerification(
         this IServiceCollection services,
@@ -23,55 +29,117 @@ public static class DependencyInjection
         if (services is null) throw new ArgumentNullException(nameof(services));
         if (configuration is null) throw new ArgumentNullException(nameof(configuration));
 
-        services.AddSingleton<IConfiguration>(configuration);
+        services.TryAddSingleton<IConfiguration>(configuration);
 
-        var encryptionKey = configuration["IdentityVerification:EncryptionKey"];
-        if (string.IsNullOrWhiteSpace(encryptionKey))
+        return services.AddIdentityVerification((sp, _) =>
         {
-            throw new InvalidOperationException("IdentityVerification:EncryptionKey missing");
-        }
+            // Options are automatically populated from IConfiguration in DelegateIdentityOptionsProvider
+        });
+    }
 
-        // 1. Register AES-256 Encryption Service as Singleton
+    /// <summary>
+    /// Registers core identity verification services using a static or code-based <see cref="IdentityVerificationOptions"/> configuration action.
+    /// </summary>
+    public static IServiceCollection AddIdentityVerification(
+        this IServiceCollection services,
+        Action<IdentityVerificationOptions> configure)
+    {
+        if (services is null) throw new ArgumentNullException(nameof(services));
+        if (configure is null) throw new ArgumentNullException(nameof(configure));
+
+        return services.AddIdentityVerification((_, options) => configure(options));
+    }
+
+    /// <summary>
+    /// Registers core identity verification services using a dynamic configuration action that can resolve
+    /// scoped or singleton services (such as EF Core <c>DbContext</c> or a Database Settings Repository) from <see cref="IServiceProvider"/>.
+    /// If <see cref="IConfiguration"/> is registered in DI, <see cref="IdentityVerificationOptions"/> is pre-populated from <c>appsettings.json</c>
+    /// before invoking <paramref name="configure"/>, allowing seamless hybrid (JSON + Database override) configuration.
+    /// </summary>
+    public static IServiceCollection AddIdentityVerification(
+        this IServiceCollection services,
+        Action<IServiceProvider, IdentityVerificationOptions> configure)
+    {
+        if (services is null) throw new ArgumentNullException(nameof(services));
+        if (configure is null) throw new ArgumentNullException(nameof(configure));
+
+        services.AddSingleton<IIdentityOptionsProvider>(sp => new DelegateIdentityOptionsProvider(sp, configure));
+        RegisterCoreServicesAndProviders(services);
+        return services;
+    }
+
+    /// <summary>
+    /// Registers core identity verification services using a custom <see cref="IIdentityOptionsProvider"/> implementation
+    /// (for example, a class that loads settings from a Database or Distributed Cache).
+    /// </summary>
+    public static IServiceCollection AddIdentityVerification<TOptionsProvider>(
+        this IServiceCollection services)
+        where TOptionsProvider : class, IIdentityOptionsProvider
+    {
+        if (services is null) throw new ArgumentNullException(nameof(services));
+
+        services.AddScoped<TOptionsProvider>();
+        services.AddSingleton<IIdentityOptionsProvider>(sp => new ScopedIdentityOptionsProviderAdapter<TOptionsProvider>(sp));
+        RegisterCoreServicesAndProviders(services);
+        return services;
+    }
+
+    private static void RegisterCoreServicesAndProviders(IServiceCollection services)
+    {
+        // 1. Register AES-256 Encryption Service (resolves EncryptionKey lazily/dynamically from IIdentityOptionsProvider)
         services.AddSingleton<IEncryptionService>(sp =>
             new AesEncryptionService(
-                encryptionKey,
+                sp.GetRequiredService<IIdentityOptionsProvider>(),
                 sp.GetService<ILogger<AesEncryptionService>>()));
 
         // 2. Register ThaID Provider (IThaIdProvider + IVerificationProvider)
         ConfigureProviderHttpClient<ThaIdProvider>(
             services,
-            configuration,
-            "IdentityVerification:ThaId:AllowUntrustedCertificates");
+            isThaId: true,
+            factory: (httpClient, sp) => new ThaIdProvider(
+                sp.GetRequiredService<IIdentityOptionsProvider>(),
+                httpClient,
+                sp.GetRequiredService<IEncryptionService>(),
+                sp.GetService<ILogger<ThaIdProvider>>() ?? NullLogger<ThaIdProvider>.Instance));
+
         services.AddTransient<IThaIdProvider>(sp => sp.GetRequiredService<ThaIdProvider>());
         services.AddTransient<IVerificationProvider>(sp => sp.GetRequiredService<ThaIdProvider>());
 
         // 3. Register DOPA Provider (IDopaProvider + IVerificationProvider)
         ConfigureProviderHttpClient<DopaProvider>(
             services,
-            configuration,
-            "IdentityVerification:Dopa:AllowUntrustedCertificates");
+            isThaId: false,
+            factory: (httpClient, sp) => new DopaProvider(
+                sp.GetRequiredService<IIdentityOptionsProvider>(),
+                httpClient,
+                sp.GetRequiredService<IEncryptionService>(),
+                sp.GetService<ILogger<DopaProvider>>() ?? NullLogger<DopaProvider>.Instance));
+
         services.AddTransient<IDopaProvider>(sp => sp.GetRequiredService<DopaProvider>());
         services.AddTransient<IVerificationProvider>(sp => sp.GetRequiredService<DopaProvider>());
-
-        return services;
     }
 
     private static void ConfigureProviderHttpClient<TProvider>(
         IServiceCollection services,
-        IConfiguration configuration,
-        string allowUntrustedCertConfigKey)
+        bool isThaId,
+        Func<HttpClient, IServiceProvider, TProvider> factory)
         where TProvider : class
     {
-        var allowUntrustedCerts = bool.TryParse(configuration[allowUntrustedCertConfigKey], out var allow) && allow;
-
         services.AddHttpClient<TProvider>(client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
             })
-            .ConfigurePrimaryHttpMessageHandler(() =>
+            .AddTypedClient(factory)
+            .ConfigurePrimaryHttpMessageHandler(sp =>
             {
                 var handler = new HttpClientHandler();
+                var optionsProvider = sp.GetService<IIdentityOptionsProvider>();
+                var options = optionsProvider?.GetOptions();
+                bool allowUntrustedCerts = isThaId
+                    ? options?.ThaId?.AllowUntrustedCertificates == true
+                    : options?.Dopa?.AllowUntrustedCertificates == true;
+
                 if (allowUntrustedCerts)
                 {
                     handler.ServerCertificateCustomValidationCallback =
@@ -102,5 +170,51 @@ public static class DependencyInjection
             .CircuitBreakerAsync(
                 handledEventsAllowedBeforeBreaking: 5,
                 durationOfBreak: TimeSpan.FromSeconds(30));
+    }
+
+    private sealed class DelegateIdentityOptionsProvider : IIdentityOptionsProvider
+    {
+        private readonly IServiceProvider _rootServiceProvider;
+        private readonly Action<IServiceProvider, IdentityVerificationOptions> _configure;
+
+        public DelegateIdentityOptionsProvider(
+            IServiceProvider rootServiceProvider,
+            Action<IServiceProvider, IdentityVerificationOptions> configure)
+        {
+            _rootServiceProvider = rootServiceProvider;
+            _configure = configure;
+        }
+
+        public IdentityVerificationOptions GetOptions()
+        {
+            using var scope = _rootServiceProvider.CreateScope();
+            var scopedSp = scope.ServiceProvider;
+
+            var config = scopedSp.GetService<IConfiguration>();
+            var options = config is not null
+                ? IdentityVerificationOptions.FromConfiguration(config)
+                : new IdentityVerificationOptions();
+
+            _configure(scopedSp, options);
+            return options;
+        }
+    }
+
+    private sealed class ScopedIdentityOptionsProviderAdapter<TOptionsProvider> : IIdentityOptionsProvider
+        where TOptionsProvider : class, IIdentityOptionsProvider
+    {
+        private readonly IServiceProvider _rootServiceProvider;
+
+        public ScopedIdentityOptionsProviderAdapter(IServiceProvider rootServiceProvider)
+        {
+            _rootServiceProvider = rootServiceProvider;
+        }
+
+        public IdentityVerificationOptions GetOptions()
+        {
+            using var scope = _rootServiceProvider.CreateScope();
+            var provider = scope.ServiceProvider.GetRequiredService<TOptionsProvider>();
+            return provider.GetOptions();
+        }
     }
 }

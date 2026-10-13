@@ -22,16 +22,15 @@ public class DopaProvider : IDopaProvider
     /// <inheritdoc />
     public string ProviderName => "DOPA";
 
-    private readonly string _defaultVerificationUrl;
-    private readonly string _laserVerificationUrl;
-    private readonly string _chipVerificationUrl;
-    private readonly string? _apiKey;
+    private readonly IConfiguration? _configuration;
+    private readonly IIdentityOptionsProvider? _optionsProvider;
+    private readonly DopaOptions? _staticOptions;
     private readonly HttpClient _httpClient;
     private readonly IEncryptionService _encryptionService;
     private readonly ILogger<DopaProvider> _logger;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="DopaProvider"/>.
+    /// Initializes a new instance of <see cref="DopaProvider"/> using <see cref="IConfiguration"/>.
     /// </summary>
     public DopaProvider(
         IConfiguration configuration,
@@ -39,32 +38,55 @@ public class DopaProvider : IDopaProvider
         IEncryptionService encryptionService,
         ILogger<DopaProvider> logger)
     {
-        if (configuration is null) throw new ArgumentNullException(nameof(configuration));
-        if (httpClient is null) throw new ArgumentNullException(nameof(httpClient));
-        if (encryptionService is null) throw new ArgumentNullException(nameof(encryptionService));
-        if (logger is null) throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        var section = configuration.GetSection("IdentityVerification:Dopa");
+    /// <summary>
+    /// Initializes a new instance of <see cref="DopaProvider"/> using a <see cref="DopaOptions"/> object (e.g., loaded from a Database).
+    /// </summary>
+    public DopaProvider(
+        DopaOptions options,
+        HttpClient httpClient,
+        IEncryptionService encryptionService,
+        ILogger<DopaProvider> logger)
+    {
+        _staticOptions = options ?? throw new ArgumentNullException(nameof(options));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        _defaultVerificationUrl = section["VerificationUrl"]
-            ?? section["LaserUrl"]
-            ?? section["LaserVerificationUrl"]
-            ?? throw new InvalidOperationException(
-                "Missing required configuration: IdentityVerification:Dopa:VerificationUrl (or LaserUrl)");
+    /// <summary>
+    /// Initializes a new instance of <see cref="DopaProvider"/> using a dynamic <see cref="IIdentityOptionsProvider"/> (e.g., Database-backed configuration).
+    /// </summary>
+    public DopaProvider(
+        IIdentityOptionsProvider optionsProvider,
+        HttpClient httpClient,
+        IEncryptionService encryptionService,
+        ILogger<DopaProvider> logger)
+    {
+        _optionsProvider = optionsProvider ?? throw new ArgumentNullException(nameof(optionsProvider));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        _laserVerificationUrl = section["LaserUrl"]
-            ?? section["LaserVerificationUrl"]
-            ?? _defaultVerificationUrl;
+    private DopaOptions ResolveOptions()
+    {
+        if (_optionsProvider is not null)
+        {
+            return _optionsProvider.GetOptions()?.Dopa ?? new DopaOptions();
+        }
 
-        _chipVerificationUrl = section["ChipUrl"]
-            ?? section["ChipVerificationUrl"]
-            ?? _defaultVerificationUrl;
+        if (_configuration is not null)
+        {
+            return DopaOptions.FromSection(_configuration.GetSection("IdentityVerification:Dopa"));
+        }
 
-        _apiKey = section["ApiKey"];
-
-        _httpClient = httpClient;
-        _encryptionService = encryptionService;
-        _logger = logger;
+        return _staticOptions ?? new DopaOptions();
     }
 
     /// <inheritdoc />
@@ -101,6 +123,11 @@ public class DopaProvider : IDopaProvider
                 "firstName, lastName, birthDate, and laserId are required for DOPA Laser verification.");
         }
 
+        var opts = ResolveOptions();
+        var laserUrl = !string.IsNullOrWhiteSpace(opts.LaserUrl)
+            ? opts.LaserUrl
+            : opts.VerificationUrl;
+
         var payload = new Dictionary<string, object>
         {
             ["PID"] = pid,
@@ -110,7 +137,7 @@ public class DopaProvider : IDopaProvider
             ["Laser"] = laserId
         };
 
-        return await SendPostJsonAsync(_laserVerificationUrl, payload, cancellationToken);
+        return await SendPostJsonAsync(laserUrl, opts.ApiKey, payload, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -135,6 +162,13 @@ public class DopaProvider : IDopaProvider
                 "Smart Card chipNo is required for DOPA Chip verification.");
         }
 
+        var opts = ResolveOptions();
+        var chipUrl = !string.IsNullOrWhiteSpace(opts.ChipUrl)
+            ? opts.ChipUrl
+            : !string.IsNullOrWhiteSpace(opts.VerificationUrl)
+                ? opts.VerificationUrl
+                : opts.LaserUrl;
+
         var payload = new Dictionary<string, object>
         {
             ["PID"] = pid,
@@ -143,10 +177,10 @@ public class DopaProvider : IDopaProvider
 
         if (!string.IsNullOrWhiteSpace(bp1No))
         {
-            payload["bp1no"] = bp1No;
+            payload["bp1no"] = bp1No!;
         }
 
-        return await SendPostJsonAsync(_chipVerificationUrl, payload, cancellationToken);
+        return await SendPostJsonAsync(chipUrl, opts.ApiKey, payload, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -172,14 +206,29 @@ public class DopaProvider : IDopaProvider
                 "Citizen ID (pid) must be a valid 13-digit Thai National ID.");
         }
 
-        return await SendPostJsonAsync(_defaultVerificationUrl, request.AdditionalParameters, cancellationToken);
+        var opts = ResolveOptions();
+        var defaultUrl = !string.IsNullOrWhiteSpace(opts.VerificationUrl)
+            ? opts.VerificationUrl
+            : !string.IsNullOrWhiteSpace(opts.LaserUrl)
+                ? opts.LaserUrl
+                : opts.ChipUrl;
+
+        return await SendPostJsonAsync(defaultUrl, opts.ApiKey, request.AdditionalParameters, cancellationToken);
     }
 
     private async Task<VerificationResult> SendPostJsonAsync(
-        string targetUrl,
+        string? targetUrl,
+        string? apiKey,
         IDictionary<string, object> requestParameters,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(targetUrl))
+        {
+            return ProviderHelper.CreateFailureResult(
+                "MISSING_CONFIGURATION",
+                "Missing required configuration: IdentityVerification:Dopa:VerificationUrl (or LaserUrl / ChipUrl).");
+        }
+
         try
         {
             var jsonContent = JsonSerializer.Serialize(requestParameters);
@@ -188,9 +237,9 @@ public class DopaProvider : IDopaProvider
                 Content = new StringContent(jsonContent, Encoding.UTF8, "application/json")
             };
 
-            if (!string.IsNullOrWhiteSpace(_apiKey))
+            if (!string.IsNullOrWhiteSpace(apiKey))
             {
-                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             }
 
             using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);

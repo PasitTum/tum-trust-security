@@ -76,22 +76,44 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 ```
 
 ### Step 5: ลงทะเบียน Dependency Injection (`Startup.cs` หรือ `Program.cs`)
-เพิ่ม `using Netka.Identity.Application;` และเรียกใช้งาน `AddIdentityVerification`:
-- **กรณีโปรเจกต์ .NET 5.0 (`Startup.cs`):**
-  ```csharp
-  using Netka.Identity.Application;
+เพิ่ม `using Netka.Identity.Application;` และเลือกวิธีลงทะเบียนตามแหล่งเก็บค่า Config ของโปรเจกต์ปลายทาง:
 
-  public void ConfigureServices(IServiceCollection services)
-  {
-      services.AddIdentityVerification(Configuration);
-  }
-  ```
-- **กรณีโปรเจกต์ .NET 8.0 / .NET 10.0 (`Program.cs`):**
-  ```csharp
-  using Netka.Identity.Application;
+1. **กรณีอ่านค่าจาก `appsettings.json` (`IConfiguration`):**
+   - **.NET 5.0 (`Startup.cs`):**
+     ```csharp
+     services.AddIdentityVerification(Configuration);
+     ```
+   - **.NET 8.0 / .NET 10.0 (`Program.cs`):**
+     ```csharp
+     builder.Services.AddIdentityVerification(builder.Configuration);
+     ```
 
-  builder.Services.AddIdentityVerification(builder.Configuration);
-  ```
+2. **กรณีเก็บค่า Config ไว้ใน Database (DB) หรือดึงผ่าน Repository / `DbContext` (รองรับ Hot Reload ทันทีเมื่อแก้ค่าใน DB โดยไม่ต้อง Restart แอป):**
+   - ตัว SDK จะสร้าง Scope ให้โดยอัตโนมัติ จึงสามารถเรียก `sp.GetRequiredService<MyDbContext>()` หรือ Scoped Service ของโปรเจกต์ปลายทางได้โดยตรง และหากตั้งค่าไว้แค่บาง Provider (เช่น ตั้งค่าแค่ ThaID แต่ยังไม่ได้ตั้งค่า DOPA ใน DB) แอปก็จะไม่พังตอน Startup:
+     ```csharp
+     using Netka.Identity.Application;
+
+     builder.Services.AddIdentityVerification((sp, options) =>
+     {
+         // ดึงค่าจาก Database Repository หรือ DbContext ของโปรเจกต์ปลายทาง
+         var configRepo = sp.GetRequiredService<IKioskConfigRepository>();
+         var dbConfig = configRepo.GetIdentitySettings();
+
+         options.EncryptionKey = dbConfig.EncryptionKey;
+
+         options.ThaId.ClientId = dbConfig.ThaIdClientId;
+         options.ThaId.ClientSecret = dbConfig.ThaIdClientSecret;
+         options.ThaId.AuthorizeUrl = dbConfig.ThaIdAuthorizeUrl; // รองรับทั้ง AuthorizeUrl และ AuthorizationUrl
+         options.ThaId.TokenUrl = dbConfig.ThaIdTokenUrl;
+         options.ThaId.RedirectUri = dbConfig.ThaIdRedirectUri;
+         options.ThaId.Scope = dbConfig.ThaIdScope;
+
+         options.Dopa.LaserUrl = dbConfig.DopaLaserUrl;
+         options.Dopa.ChipUrl = dbConfig.DopaChipUrl;
+         options.Dopa.ApiKey = dbConfig.DopaApiKey;
+     });
+     ```
+   - หรือหากต้องการแยกเป็นคลาส สามารถ Implement `IIdentityOptionsProvider` แล้วลงทะเบียนด้วย `builder.Services.AddIdentityVerification<MyDbIdentityOptionsProvider>();` ได้เช่นกัน
 
 ### Step 6: สร้าง Service หรือ Controller เชื่อมต่อตามความต้องการของโปรเจกต์ปลายทาง
 
