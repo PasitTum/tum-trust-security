@@ -89,3 +89,27 @@
 | **`CARD_VERIFICATION_REJECTED`** | กรมการปกครองตอบกลับว่า `IsError: true` (เช่น เลขหลังบัตรไม่ตรงกับหน้าบัตร, บัตรหมดอายุ/ถูกยกเลิก, หรือสถานะบัตรไม่ปกติ) โดยดูรายละเอียดเพิ่มได้ใน `result.Data` | `200` |
 | **`DOPA_API_FAILED`** | เซิร์ฟเวอร์ DOPA Gateway ตอบกลับ HTTP Error (เช่น `500`, `502`, `503 Service Unavailable`) | `500` / `503` |
 | **`INVALID_DOPA_RESPONSE`** | เซิร์ฟเวอร์ DOPA ตอบกลับไม่ใช่รูปแบบ JSON ที่ถูกต้อง | `null` |
+
+---
+
+## 4. แผนงานปรับปรุงสถาปัตยกรรมในอนาคต (Future Architectural Roadmap: Secret Management)
+
+### 4.1 ข้อสังเกตและช่องโหว่ความเสี่ยงในปัจจุบัน (Current Pain Points & Security Risks)
+ปัจจุบันตู้ Kiosk มีการประกาศตัวแปรการตั้งค่าในตาราง `variables` แบบ Flat Keys ถึง 36 ตัวแปร ซึ่งก่อให้เกิดความเสี่ยงและภาระการดูแลระบบดังนี้:
+1. **ความเสี่ยงข้อมูลความลับรั่วไหล (Plaintext Secrets in Database):**
+   - ค่าความลับระดับสูงสุด เช่น `kiosk_thaid_client_secret`, `kiosk_thaid_api_key`, `kiosk_dopa_consumer_secret` ถูกบันทึกเป็น Plaintext อยู่ในฐานข้อมูล
+   - หากฐานข้อมูลถูกโจมตี (SQL Injection, Database Backup หลุด หรือ Harddisk ประจำตู้ถูกถอด) ผู้โจมตีจะได้กุญแจลับไปสวมรอยเรียกข้อมูลประชาชนได้ทันที
+2. **ความซับซ้อนในการจัดการ (Configuration Sprawl):**
+   - ตัวแปร 36 ตัวแปรมีความกระจัดกระจาย ตรวจสอบความถูกต้องได้ยาก และเสี่ยงต่อการสะกดชื่อผิด (Typo)
+
+### 4.2 สถาปัตยกรรมเป้าหมายที่แนะนำ (Recommended Target Architecture)
+1. **การแยก Configuration ทั่วไป ออกจาก Secrets (Principle of Least Privilege):**
+   - **Non-sensitive Config (เก็บบน DB ได้):** เช่น `redirect_uri`, `scope`, `face_threshold`, `use_mock`
+     * รวมเป็น **JSON Config Block** เหลือเพียง 2 แถวใน DB: `kiosk_thaid_config` และ `kiosk_dopa_config`
+     * สามารถ Deserialize เข้า Object ของ SDK ได้ในบรรทัดเดียว
+   - **Sensitive Secrets (ห้ามเก็บบน DB เป็น Plaintext เด็ดขาด):**
+     * **แนวทางที่ 1 (Best Practice):** ย้ายไปเก็บใน **OS Environment Variables** หรือ **Windows DPAPI / Machine KeyStore** ของตัวตู้ Kiosk ซึ่งเข้าถึงได้เฉพาะบัญชี Service ของระบบเท่านั้น
+     * **แนวทางที่ 2 (Encrypted at Rest):** หากจำเป็นต้องเก็บบน DB เพื่อให้หน้า Web Admin แก้ไขได้ ต้องบังคับเข้ารหัสด้วย `AES-256-GCM` โดยใช้กุญแจลับ (`identity_encryption_key`) ที่ซ่อนอยู่นอกฐานข้อมูลเสมอ
+2. **Convention Over Configuration (การลดตัวแปรที่ไม่จำเป็น):**
+   - Endpoint มาตรฐานของ ThaID (`authorize_url`, `token_url`, `userinfo_url`, `jwks_url`) สามารถอ่านอัตโนมัติผ่าน Discovery URL (`.well-known/openid-configuration`) หรือกำหนดเป็น Built-in Default ใน SDK
+   - ช่วยลดตัวแปรที่ต้องตั้งค่าในตู้ Kiosk จาก 36 ตัว เหลือเพียงไม่เกิน 4-5 ตัวที่จำเป็นจริงๆ เท่านั้น

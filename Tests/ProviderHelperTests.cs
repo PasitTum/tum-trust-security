@@ -46,4 +46,32 @@ public class ProviderHelperTests
         var address = Assert.IsAssignableFrom<IDictionary<string, object>>(dict["address"]);
         Assert.Equal("กรุงเทพมหานคร", address["province"]);
     }
+
+    [Fact]
+    public void GetFormattedAddress_ExtractsFormattedStringFromDictionary()
+    {
+        var dict = new Dictionary<string, object>
+        {
+            ["address"] = new Dictionary<string, object>
+            {
+                ["formatted"] = "99/9 หมู่ที่ 1 ถนนแจ้งวัฒนะ นนทบุรี",
+                ["province"] = "นนทบุรี"
+            }
+        };
+
+        var addr = dict.GetFormattedAddress();
+        Assert.Equal("99/9 หมู่ที่ 1 ถนนแจ้งวัฒนะ นนทบุรี", addr);
+    }
+
+    [Fact]
+    public void GetFormattedAddress_ExtractsDirectString()
+    {
+        var dict = new Dictionary<string, object>
+        {
+            ["address"] = "123 ถ.สุขุมวิท กทม."
+        };
+
+        var addr = dict.GetFormattedAddress();
+        Assert.Equal("123 ถ.สุขุมวิท กทม.", addr);
+    }
 }

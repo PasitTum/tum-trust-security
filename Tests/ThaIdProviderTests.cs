@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Netka.Identity.Core.Models;
 using Netka.Identity.Infrastructure.Providers;
+using Netka.Identity.Infrastructure.Helpers;
 using Netka.Identity.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -60,6 +61,28 @@ public class ThaIdProviderTests
         Assert.Contains("code_challenge=challenge-xyz", url);
         Assert.Contains("code_challenge_method=S256", url);
         Assert.Contains("nonce=nonce-999", url);
+    }
+
+    [Fact]
+    public void GetAuthorizationUrl_WithCustomScope_UsesCustomScope()
+    {
+        // Arrange
+        var handler = new MockHttpMessageHandler(_ => MockHttpMessageHandler.JsonResponse("{}"));
+        var provider = CreateProvider(handler);
+
+        // Act
+        string url = provider.GetAuthorizationUrl(
+            redirectUri: "https://kiosk.local/callback",
+            state: "state-123",
+            codeChallenge: "challenge-xyz",
+            codeChallengeMethod: "S256",
+            nonce: "nonce-999",
+            scope: "openid pid address");
+
+        // Assert
+        Assert.Contains("scope=openid%20pid%20address", url);
+        // Ensure scope is NOT duplicated
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(url, "scope="));
     }
 
     [Fact]
@@ -486,7 +509,10 @@ public class ThaIdProviderTests
         // Step 1: GetAuthorizationUrl returns Loopback Callback URL directly (suitable for QR Code or Browser Redirect)
         string loopbackUrl = provider.GetAuthorizationUrl(
             redirectUri: "https://kiosk.local/api/auth/thaid/callback",
-            state: "mock-state-999");
+            state: "mock-state-999",
+            codeChallenge: null,
+            codeChallengeMethod: "S256",
+            nonce: "nonce-123");
 
         Assert.Equal(
             "https://kiosk.local/api/auth/thaid/callback?code=mock-auth-code-001&state=mock-state-999",
@@ -495,7 +521,9 @@ public class ThaIdProviderTests
         // Step 2: ExchangeCodeAsync returns all 20 scopes in-memory
         var result = await provider.ExchangeCodeAsync("mock-auth-code-001");
         Assert.True(result.IsSuccess);
-        Assert.Equal("1100501234561", result.Data["pid"]);
+        Assert.Equal("1100501234567", result.Data["pid"]);
+        // Verify mock PID passes Modulo 11 check digit so DOPA face verify can accept it
+        Assert.True(result.Data["pid"].ToString().IsValidThaiNationalId());
         Assert.Equal("นาย สมชาย ใจดี", result.Data["name"]);
         Assert.Equal("Mr. Somchai Jaidee", result.Data["name_en"]);
         Assert.Equal("1001012345678901", result.Data["smartcard_code"]);
@@ -520,12 +548,20 @@ public class ThaIdProviderTests
         Assert.True(jwksResult.IsSuccess);
         Assert.True(jwksResult.Data.ContainsKey("keys"));
 
+        // 4a. ValidateIdTokenAsync in mock mode with matching nonce succeeds
         var idTokenResult = await provider.ValidateIdTokenAsync(
             result.Data["id_token"].ToString()!,
             expectedNonce: "nonce-123");
         Assert.True(idTokenResult.IsSuccess);
-        Assert.Equal("1100501234561", idTokenResult.Data["pid"]);
+        Assert.Equal("1100501234567", idTokenResult.Data["pid"]);
         Assert.Equal("nonce-123", idTokenResult.Data["nonce"]);
+
+        // 4b. ValidateIdTokenAsync in mock mode with mismatched nonce fails with INVALID_NONCE
+        var wrongNonceResult = await provider.ValidateIdTokenAsync(
+            result.Data["id_token"].ToString()!,
+            expectedNonce: "wrong-tampered-nonce");
+        Assert.False(wrongNonceResult.IsSuccess);
+        Assert.Equal("INVALID_NONCE", wrongNonceResult.ErrorCode);
     }
 
     [Fact]
@@ -600,7 +636,7 @@ public class ThaIdProviderTests
         var headerB64 = ToBase64Url(System.Text.Encoding.UTF8.GetBytes("""{"alg":"ES256","typ":"JWT","kid":"test-es256-key"}"""));
         var exp = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds();
         var payloadB64 = ToBase64Url(System.Text.Encoding.UTF8.GetBytes(
-            $$"""{"iss":"https://imauth.bora.dopa.go.th","aud":"test-thaid-client-id","exp":{{exp}},"nonce":"my-nonce-001","pid":"1100501234561","given_name":"สมชาย"}"""));
+            $$"""{"iss":"https://imauth.bora.dopa.go.th","aud":"test-thaid-client-id","exp":{{exp}},"nonce":"my-nonce-001","pid":"1100501234567","given_name":"สมชาย"}"""));
         var signingInput = $"{headerB64}.{payloadB64}";
         var sigBytes = ecdsa.SignData(System.Text.Encoding.ASCII.GetBytes(signingInput), System.Security.Cryptography.HashAlgorithmName.SHA256);
         var jwt = $"{signingInput}.{ToBase64Url(sigBytes)}";
@@ -608,7 +644,7 @@ public class ThaIdProviderTests
         // 3. ValidateIdTokenAsync succeeds with valid ES256 signature and matching nonce
         var validResult = await provider.ValidateIdTokenAsync(jwt, expectedNonce: "my-nonce-001");
         Assert.True(validResult.IsSuccess);
-        Assert.Equal("1100501234561", validResult.Data["pid"]);
+        Assert.Equal("1100501234567", validResult.Data["pid"]);
         Assert.Equal("สมชาย", validResult.Data["given_name"]);
 
         // 4. ValidateIdTokenAsync fails when nonce mismatches

@@ -39,6 +39,7 @@ public class ThaIdProvider : IThaIdProvider
     private readonly HttpClient _httpClient;
     private readonly IEncryptionService _encryptionService;
     private readonly ILogger<ThaIdProvider> _logger;
+    private static string? _lastMockNonce;
 
     /// <summary>
     /// Initializes a new instance of <see cref="ThaIdProvider"/> using <see cref="IConfiguration"/>.
@@ -122,7 +123,8 @@ public class ThaIdProvider : IThaIdProvider
         string state,
         string? codeChallenge,
         string codeChallengeMethod = "S256",
-        string? nonce = null)
+        string? nonce = null,
+        string? scope = null)
     {
         var opts = ResolveOptions();
 
@@ -138,6 +140,11 @@ public class ThaIdProvider : IThaIdProvider
         if (string.IsNullOrWhiteSpace(state))
         {
             throw new ArgumentException("State cannot be null or whitespace.", nameof(state));
+        }
+
+        if (!string.IsNullOrWhiteSpace(nonce))
+        {
+            _lastMockNonce = nonce;
         }
 
         if (opts.UseMock)
@@ -165,9 +172,9 @@ public class ThaIdProvider : IThaIdProvider
             throw new InvalidOperationException("Missing required configuration: IdentityVerification:ThaId:ClientId");
         }
 
-        var scope = !string.IsNullOrWhiteSpace(opts.Scope)
-            ? opts.Scope!
-            : "openid pid profile";
+        var targetScope = !string.IsNullOrWhiteSpace(scope)
+            ? scope!
+            : (!string.IsNullOrWhiteSpace(opts.Scope) ? opts.Scope! : "openid pid profile");
 
         var authorizationUrl = !string.IsNullOrWhiteSpace(opts.AuthorizeUrl)
             ? opts.AuthorizeUrl!
@@ -178,7 +185,7 @@ public class ThaIdProvider : IThaIdProvider
             ["client_id"] = opts.ClientId!,
             ["redirect_uri"] = targetRedirectUri!,
             ["response_type"] = "code",
-            ["scope"] = scope,
+            ["scope"] = targetScope,
             ["state"] = state
         };
 
@@ -197,7 +204,8 @@ public class ThaIdProvider : IThaIdProvider
             $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
 
         _logger.LogInformation("Generated ThaID authorization URL for RedirectUri: {RedirectUri}", targetRedirectUri);
-        return $"{authorizationUrl}?{queryString}";
+        var urlSeparator = authorizationUrl.Contains('?') ? "&" : "?";
+        return $"{authorizationUrl}{urlSeparator}{queryString}";
     }
 
     /// <inheritdoc />
@@ -582,16 +590,20 @@ public class ThaIdProvider : IThaIdProvider
 
         if (opts.UseMock && idToken.StartsWith("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.mock-id-token", StringComparison.Ordinal))
         {
+            if (!string.IsNullOrWhiteSpace(_lastMockNonce) &&
+                !string.IsNullOrWhiteSpace(expectedNonce) &&
+                !string.Equals(_lastMockNonce, expectedNonce, StringComparison.Ordinal))
+            {
+                return ProviderHelper.CreateFailureResult("INVALID_NONCE", "ID token nonce does not match the expected nonce.");
+            }
+
             _logger.LogWarning("[MOCK-MODE] ThaID ValidateIdTokenAsync returning simulated decoded ID token claims.");
             var mockClaims = CreateMockThaIdCitizenClaims();
             mockClaims["iss"] = !string.IsNullOrWhiteSpace(opts.Issuer) ? opts.Issuer! : DefaultIssuer;
             mockClaims["aud"] = !string.IsNullOrWhiteSpace(opts.ClientId) ? opts.ClientId! : "thaid-mock-client";
             mockClaims["exp"] = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds();
             mockClaims["iat"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            if (!string.IsNullOrWhiteSpace(expectedNonce))
-            {
-                mockClaims["nonce"] = expectedNonce!;
-            }
+            mockClaims["nonce"] = !string.IsNullOrWhiteSpace(_lastMockNonce) ? _lastMockNonce! : (expectedNonce ?? "mock-nonce");
             _logger.LogEncryptedPiiIfPresent(_encryptionService, ProviderName, mockClaims, "pid", "citizen_id");
             return new VerificationResult
             {
@@ -706,6 +718,7 @@ public class ThaIdProvider : IThaIdProvider
 
     private VerificationResult ExecuteMockTokenExchange(string authorizationCode)
     {
+        var opts = ResolveOptions();
         if (string.Equals(authorizationCode, "mock-expired-code", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("[MOCK-MODE] ThaID ExchangeCodeAsync simulating UC-THAID-03 (Expired/Invalid Code -> HTTP 400).");
@@ -730,7 +743,18 @@ public class ThaIdProvider : IThaIdProvider
         responseData["expires_in"] = 3600L;
         responseData["scope"] = "openid pid title title_en name name_en given_name middle_name family_name given_name_en middle_name_en family_name_en gender birthdate address house_address smartcard_code date_of_issuance date_of_expiry ial";
         responseData["refresh_token"] = "mock-thaid-refresh-token-2026";
-        responseData["id_token"] = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.mock-id-token";
+
+        var mockPayloadClaims = new Dictionary<string, object>(responseData)
+        {
+            ["iss"] = !string.IsNullOrWhiteSpace(opts.Issuer) ? opts.Issuer! : DefaultIssuer,
+            ["aud"] = !string.IsNullOrWhiteSpace(opts.ClientId) ? opts.ClientId! : "thaid-mock-client",
+            ["exp"] = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds(),
+            ["iat"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            ["nonce"] = !string.IsNullOrWhiteSpace(_lastMockNonce) ? _lastMockNonce! : "mock-nonce-default"
+        };
+        var headerB64 = EncodeBase64Url(Encoding.UTF8.GetBytes("{\"alg\":\"RS256\",\"typ\":\"JWT\"}"));
+        var payloadB64 = EncodeBase64Url(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(mockPayloadClaims)));
+        responseData["id_token"] = $"{headerB64}.{payloadB64}.mock-sig";
 
         _logger.LogEncryptedPiiIfPresent(_encryptionService, ProviderName, responseData, "pid", "citizen_id");
 
@@ -747,7 +771,7 @@ public class ThaIdProvider : IThaIdProvider
         return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
         {
             ["sub"] = "thaid-mock-sub-001",
-            ["pid"] = "1100501234561",
+            ["pid"] = "1100501234567",
             ["title"] = "นาย",
             ["title_en"] = "Mr.",
             ["name"] = "นาย สมชาย ใจดี",
@@ -916,6 +940,11 @@ public class ThaIdProvider : IThaIdProvider
             case 3: padded += "="; break;
         }
         return Convert.FromBase64String(padded);
+    }
+
+    private static string EncodeBase64Url(byte[] input)
+    {
+        return Convert.ToBase64String(input).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
     private static bool TryConvertToLong(object? value, out long result)

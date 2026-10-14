@@ -9,7 +9,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionPrefix>1.0.1</VersionPrefix>
     <Authors>Netka Team</Authors>
     <Description>Netka Enterprise Identity Verification SDK for ThaID and DOPA Citizen Card providers (.NET 5, .NET 8 &amp; .NET 10)</Description>
     <PackageProjectUrl>https://github.com/netkasystem/nks-enterprise-identity</PackageProjectUrl>

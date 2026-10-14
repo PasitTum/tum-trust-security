@@ -275,4 +275,70 @@ public static class ProviderHelper
             }
         }
     }
+
+    /// <summary>
+    /// Extracts a formatted human-readable Thai address string from identity verification response data.
+    /// Safely inspects both string claims and OIDC Address object dictionaries (reading "formatted",
+    /// or concatenating component address fields), avoiding raw type serialization bugs.
+    /// </summary>
+    public static string? GetFormattedAddress(this IDictionary<string, object>? parameters, params string[] candidateKeys)
+    {
+        if (parameters is null) return null;
+
+        var keys = candidateKeys.Length > 0 ? candidateKeys : new[] { "address", "house_address" };
+        foreach (var key in keys)
+        {
+            if (!parameters.TryGetValue(key, out var raw) || raw is null) continue;
+
+            if (raw is string str && !string.IsNullOrWhiteSpace(str))
+                return str.Trim();
+
+            if (raw is IDictionary<string, object> dict)
+            {
+                if (dict.TryGetValue("formatted", out var fmt) && fmt is not null)
+                {
+                    var fmtStr = fmt.ToString();
+                    if (!string.IsNullOrWhiteSpace(fmtStr)) return fmtStr.Trim();
+                }
+
+                var parts = dict.Values
+                    .Where(v => v is not null && v is not IDictionary<string, object>)
+                    .Select(v => v!.ToString())
+                    .Where(s => !string.IsNullOrWhiteSpace(s));
+                var joined = string.Join(" ", parts).Trim();
+                if (!string.IsNullOrWhiteSpace(joined)) return joined;
+            }
+            else if (raw is JsonElement el)
+            {
+                if (el.ValueKind == JsonValueKind.String)
+                {
+                    var s = el.GetString();
+                    if (!string.IsNullOrWhiteSpace(s)) return s;
+                }
+                else if (el.ValueKind == JsonValueKind.Object)
+                {
+                    if (el.TryGetProperty("formatted", out var f) && f.ValueKind == JsonValueKind.String)
+                    {
+                        var s = f.GetString();
+                        if (!string.IsNullOrWhiteSpace(s)) return s;
+                    }
+                    var parts = el.EnumerateObject()
+                        .Where(x => x.Value.ValueKind == JsonValueKind.String)
+                        .Select(x => x.Value.GetString())
+                        .Where(s => !string.IsNullOrWhiteSpace(s));
+                    var joined = string.Join(" ", parts).Trim();
+                    if (!string.IsNullOrWhiteSpace(joined)) return joined;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Extracts a formatted human-readable Thai address string directly from a <see cref="VerificationResult"/>.
+    /// </summary>
+    public static string? GetFormattedAddress(this VerificationResult? result)
+    {
+        return result?.Data?.GetFormattedAddress();
+    }
 }
