@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models;
+﻿namespace Tum.Trust.Security.Core.Models;
 
 /// <summary>
 /// Hybrid model representing an identity verification request.

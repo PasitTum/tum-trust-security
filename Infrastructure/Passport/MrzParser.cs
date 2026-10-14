@@ -1,6 +1,6 @@
-using Netka.Identity.Core.Models.Passport;
+﻿using Tum.Trust.Security.Core.Models.Passport;
 
-namespace Netka.Identity.Infrastructure.Passport;
+namespace Tum.Trust.Security.Infrastructure.Passport;
 
 /// <summary>
 /// Parser and validator for ICAO Doc 9303 Machine Readable Travel Documents (MRTD).

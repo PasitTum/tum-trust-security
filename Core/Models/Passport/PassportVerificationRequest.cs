@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models.Passport;
+﻿namespace Tum.Trust.Security.Core.Models.Passport;
 
 /// <summary>
 /// Represents an ePassport verification payload containing NFC Data Groups or raw APDU dumps.

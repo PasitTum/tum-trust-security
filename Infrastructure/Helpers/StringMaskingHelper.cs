@@ -1,4 +1,4 @@
-namespace Netka.Identity.Infrastructure.Helpers;
+﻿namespace Tum.Trust.Security.Infrastructure.Helpers;
 
 /// <summary>
 /// String masking utilities for secure logging and display of sensitive data.

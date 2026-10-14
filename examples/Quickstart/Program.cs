@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Netka.Identity.Application;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models.Biometrics;
-using Netka.Identity.Core.Models.Passport;
-using Netka.Identity.Infrastructure.Passport;
+using Tum.Trust.Security.Application;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models.Biometrics;
+using Tum.Trust.Security.Core.Models.Passport;
+using Tum.Trust.Security.Infrastructure.Passport;
 
 namespace Tum.Trust.Security.Examples.Quickstart;
 

@@ -1,6 +1,6 @@
-using Netka.Identity.Core.Models;
+﻿using Tum.Trust.Security.Core.Models;
 
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Defines the contract for DOPA ThaID (OAuth 2.0 / OIDC) operations.

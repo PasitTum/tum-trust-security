@@ -1,12 +1,12 @@
-<#
+﻿<#
 .SYNOPSIS
-    Installs or updates the Claude Code Global Skill (integrate-netka-identity) to ~/.claude/skills/
-    and parent workspace .claude/skills/ (if present) so that /integrate-netka-identity is always up to date.
+    Installs or updates the Claude Code Global Skill (integrate-tum-trust) to ~/.claude/skills/
+    and parent workspace .claude/skills/ (if present) so that /integrate-tum-trust is always up to date.
 #>
 
 $ErrorActionPreference = "Stop"
 
-$SourceSkillDir = Join-Path $PSScriptRoot ".claude\skills\integrate-netka-identity"
+$SourceSkillDir = Join-Path $PSScriptRoot ".claude\skills\integrate-tum-trust"
 $SourceSkillFile = Join-Path $SourceSkillDir "SKILL.md"
 
 if (-not (Test-Path $SourceSkillFile)) {
@@ -14,8 +14,8 @@ if (-not (Test-Path $SourceSkillFile)) {
     exit 1
 }
 
-# 1. Sync to Global ~/.claude/skills/integrate-netka-identity/SKILL.md
-$GlobalClaudeSkillDir = Join-Path $HOME ".claude\skills\integrate-netka-identity"
+# 1. Sync to Global ~/.claude/skills/integrate-tum-trust/SKILL.md
+$GlobalClaudeSkillDir = Join-Path $HOME ".claude\skills\integrate-tum-trust"
 $GlobalClaudeSkillFile = Join-Path $GlobalClaudeSkillDir "SKILL.md"
 
 if (-not (Test-Path $GlobalClaudeSkillDir)) {
@@ -27,10 +27,10 @@ Write-Host "[OK] Global Skill installed successfully!" -ForegroundColor Green
 Write-Host "  Source (Git):   $SourceSkillFile"
 Write-Host "  Global Target:  $GlobalClaudeSkillFile"
 
-# 2. Sync to Parent Workspace .claude/skills/integrate-netka-identity/SKILL.md (if parent .claude/skills exists)
+# 2. Sync to Parent Workspace .claude/skills/integrate-tum-trust/SKILL.md (if parent .claude/skills exists)
 $ParentClaudeSkillsRoot = Join-Path (Split-Path $PSScriptRoot -Parent) ".claude\skills"
 if (Test-Path $ParentClaudeSkillsRoot) {
-    $ParentTargetDir = Join-Path $ParentClaudeSkillsRoot "integrate-netka-identity"
+    $ParentTargetDir = Join-Path $ParentClaudeSkillsRoot "integrate-tum-trust"
     $ParentTargetFile = Join-Path $ParentTargetDir "SKILL.md"
     if (-not (Test-Path $ParentTargetDir)) {
         New-Item -ItemType Directory -Force -Path $ParentTargetDir | Out-Null
@@ -42,4 +42,4 @@ if (Test-Path $ParentClaudeSkillsRoot) {
 Write-Host ""
 Write-Host "Usage in any host project:" -ForegroundColor Cyan
 Write-Host "  1. Open terminal in target project and run: claude"
-Write-Host "  2. Run: /integrate-netka-identity"
+Write-Host "  2. Run: /integrate-tum-trust"

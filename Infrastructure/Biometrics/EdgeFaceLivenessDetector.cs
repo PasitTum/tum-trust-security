@@ -1,9 +1,9 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models.Biometrics;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models.Biometrics;
 
-namespace Netka.Identity.Infrastructure.Biometrics;
+namespace Tum.Trust.Security.Infrastructure.Biometrics;
 
 /// <summary>
 /// High-speed Neuromorphic Edge AI Presentation Attack Detection (PAD) engine.

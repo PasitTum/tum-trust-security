@@ -1,11 +1,11 @@
-using System.Text;
-using Netka.Identity.Core.Models.Biometrics;
-using Netka.Identity.Core.Models.Passport;
-using Netka.Identity.Infrastructure.Biometrics;
-using Netka.Identity.Infrastructure.Passport;
+﻿using System.Text;
+using Tum.Trust.Security.Core.Models.Biometrics;
+using Tum.Trust.Security.Core.Models.Passport;
+using Tum.Trust.Security.Infrastructure.Biometrics;
+using Tum.Trust.Security.Infrastructure.Passport;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 public class BiometricLivenessTests
 {

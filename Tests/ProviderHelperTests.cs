@@ -1,7 +1,7 @@
-using Netka.Identity.Infrastructure.Helpers;
+﻿using Tum.Trust.Security.Infrastructure.Helpers;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 public class ProviderHelperTests
 {

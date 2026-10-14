@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
-namespace Netka.Identity.Core.Models;
+namespace Tum.Trust.Security.Core.Models;
 
 /// <summary>
-/// Root configuration options for Netka Identity Verification SDK.
+/// Root configuration options for TUM Trust Security Verification SDK.
 /// Supports loading from <see cref="IConfiguration"/> (appsettings.json) or dynamically from a Database / custom service.
 /// </summary>
 public class IdentityVerificationOptions

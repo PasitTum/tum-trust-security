@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Exceptions;
+﻿namespace Tum.Trust.Security.Core.Exceptions;
 
 /// <summary>
 /// Exception thrown when an identity verification operation fails due to provider, network, or validation errors.

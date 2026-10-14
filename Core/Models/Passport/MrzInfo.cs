@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models.Passport;
+﻿namespace Tum.Trust.Security.Core.Models.Passport;
 
 /// <summary>
 /// Parsed Machine Readable Zone (MRZ) details conforming to ICAO Doc 9303 (TD1, TD2, TD3).

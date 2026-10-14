@@ -23,12 +23,12 @@
 #### 🚨 ช่องโหว่ที่ 1: "The Bit-for-Bit Chip Cloning Flaw" (Passive Auth Limitation)
 * **ข้อเท็จจริงทางเทคนิค:** ระบบตรวจพาสปอร์ตส่วนใหญ่ในท้องตลาดตรวจเพียง **Passive Authentication (PA)** ซึ่งตรวจสอบว่าข้อมูลใน `EF.SOD` ถูกเซ็นโดยรัฐบาลจริงหรือไม่
 * **จุดบกพร่อง:** ผู้โจมตีสามารถอ่าน Raw Data จากชิปพาสปอร์ตจริงของผู้อื่น แล้วนำไป **โคลนแบบบิตต่อบิต (Clone bit-for-bit)** ลงบนชิป NFC เปล่าหรือโปรแกรมจำลองบนสมาร์ตโฟน (NFC Emulator) เมื่อนำไปสแกนที่ตู้ Kiosk ทั่วไป ระบบ PA จะบอกว่า "ถูกต้อง" ทั้งที่เป็นชิปปลอม!
-* **การแก้ไขใน TUM TRUST SECURITY:** เราบังคับใช้ **Active Authentication (AA)** ใน [`SovereignTrustAnchorService.cs`](file:///d:/Work/NKS-Kiosk-Config/NKS-Kiosk-Identity-SDK/Infrastructure/Passport/SovereignTrustAnchorService.cs) โดยส่ง Cryptographic Challenge ให้ชิปเซ็นด้วย Private Key ภายใน Hardware Secure Element ซึ่งไม่สามารถก๊อปปี้ออกมาได้ ทำให้ชิปโคลนล้มเหลวทันที 100%!
+* **การแก้ไขใน TUM TRUST SECURITY:** เราบังคับใช้ **Active Authentication (AA)** ใน [`SovereignTrustAnchorService.cs`](file:///d:/Work/TUM-Kiosk-Config/tum-trust-security/Infrastructure/Passport/SovereignTrustAnchorService.cs) โดยส่ง Cryptographic Challenge ให้ชิปเซ็นด้วย Private Key ภายใน Hardware Secure Element ซึ่งไม่สามารถก๊อปปี้ออกมาได้ ทำให้ชิปโคลนล้มเหลวทันที 100%!
 
 #### 🚨 ช่องโหว่ที่ 2: "Parser Logic & Missing Tag Bypass" (Calderoni & Maio Vulnerability)
 * **ข้อเท็จจริง:** งานวิจัยของนักวิจัยความปลอดภัยสากลพบว่า ซอฟต์แวร์ตรวจพาสปอร์ตหลายตัวมีช่องโหว่ในตัวถอดรหัส ASN.1 และโครงสร้าง `EF.COM`
 * **การโจมตี:** หากผู้โจมตีเจตนาตัด Tag หรือส่งฟิลด์ Data Group ที่ว่างเปล่า (Empty DG) เข้าไป ตัว Parser บางตัวจะข้ามขั้นตอนการเช็ก Signature และส่งสถานะคืนมาเป็น `SUCCESS` โดยไม่ได้ตรวจสอบข้อมูลจริง
-* **การป้องกันใน TUM TRUST SECURITY:** เรากำหนด Strict Schema Validation ใน [`MrzParser.cs`](file:///d:/Work/NKS-Kiosk-Config/NKS-Kiosk-Identity-SDK/Infrastructure/Passport/MrzParser.cs) ตรวจสอบความยาวตัวอักษรและ Hash Array อย่างเข้มงวด หากพบฟิลด์แหว่งหรือไม่ครบองค์ประกอบ จะปฏิเสธ (Reject) ทันที (Fail-Closed Architecture)
+* **การป้องกันใน TUM TRUST SECURITY:** เรากำหนด Strict Schema Validation ใน [`MrzParser.cs`](file:///d:/Work/TUM-Kiosk-Config/tum-trust-security/Infrastructure/Passport/MrzParser.cs) ตรวจสอบความยาวตัวอักษรและ Hash Array อย่างเข้มงวด หากพบฟิลด์แหว่งหรือไม่ครบองค์ประกอบ จะปฏิเสธ (Reject) ทันที (Fail-Closed Architecture)
 
 #### 🚨 ช่องโหว่ที่ 3: Buffer Overflow & Memory Safety ใน Native C/C++ Drivers (CVE-2018-XXXX, OpenSC / Reader Drivers)
 * **ปัญหา:** ไดรเวอร์เครื่องอ่านบัตรแบบเก่าที่เขียนด้วย C/C++ มักมีปัญหา Buffer Overflow เมื่อถูกยิงด้วย APDU Command ที่มีความยาวผิดปกติ (Malformed APDU)

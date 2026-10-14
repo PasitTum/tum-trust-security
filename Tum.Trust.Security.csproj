@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;net8.0;net10.0</TargetFrameworks>
-    <RootNamespace>Netka.Identity</RootNamespace>
-    <AssemblyName>Netka.Identity.SDK</AssemblyName>
+    <RootNamespace>Tum.Trust.Security</RootNamespace>
+    <AssemblyName>Tum.Trust.Security</AssemblyName>
     <PackageId>Tum.Trust.Security</PackageId>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>

@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Attributes;
+﻿namespace Tum.Trust.Security.Core.Attributes;
 
 /// <summary>
 /// Marks a method or property as generating audit log entries.

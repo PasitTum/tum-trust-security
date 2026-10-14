@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Interfaces;
+﻿namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Cryptographic trust anchor service validating sovereign Country Signing CA (CSCA) certificates,

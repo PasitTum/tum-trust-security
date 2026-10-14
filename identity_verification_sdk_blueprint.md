@@ -1,8 +1,8 @@
-# พิมพ์เขียวสถาปัตยกรรม SDK ยืนยันตัวตนระดับองค์กร (`Netka.Identity.SDK` — Clean Architecture & .NET 10)
+﻿# พิมพ์เขียวสถาปัตยกรรม SDK ยืนยันตัวตนระดับองค์กร (`Tum.Trust.Security` — Clean Architecture & .NET 10)
 
 ## 1. บทสรุปผู้บริหารและวัตถุประสงค์ (Executive Summary & Objective)
 
-เอกสารฉบับนี้คือพิมพ์เขียวสถาปัตยกรรมของ **`Netka.Identity.SDK`** ซึ่งเป็น C# Class Library (`.NET 10`) ของทีม Netka ที่ออกแบบมาเพื่อจัดการการพิสูจน์และยืนยันตัวตนดิจิทัลสำหรับระบบ **Web Application** และ **ตู้ยืนยันตัวตน (Browser-Based Kiosk)** โดยเริ่มต้นรองรับผู้ให้บริการหลักของภาครัฐไทย 2 ช่องทาง ได้แก่:
+เอกสารฉบับนี้คือพิมพ์เขียวสถาปัตยกรรมของ **`Tum.Trust.Security`** ซึ่งเป็น C# Class Library (`.NET 10`) ของทีม TUM Trust Security ที่ออกแบบมาเพื่อจัดการการพิสูจน์และยืนยันตัวตนดิจิทัลสำหรับระบบ **Web Application** และ **ตู้ยืนยันตัวตน (Browser-Based Kiosk)** โดยเริ่มต้นรองรับผู้ให้บริการหลักของภาครัฐไทย 2 ช่องทาง ได้แก่:
 1. **ThaID (`IThaIdProvider` / `ThaIdProvider`)** — ยืนยันตัวตนดิจิทัลผ่านแอปพลิเคชัน ThaID ของกรมการปกครอง (มาตรฐาน **OAuth 2.0 + OpenID Connect**)
 2. **DOPA Check Card Service (`IDopaProvider` / `DopaProvider`)** — ตรวจสอบสถานะบัตรประจำตัวประชาชนโดยตรงกับกรมการปกครอง ทั้งแบบรหัสหลังบัตร (**Laser ID**) และชิปสมาร์ทการ์ด (**Smart Card IC Chip**)
 
@@ -30,7 +30,7 @@
 ## 3. โครงสร้างโปรเจกต์ (Project Structure Layout)
 
 ```text
-Netka.Identity.SDK/
+Tum.Trust.Security/
 │
 ├── Core/
 │   ├── Attributes/
@@ -61,20 +61,20 @@ Netka.Identity.SDK/
 │       └── PkceHelper.cs
 │
 ├── Tests/
-│   └── Netka.Identity.SDK.Tests.csproj (Phase 3: Unit Tests 24 ข้อ — แยกออกจาก .dll หลัก)
+│   └── Tum.Trust.Security.Tests.csproj (Phase 3: Unit Tests 24 ข้อ — แยกออกจาก .dll หลัก)
 │
-├── Netka.Identity.SDK.csproj
-└── Netka.Identity.SDK.sln
+├── Tum.Trust.Security.csproj
+└── Tum.Trust.Security.sln
 ```
 
 ---
 
-## 4. สัญญา Interfaces และ Models หลัก (`Netka.Identity.Core`)
+## 4. สัญญา Interfaces และ Models หลัก (`Tum.Trust.Security.Core`)
 
 ### A. Interfaces (`IVerificationProvider`, `IThaIdProvider`, `IDopaProvider`, `IEncryptionService`)
 
 ```csharp
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 public interface IVerificationProvider
 {
@@ -150,7 +150,7 @@ public interface IEncryptionService
 ### B. Hybrid Models (`VerificationRequest`, `VerificationResult`, `VerificationError`)
 
 ```csharp
-namespace Netka.Identity.Core.Models;
+namespace Tum.Trust.Security.Core.Models;
 
 public class VerificationRequest
 {

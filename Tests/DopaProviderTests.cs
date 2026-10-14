@@ -1,12 +1,12 @@
-using System.Security.Cryptography;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Infrastructure.Providers;
-using Netka.Identity.Infrastructure.Security;
+﻿using System.Security.Cryptography;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Infrastructure.Providers;
+using Tum.Trust.Security.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 public class DopaProviderTests
 {

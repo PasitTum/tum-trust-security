@@ -1,7 +1,7 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 /// <summary>
 /// Simple delegating HTTP message handler for unit testing provider HTTP calls without real network traffic.

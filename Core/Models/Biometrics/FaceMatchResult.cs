@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models.Biometrics;
+﻿namespace Tum.Trust.Security.Core.Models.Biometrics;
 
 /// <summary>
 /// Outcome of a 1:1 facial biometric feature comparison between a live probe image and an official reference photo.

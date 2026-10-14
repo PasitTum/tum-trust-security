@@ -1,20 +1,20 @@
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Infrastructure.Providers;
-using Netka.Identity.Infrastructure.Security;
+﻿using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Infrastructure.Providers;
+using Tum.Trust.Security.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Netka.Identity.Application;
+namespace Tum.Trust.Security.Application;
 
 /// <summary>
 /// Dependency Injection registration extensions for the Identity Verification SDK.
 /// Supports <see cref="IConfiguration"/> (appsettings.json), in-memory <see cref="IdentityVerificationOptions"/>,
 /// and dynamic Database-backed configuration via <see cref="IServiceProvider"/> or <see cref="IIdentityOptionsProvider"/>.
-/// Compiled as a zero-third-party-dependency DLL so host projects can reference <c>Netka.Identity.SDK.dll</c> directly.
+/// Compiled as a zero-third-party-dependency DLL so host projects can reference <c>Tum.Trust.Security.dll</c> directly.
 /// </summary>
 public static class DependencyInjection
 {
@@ -118,11 +118,11 @@ public static class DependencyInjection
         services.AddTransient<IDopaProvider>(sp => sp.GetRequiredService<DopaProvider>());
         services.AddTransient<IVerificationProvider>(sp => sp.GetRequiredService<DopaProvider>());
 
-        // 4. Register Netka Borderless Trust Provider (IBorderlessTrustProvider + IVerificationProvider)
-        services.TryAddSingleton<IFaceLivenessDetector, Netka.Identity.Infrastructure.Biometrics.EdgeFaceLivenessDetector>();
-        services.TryAddSingleton<IBiometricFaceMatcher, Netka.Identity.Infrastructure.Biometrics.EdgeBiometricFaceMatcher>();
-        services.TryAddSingleton<ISovereignTrustAnchorService, Netka.Identity.Infrastructure.Passport.SovereignTrustAnchorService>();
-        services.TryAddSingleton<IBorderlessTrustProvider, Netka.Identity.Infrastructure.Passport.MockBorderlessTrustProvider>();
+        // 4. Register TUM TRUST SECURITY Trust Provider (IBorderlessTrustProvider + IVerificationProvider)
+        services.TryAddSingleton<IFaceLivenessDetector, Tum.Trust.Security.Infrastructure.Biometrics.EdgeFaceLivenessDetector>();
+        services.TryAddSingleton<IBiometricFaceMatcher, Tum.Trust.Security.Infrastructure.Biometrics.EdgeBiometricFaceMatcher>();
+        services.TryAddSingleton<ISovereignTrustAnchorService, Tum.Trust.Security.Infrastructure.Passport.SovereignTrustAnchorService>();
+        services.TryAddSingleton<IBorderlessTrustProvider, Tum.Trust.Security.Infrastructure.Passport.MockBorderlessTrustProvider>();
     }
 
     private static void ConfigureProviderHttpClient<TProvider>(

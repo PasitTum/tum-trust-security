@@ -1,11 +1,11 @@
 ---
-name: integrate-netka-identity
-description: ติดตั้งและเชื่อมต่อ Netka.Identity.SDK (ThaID, DOPA และ Identity Providers อื่นๆ) เข้าสู่โปรเจกต์ปลายทาง (.NET 5.0, .NET 8.0, .NET 10.0) โดยการ Build และคัดลอกเฉพาะไฟล์ Netka.Identity.SDK.dll ไปยังโฟลเดอร์ libs/ ของโปรเจกต์ปลายทาง เพื่อให้ติดขึ้น Git ของโปรเจกต์ปลายทางได้ทันทีโดยไม่ต้องพึ่งพา Repo ภายนอก
+name: integrate-tum-trust
+description: ติดตั้งและเชื่อมต่อ Tum.Trust.Security (ThaID, DOPA และ Identity Providers อื่นๆ) เข้าสู่โปรเจกต์ปลายทาง (.NET 5.0, .NET 8.0, .NET 10.0) โดยการ Build และคัดลอกเฉพาะไฟล์ Tum.Trust.Security.dll ไปยังโฟลเดอร์ libs/ ของโปรเจกต์ปลายทาง เพื่อให้ติดขึ้น Git ของโปรเจกต์ปลายทางได้ทันทีโดยไม่ต้องพึ่งพา Repo ภายนอก
 ---
 
-# Skill: Integrate Netka.Identity.SDK (`integrate-netka-identity`)
+# Skill: Integrate Tum.Trust.Security (`integrate-tum-trust`)
 
-คุณคือผู้เชี่ยวชาญการเชื่อมต่อระบบยืนยันตัวตนด้วย **Netka.Identity.SDK** เข้าสู่โปรเจกต์ปลายทาง (Host Project)
+คุณคือผู้เชี่ยวชาญการเชื่อมต่อระบบยืนยันตัวตนด้วย **Tum.Trust.Security** เข้าสู่โปรเจกต์ปลายทาง (Host Project)
 
 ---
 
@@ -13,14 +13,14 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 
 1. **Zero Host Package Mutation Rule (ห้ามแก้ NuGet เดิมของโปรเจกต์ปลายทาง):**
    - ห้ามอัปเกรด, ดาวน์เกรด, หรือลบ `<PackageReference>` เดิมที่มีอยู่ในโปรเจกต์ปลายทางเด็ดขาด เพราะจะกระทบระบบเดิมของโปรเจกต์ปลายทาง
-   - `Netka.Identity.SDK` รองรับ `net5.0`, `net8.0`, และ `net10.0` โดยใช้ Base Version (`5.0.0`, `8.0.0`, `10.0.0`) อยู่แล้ว หากเกิดปัญหาความเข้ากันได้ใดๆ ต้องปรับที่ฝั่ง SDK เท่านั้น ห้ามแก้แพ็กเกจของโปรเจกต์ปลายทาง
+   - `Tum.Trust.Security` รองรับ `net5.0`, `net8.0`, และ `net10.0` โดยใช้ Base Version (`5.0.0`, `8.0.0`, `10.0.0`) อยู่แล้ว หากเกิดปัญหาความเข้ากันได้ใดๆ ต้องปรับที่ฝั่ง SDK เท่านั้น ห้ามแก้แพ็กเกจของโปรเจกต์ปลายทาง
 
 2. **No Hardcoded Machine Paths (ห้ามใช้ Absolute Path เฉพาะเครื่อง):**
    - ห้ามใส่ Path เฉพาะเครื่อง (เช่น `D:\Work\...` หรือ `C:\Users\...`) ลงในไฟล์ `.csproj` หรือโค้ดของโปรเจกต์ปลายทางเด็ดขาด เพราะแต่ละเครื่องและระบบ CI/CD มีโครงสร้างโฟลเดอร์ไม่เหมือนกัน
-   - ต้องค้นหาตำแหน่งของ `Netka.Identity.SDK` แบบ Dynamic และใช้ **Relative Path** เสมอ
+   - ต้องค้นหาตำแหน่งของ `Tum.Trust.Security` แบบ Dynamic และใช้ **Relative Path** เสมอ
 
 3. **100% Full Provider Endpoint Rule (ห้ามตัดทอนฟีเจอร์ของ Provider):**
-   - โปรเจกต์ `Netka.Identity.SDK` คือ Middleware ตัวกลางของทีม รองรับทุก Endpoint ของทั้ง `IThaIdProvider` และ `IDopaProvider` ครบ 100% ห้ามสร้างคลาส HTTP ยิงตรงซ้ำซ้อนในโปรเจกต์ปลายทาง ให้เรียกผ่านเมธอดของ `IThaIdProvider` และ `IDopaProvider` เสมอ
+   - โปรเจกต์ `Tum.Trust.Security` คือ Middleware ตัวกลางของทีม รองรับทุก Endpoint ของทั้ง `IThaIdProvider` และ `IDopaProvider` ครบ 100% ห้ามสร้างคลาส HTTP ยิงตรงซ้ำซ้อนในโปรเจกต์ปลายทาง ให้เรียกผ่านเมธอดของ `IThaIdProvider` และ `IDopaProvider` เสมอ
 
 4. **Append-Only Provider Documentation Rule (ห้ามลบข้อมูลอ้างอิงใน `docs/providers/`):**
    - ห้ามลบหรือเขียนทับข้อมูลอ้างอิงเดิมใน `<SDK_ROOT>/docs/providers/*.md` โดยเด็ดขาด
@@ -35,12 +35,12 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 
 ## ขั้นตอนการติดตั้งและเชื่อมต่อ (Step-by-Step Workflow)
 
-### Step 1: ค้นหาตำแหน่งของ `Netka.Identity.SDK` (`<SDK_ROOT>`) แบบอัตโนมัติ
-ให้ค้นหาโฟลเดอร์ของโปรเจกต์ `NKS-Kiosk-Identity-SDK` (`<SDK_ROOT>`) ตามลำดับต่อไปนี้:
-1. ตรวจสอบว่าในโปรเจกต์ปลายทางมีโฟลเดอร์ Submodule อยู่แล้วหรือไม่ เช่น `libs/NKS-Kiosk-Identity-SDK/Netka.Identity.SDK.csproj` หรือ `submodules/NKS-Kiosk-Identity-SDK/Netka.Identity.SDK.csproj`
-2. ตรวจสอบว่าในไฟล์ `.csproj` ของโปรเจกต์ปลายทางมี `<ProjectReference>` ที่ชี้ไปยัง `Netka.Identity.SDK.csproj` อยู่แล้วหรือไม่
-3. ค้นหาในโฟลเดอร์ระดับเดียวกัน (Sibling Directory) เช่น `../NKS-Kiosk-Identity-SDK/Netka.Identity.SDK.csproj` หรือ `../../NKS-Kiosk-Identity-SDK/Netka.Identity.SDK.csproj`
-4. หากยังไม่พบ ให้ใช้เครื่องมือค้นหาไฟล์ (`Glob` / `Find`) ค้นหาไฟล์ชื่อ `Netka.Identity.SDK.csproj` ในโฟลเดอร์แม่ แล้วคำนวณ **Relative Path** จากโฟลเดอร์ของ `.csproj` ปลายทางไปยัง `Netka.Identity.SDK.csproj` (หรือถาม Path/Git URL จากผู้ใช้หากอยู่นอก Workspace)
+### Step 1: ค้นหาตำแหน่งของ `Tum.Trust.Security` (`<SDK_ROOT>`) แบบอัตโนมัติ
+ให้ค้นหาโฟลเดอร์ของโปรเจกต์ `tum-trust-security` (`<SDK_ROOT>`) ตามลำดับต่อไปนี้:
+1. ตรวจสอบว่าในโปรเจกต์ปลายทางมีโฟลเดอร์ Submodule อยู่แล้วหรือไม่ เช่น `libs/tum-trust-security/Tum.Trust.Security.csproj` หรือ `submodules/tum-trust-security/Tum.Trust.Security.csproj`
+2. ตรวจสอบว่าในไฟล์ `.csproj` ของโปรเจกต์ปลายทางมี `<ProjectReference>` ที่ชี้ไปยัง `Tum.Trust.Security.csproj` อยู่แล้วหรือไม่
+3. ค้นหาในโฟลเดอร์ระดับเดียวกัน (Sibling Directory) เช่น `../tum-trust-security/Tum.Trust.Security.csproj` หรือ `../../tum-trust-security/Tum.Trust.Security.csproj`
+4. หากยังไม่พบ ให้ใช้เครื่องมือค้นหาไฟล์ (`Glob` / `Find`) ค้นหาไฟล์ชื่อ `Tum.Trust.Security.csproj` ในโฟลเดอร์แม่ แล้วคำนวณ **Relative Path** จากโฟลเดอร์ของ `.csproj` ปลายทางไปยัง `Tum.Trust.Security.csproj` (หรือถาม Path/Git URL จากผู้ใช้หากอยู่นอก Workspace)
 
 ### Step 2: สำรวจโปรเจกต์ปลายทาง และอ่านเอกสาร Provider จาก `<SDK_ROOT>/docs/providers/`
 1. ตรวจสอบไฟล์ `.csproj` ของโปรเจกต์ปลายทาง:
@@ -50,23 +50,23 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
    - อ่าน `<SDK_ROOT>/docs/providers/README.md` เพื่อดูรายชื่อ Providers ทั้งหมดที่มีใน SDK
    - อ่านไฟล์ `<SDK_ROOT>/docs/providers/thaid.md` และ/หรือ `<SDK_ROOT>/docs/providers/dopa.md` (หรือไฟล์ของ Provider อื่นๆ ที่ต้องการเชื่อม) เพื่อดู Config, เมธอดของ Interface และรายชื่อ Key ใน `VerificationResult.Data`
 
-### Step 3: Build และคัดลอกเฉพาะไฟล์ `.dll` (`Netka.Identity.SDK.dll`) เข้าสู่โฟลเดอร์ `libs/` ของโปรเจกต์ปลายทาง
+### Step 3: Build และคัดลอกเฉพาะไฟล์ `.dll` (`Tum.Trust.Security.dll`) เข้าสู่โฟลเดอร์ `libs/` ของโปรเจกต์ปลายทาง
 
-เพื่อให้โปรเจกต์ปลายทางมีไฟล์ `Netka.Identity.SDK.dll` ติดอยู่ใน Repository ของตัวเองเลย (เวลาคนอื่นในทีม `git clone` โปรเจกต์ปลายทางไป หรือรันบน CI/CD จะสามารถ Build และ Run ได้ทันที 100% โดยไม่ต้องมีโปรเจกต์ SDK ในเครื่อง และไม่ติดปัญหาสิทธิ์ข้าม Private Repo):
+เพื่อให้โปรเจกต์ปลายทางมีไฟล์ `Tum.Trust.Security.dll` ติดอยู่ใน Repository ของตัวเองเลย (เวลาคนอื่นในทีม `git clone` โปรเจกต์ปลายทางไป หรือรันบน CI/CD จะสามารถ Build และ Run ได้ทันที 100% โดยไม่ต้องมีโปรเจกต์ SDK ในเครื่อง และไม่ติดปัญหาสิทธิ์ข้าม Private Repo):
 
 1. **สั่ง Build SDK ในโหมด `Release` ตาม `<TargetFramework>` ของโปรเจกต์ปลายทาง (`net5.0`, `net8.0`, หรือ `net10.0`):**
    ```powershell
-   dotnet build "<SDK_ROOT>\Netka.Identity.SDK.csproj" -c Release -f <TARGET_FRAMEWORK>
+   dotnet build "<SDK_ROOT>\Tum.Trust.Security.csproj" -c Release -f <TARGET_FRAMEWORK>
    ```
-2. **สร้างโฟลเดอร์ `libs/` ในโปรเจกต์ปลายทาง แล้วคัดลอกเฉพาะไฟล์ `Netka.Identity.SDK.dll` และ `Netka.Identity.SDK.xml` (สำหรับแสดง IntelliSense Tooltip) ไปวาง:**
-   - ต้นทาง: `<SDK_ROOT>\bin\Release\<TARGET_FRAMEWORK>\Netka.Identity.SDK.dll` และ `Netka.Identity.SDK.xml`
-   - ปลายทาง: `<TARGET_PROJECT_DIR>\libs\Netka.Identity.SDK.dll` และ `<TARGET_PROJECT_DIR>\libs\Netka.Identity.SDK.xml`
-   *(ตัว `Netka.Identity.SDK.dll` ไม่มี Third-Party NuGet Dependency ภายนอก จึงใช้แค่ไฟล์ `.dll` ไฟล์เดียวจบ และไม่มีโค้ด `Tests` หรือ `MockServer` ติดไปด้วย)*
+2. **สร้างโฟลเดอร์ `libs/` ในโปรเจกต์ปลายทาง แล้วคัดลอกเฉพาะไฟล์ `Tum.Trust.Security.dll` และ `Tum.Trust.Security.xml` (สำหรับแสดง IntelliSense Tooltip) ไปวาง:**
+   - ต้นทาง: `<SDK_ROOT>\bin\Release\<TARGET_FRAMEWORK>\Tum.Trust.Security.dll` และ `Tum.Trust.Security.xml`
+   - ปลายทาง: `<TARGET_PROJECT_DIR>\libs\Tum.Trust.Security.dll` และ `<TARGET_PROJECT_DIR>\libs\Tum.Trust.Security.xml`
+   *(ตัว `Tum.Trust.Security.dll` ไม่มี Third-Party NuGet Dependency ภายนอก จึงใช้แค่ไฟล์ `.dll` ไฟล์เดียวจบ และไม่มีโค้ด `Tests` หรือ `MockServer` ติดไปด้วย)*
 3. **ผูก `<Reference>` ในไฟล์ `.csproj` ของโปรเจกต์ปลายทางด้วย Relative Path:**
    ```xml
    <ItemGroup>
-     <Reference Include="Netka.Identity.SDK">
-       <HintPath>libs\Netka.Identity.SDK.dll</HintPath>
+     <Reference Include="Tum.Trust.Security">
+       <HintPath>libs\Tum.Trust.Security.dll</HintPath>
      </Reference>
    </ItemGroup>
    ```
@@ -74,8 +74,8 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
    - หากใน `.gitignore` ของโปรเจกต์ปลายทางมีการบล็อก `*.dll` หรือ `libs/` ไว้ ให้เพิ่มบรรทัดยกเว้น (Unignore) ท้ายไฟล์ `.gitignore` ของโปรเจกต์ปลายทาง:
      ```gitignore
      !libs/
-     !libs/Netka.Identity.SDK.dll
-     !libs/Netka.Identity.SDK.xml
+     !libs/Tum.Trust.Security.dll
+     !libs/Tum.Trust.Security.xml
      ```
 5. **กรณีโปรเจกต์ปลายทางใช้ `<Project SDK="Microsoft.NET.Sdk">` (เช่น Console / Worker / Class Library ที่ไม่ใช่ `Microsoft.NET.Sdk.Web`):**
    - ตรวจสอบว่ามี `Microsoft.Extensions.Http` ในโปรเจกต์ปลายทางแล้วหรือไม่ (สำหรับ `Microsoft.NET.Sdk.Web` มีมาให้ในตัวแล้ว ไม่ต้องเพิ่มอะไรเลย)
@@ -86,9 +86,9 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 
 #### รูปแบบ ก: กรณีโปรเจกต์ปลายทางเก็บค่า Config ไว้ใน Database (เช่นตาราง `variables` หรือ `settings`) — รองรับ Runtime Hot-Reload ในตัว
 - **ข้อห้ามสำคัญ:** **ห้าม** สร้าง Interface `IIdentityOptionsProvider` ซ้ำขึ้นมาเองในโปรเจกต์ปลายทางเด็ดขาด! เพราะ `builder.Services.AddIdentityVerification((sp, options) => { ... })` ของ SDK จะสร้าง DI Scope ให้โดยอัตโนมัติและถูกเรียกอ่านค่าสดใหม่ทุกครั้งที่มีการเรียกใช้ Provider (เป็น **Runtime Hot-Reload ในตัวอยู่แล้ว**)
-- เพียงเพิ่ม `using Netka.Identity.Application;` ใน `Program.cs` แล้วดึงค่าจาก `DbContext` หรือ Repository ของโปรเจกต์ปลายทางโดยตรง:
+- เพียงเพิ่ม `using Tum.Trust.Security.Application;` ใน `Program.cs` แล้วดึงค่าจาก `DbContext` หรือ Repository ของโปรเจกต์ปลายทางโดยตรง:
   ```csharp
-  using Netka.Identity.Application;
+  using Tum.Trust.Security.Application;
 
   builder.Services.AddIdentityVerification((sp, options) =>
   {
@@ -177,7 +177,7 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
    ```
 2. ลงทะเบียนใน `Program.cs` (หรือ `Startup.cs`):
    ```csharp
-   using Netka.Identity.Application;
+   using Tum.Trust.Security.Application;
 
    builder.Services.AddIdentityVerification(builder.Configuration);
    ```
@@ -187,10 +187,10 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 #### 6.1 กรณีเชื่อมต่อ ThaID (`IThaIdProvider` + `PkceHelper` + `ProviderHelper`)
 - Namespaces ที่ใช้:
   ```csharp
-  using Netka.Identity.Core.Interfaces;
-  using Netka.Identity.Core.Models;
-  using Netka.Identity.Infrastructure.Helpers;
-  using Netka.Identity.Infrastructure.Security;
+  using Tum.Trust.Security.Core.Interfaces;
+  using Tum.Trust.Security.Core.Models;
+  using Tum.Trust.Security.Infrastructure.Helpers;
+  using Tum.Trust.Security.Infrastructure.Security;
   ```
 - **ตอนเริ่ม Login (`/thaid/login`):**
   ```csharp
@@ -228,7 +228,7 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
   ```
 
 #### 6.2 กรณีเชื่อมต่อ DOPA (`IDopaProvider`) — รองรับครบทั้ง Laser, Chip, Face 1:1 และ OAuth Token
-- Inject `Netka.Identity.Core.Interfaces.IDopaProvider`
+- Inject `Tum.Trust.Security.Core.Interfaces.IDopaProvider`
 - **1) ตรวจสอบด้วยข้อมูลหน้าบัตร + เลขหลังบัตร (`VerifyByLaserAsync`):**
   ```csharp
   VerificationResult result = await _dopaProvider.VerifyByLaserAsync(
@@ -267,9 +267,9 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 #### 6.4 กรณีผู้ใช้ต้องการทำ Mock Data / ทดสอบ Redirect และ QR Code (เมื่อยังไม่มี Credentials จริง หรือมีเฉพาะไฟล์ `.dll`)
 - **กฎเหล็กด้านความปลอดภัย (ไม่ยุ่งกับโค้ดของโปรเจกต์ปลายทาง 100%):**
   - **ห้าม** สร้างคลาส `MockThaIdProvider`, `MockDopaProvider`, หรือสร้าง Mock Endpoints ใดๆ ลงในโค้ดของโปรเจกต์ปลายทางเด็ดขาด
-  - ตัว `Netka.Identity.SDK.dll` มี **Built-in Mock Mode (`UseMock = true`)** ฝังมาให้ในตัวแล้ว (และมี Standalone `MockServer` เป็นทางเลือกเสริม)
+  - ตัว `Tum.Trust.Security.dll` มี **Built-in Mock Mode (`UseMock = true`)** ฝังมาให้ในตัวแล้ว (และมี Standalone `MockServer` เป็นทางเลือกเสริม)
 
-##### วิธีที่ 1 (แนะนำเมื่อส่งต่อเฉพาะไฟล์ `.dll`): เปิด `UseMock = true` ในตัว `Netka.Identity.SDK.dll` ทันที (ไม่ต้องรัน Server แยก)
+##### วิธีที่ 1 (แนะนำเมื่อส่งต่อเฉพาะไฟล์ `.dll`): เปิด `UseMock = true` ในตัว `Tum.Trust.Security.dll` ทันที (ไม่ต้องรัน Server แยก)
 - เพียงตั้งค่า `UseMock = true` (ผ่าน Database `IdentityVerificationOptions` หรือผ่าน `appsettings.Development.json`) ตัว `ThaIdProvider` และ `DopaProvider` ใน `.dll` จะจำลองการทำงานทั้งหมดใน Memory ทันทีโดยไม่ต้องต่อเน็ตและไม่ต้องกรอก `ClientId`/`ClientSecret`/`ApiKey`:
   - **1) ตั้งค่าผ่าน Database (`Program.cs`):**
     ```csharp
@@ -300,7 +300,7 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 ##### วิธีที่ 2 (ทางเลือกเสริมเมื่อต้องการเห็นหน้าเว็บจำลอง QR Code ของกรมการปกครอง): รัน Standalone Sandbox Mock Server (`<SDK_ROOT>/MockServer`)
 1. **รัน Mock Server จากฝั่ง SDK (พอร์ตเริ่มต้น `http://localhost:5199`):**
    ```powershell
-   dotnet run --project "<SDK_ROOT>/MockServer/Netka.Identity.MockServer.csproj"
+   dotnet run --project "<SDK_ROOT>/MockServer/Tum.Trust.MockServer.csproj"
    ```
    *(สามารถเปิดดูหน้า Dashboard และสถานะได้ที่ `http://localhost:5199`)*
 2. **ชี้ URL ใน `appsettings.Development.json` หรือใน Database ของโปรเจกต์ปลายทางมายัง Mock Server (`UseMock = false`):**
@@ -359,6 +359,6 @@ description: ติดตั้งและเชื่อมต่อ Netka.Ide
 
 ## Step 7: การตรวจสอบและ Build ยืนยันผล
 1. รัน `dotnet build` ที่โปรเจกต์ปลายทาง ยืนยันว่า Build ผ่านเรียบร้อยโดยไม่มี Error
-2. ตรวจสอบว่าไฟล์ `libs/Netka.Identity.SDK.dll` (และ `libs/Netka.Identity.SDK.xml`) อยู่ในโปรเจกต์ปลายทางเรียบร้อย ไม่ถูกบล็อกโดย `.gitignore` และในไฟล์ `.csproj` อ้างอิงผ่าน `<HintPath>libs\Netka.Identity.SDK.dll</HintPath>` โดยไม่มีการแก้ไข `<PackageReference>` เดิม หรือเพิ่มโค้ด Mock ใดๆ ลงในโปรเจกต์ปลายทาง
+2. ตรวจสอบว่าไฟล์ `libs/Tum.Trust.Security.dll` (และ `libs/Tum.Trust.Security.xml`) อยู่ในโปรเจกต์ปลายทางเรียบร้อย ไม่ถูกบล็อกโดย `.gitignore` และในไฟล์ `.csproj` อ้างอิงผ่าน `<HintPath>libs\Tum.Trust.Security.dll</HintPath>` โดยไม่มีการแก้ไข `<PackageReference>` เดิม หรือเพิ่มโค้ด Mock ใดๆ ลงในโปรเจกต์ปลายทาง
 
 

@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models;
+﻿namespace Tum.Trust.Security.Core.Models;
 
 /// <summary>
 /// Pure DTO representing structured error details for a failed verification attempt.

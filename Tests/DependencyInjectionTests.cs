@@ -1,12 +1,12 @@
-using System.Security.Cryptography;
-using Netka.Identity.Application;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
+﻿using System.Security.Cryptography;
+using Tum.Trust.Security.Application;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 public class DependencyInjectionTests
 {

@@ -1,7 +1,7 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Text.Json;
-using Netka.Identity.Infrastructure.Security;
+using Tum.Trust.Security.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +37,7 @@ app.MapGet("/", (HttpContext ctx) =>
     <html lang="th">
     <head>
         <meta charset="utf-8" />
-        <title>Netka Identity Sandbox Mock Server (ThaID &amp; DOPA)</title>
+        <title>TUM Trust Security Sandbox Mock Server (ThaID &amp; DOPA)</title>
         <style>
             body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 960px; margin: 32px auto; padding: 0 20px; color: #1e293b; background: #f8fafc; }
             h1 { color: #0f172a; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px; }
@@ -51,7 +51,7 @@ app.MapGet("/", (HttpContext ctx) =>
         </style>
     </head>
     <body>
-        <h1>Netka Identity Sandbox Mock Server <span class="badge">RUNNING</span></h1>
+        <h1>TUM Trust Security Sandbox Mock Server <span class="badge">RUNNING</span></h1>
         <div class="card">
             <h3>การตั้งค่าในโปรเจกต์ปลายทาง (appsettings.Development.json)</h3>
             <p>ชี้ URL มายัง Mock Server นี้โดยไม่ต้องแก้ไขโค้ดใดๆ ในโปรเจกต์ปลายทาง:</p>
@@ -87,13 +87,13 @@ app.MapGet("/", (HttpContext ctx) =>
                 <tr><td>GET</td><td><code>/api/v2/oauth2/userinfo/</code></td><td>คืนข้อมูลประชาชน 20 Scopes จาก Bearer Token</td></tr>
                 <tr><td>POST</td><td><code>/CheckCardByLaser</code></td><td>จำลองการตรวจสอบสถานะบัตรประชาชนด้วยเลขหลังบัตร (DOPA Laser ID)</td></tr>
                 <tr><td>POST</td><td><code>/CheckCardByCID</code></td><td>จำลองการตรวจสอบสถานะบัตรประชาชนด้วยเลขชิป (DOPA Chip / BP1)</td></tr>
-                <tr><td>POST</td><td><code>/api/v1/borderless/passport/verify</code></td><td><strong>Netka Borderless:</strong> ตรวจสอบ ePassport NFC (150+ ประเทศ), Passive/Active Auth, AI Liveness, Zero-Knowledge Pass</td></tr>
-                <tr><td>POST</td><td><code>/api/v1/borderless/mdl/verify</code></td><td><strong>Netka Borderless:</strong> ตรวจสอบใบขับขี่และบัตรประชาชนดิจิทัล ISO 18013-5 (Apple/Google Wallet)</td></tr>
+                <tr><td>POST</td><td><code>/api/v1/borderless/passport/verify</code></td><td><strong>TUM TRUST SECURITY:</strong> ตรวจสอบ ePassport NFC (150+ ประเทศ), Passive/Active Auth, AI Liveness, Zero-Knowledge Pass</td></tr>
+                <tr><td>POST</td><td><code>/api/v1/borderless/mdl/verify</code></td><td><strong>TUM TRUST SECURITY:</strong> ตรวจสอบใบขับขี่และบัตรประชาชนดิจิทัล ISO 18013-5 (Apple/Google Wallet)</td></tr>
             </table>
         </div>
 
         <div class="card" style="border: 2px solid #3b82f6; background: #eff6ff;">
-            <h3 style="color: #1d4ed8; margin-top: 0;">🌐 Netka Borderless: Global Sovereign Trust Console (Live Demo)</h3>
+            <h3 style="color: #1d4ed8; margin-top: 0;">🌐 TUM TRUST SECURITY: Global Sovereign Trust Console (Live Demo)</h3>
             <p>ทดสอบยิงยืนยันตัวตนหนังสือเดินทางสากล ICAO 9303 และกระเป๋าเงินดิจิทัล mDL ได้แบบ Real-Time:</p>
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
                 <button onclick="testBorderless('USA')" style="background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">🇺🇸 USA Passport</button>
@@ -109,7 +109,7 @@ app.MapGet("/", (HttpContext ctx) =>
         <script>
             async function testBorderless(country) {
                 const out = document.getElementById('borderlessConsoleOutput');
-                out.innerText = 'Connecting to Netka Borderless Engine for ' + country + '...';
+                out.innerText = 'Connecting to TUM TRUST SECURITY Engine for ' + country + '...';
                 try {
                     const res = await fetch('/api/v1/borderless/passport/verify?country=' + country, { method: 'POST' });
                     const data = await res.json();
@@ -120,7 +120,7 @@ app.MapGet("/", (HttpContext ctx) =>
             }
             async function testMdl() {
                 const out = document.getElementById('borderlessConsoleOutput');
-                out.innerText = 'Connecting to Netka Borderless mDL Wallet Reader...';
+                out.innerText = 'Connecting to TUM TRUST SECURITY mDL Wallet Reader...';
                 try {
                     const res = await fetch('/api/v1/borderless/mdl/verify', { method: 'POST' });
                     const data = await res.json();
@@ -676,7 +676,7 @@ app.MapPost("/oauth/token", async (HttpContext ctx) =>
 });
 
 // ============================================================================
-// 6. Netka Borderless: Global ePassport & mDL Sovereign Verification Endpoints
+// 6. TUM TRUST SECURITY: Global ePassport & mDL Sovereign Verification Endpoints
 // ============================================================================
 
 app.MapPost("/api/v1/borderless/passport/verify", (HttpContext ctx) =>
@@ -695,8 +695,8 @@ app.MapPost("/api/v1/borderless/passport/verify", (HttpContext ctx) =>
 
     var tokenClaims = new Dictionary<string, object>
     {
-        ["iss"] = "https://trust.netka.io",
-        ["aud"] = "netka-global-ecosystem",
+        ["iss"] = "https://trust.tum.security",
+        ["aud"] = "tum-global-ecosystem",
         ["sub"] = $"sovereign-user-{country.ToLowerInvariant()}-001",
         ["country"] = profile.Nationality,
         ["is_real_human"] = true,

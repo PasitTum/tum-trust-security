@@ -1,7 +1,7 @@
-using Netka.Identity.Core.Models;
-using Netka.Identity.Core.Models.Passport;
+﻿using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Core.Models.Passport;
 
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Universal Sovereign Identity Verification contract for ICAO 9303 ePassports and ISO/IEC 18013-5 Mobile Driving Licenses (mDL).

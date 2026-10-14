@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models.Passport;
+﻿namespace Tum.Trust.Security.Core.Models.Passport;
 
 /// <summary>
 /// Outcome of a full ICAO 9303 Sovereign Identity verification operation.

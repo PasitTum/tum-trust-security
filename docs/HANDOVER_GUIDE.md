@@ -26,7 +26,7 @@
 ## 2. โครงสร้างไฟล์ทั้งหมดในโปรเจกต์ (Repository Structure)
 
 ```text
-NKS-Kiosk-Identity-SDK/
+tum-trust-security/
 ├── Core/                                         # Domain Layer (Interfaces, Models, Attributes, Exceptions)
 │   ├── Attributes/
 │   │   └── AuditLogAttribute.cs                  # [AuditLog] Attribute สำหรับระบบ Audit Trail

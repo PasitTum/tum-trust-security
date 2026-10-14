@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "2.0.0",
   "tasks": [
     {
@@ -8,7 +8,7 @@
       "args": [
         "run",
         "--project",
-        "${workspaceFolder}/MockServer/Netka.Identity.MockServer.csproj"
+        "${workspaceFolder}/MockServer/Tum.Trust.MockServer.csproj"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -31,7 +31,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/Netka.Identity.SDK.sln"
+        "${workspaceFolder}/Tum.Trust.Security.sln"
       ],
       "problemMatcher": "$msCompile"
     }

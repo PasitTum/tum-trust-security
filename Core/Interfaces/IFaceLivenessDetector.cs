@@ -1,6 +1,6 @@
-using Netka.Identity.Core.Models.Biometrics;
+﻿using Tum.Trust.Security.Core.Models.Biometrics;
 
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Contract for high-speed edge AI Presentation Attack Detection (PAD) and anti-deepfake liveness verification.

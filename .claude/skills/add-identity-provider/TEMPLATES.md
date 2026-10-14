@@ -1,6 +1,6 @@
-# add-identity-provider Templates
+﻿# add-identity-provider Templates
 
-ไฟล์นี้เก็บ Code Templates ที่ตรงกับโครงสร้างจริงของ `Netka.Identity.SDK` 100% (รองรับ `.NET 5.0`, `.NET 8.0`, `.NET 10.0` ด้วย `0 Warning(s)` และ `0 Error(s)`)
+ไฟล์นี้เก็บ Code Templates ที่ตรงกับโครงสร้างจริงของ `Tum.Trust.Security` 100% (รองรับ `.NET 5.0`, `.NET 8.0`, `.NET 10.0` ด้วย `0 Warning(s)` และ `0 Error(s)`)
 
 ---
 
@@ -9,9 +9,9 @@
 ### Type A — OAuth 2.0 / OpenID Connect (ต้นแบบจาก `IThaIdProvider`)
 
 ```csharp
-using Netka.Identity.Core.Models;
+using Tum.Trust.Security.Core.Models;
 
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Defines the contract for <Name> (OAuth 2.0 / OIDC) operations.
@@ -74,9 +74,9 @@ public interface I<Name>Provider : IVerificationProvider
 ### Type B — Direct REST / Hardware Verification (ต้นแบบจาก `IDopaProvider`)
 
 ```csharp
-using Netka.Identity.Core.Models;
+using Tum.Trust.Security.Core.Models;
 
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Defines the contract for <Name> direct verification operations.
@@ -104,15 +104,15 @@ public interface I<Name>Provider : IVerificationProvider
 ```csharp
 using System.Net.Http.Headers;
 using System.Text;
-using Netka.Identity.Core.Attributes;
-using Netka.Identity.Core.Exceptions;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Infrastructure.Helpers;
+using Tum.Trust.Security.Core.Attributes;
+using Tum.Trust.Security.Core.Exceptions;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Netka.Identity.Infrastructure.Providers;
+namespace Tum.Trust.Security.Infrastructure.Providers;
 
 /// <summary>
 /// <Name> identity verification provider implementing <see cref="I<Name>Provider"/>.
@@ -434,14 +434,14 @@ public class <Name>Provider : I<Name>Provider
 ```csharp
 using System.Net;
 using System.Security.Cryptography;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Infrastructure.Providers;
-using Netka.Identity.Infrastructure.Security;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Infrastructure.Providers;
+using Tum.Trust.Security.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 public class <Name>ProviderTests
 {

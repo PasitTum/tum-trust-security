@@ -1,12 +1,12 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
 using System.Runtime.Versioning;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Infrastructure.Helpers;
-using Netka.Identity.Infrastructure.Security;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Infrastructure.Helpers;
+using Tum.Trust.Security.Infrastructure.Security;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 /// <summary>
 /// Tests specifically targeting cross-version .NET API behavior (.NET 8.0 vs .NET 10.0),
@@ -22,7 +22,7 @@ public class RuntimeCompatibilityTests
         var targetFrameworkAttr = sdkAssembly.GetCustomAttribute<TargetFrameworkAttribute>();
 
         Assert.NotNull(targetFrameworkAttr);
-        Assert.Equal("Netka.Identity.SDK", sdkAssembly.GetName().Name);
+        Assert.Equal("Tum.Trust.Security", sdkAssembly.GetName().Name);
 
 #if NET5_0
         Assert.Equal(".NETCoreApp,Version=v5.0", targetFrameworkAttr.FrameworkName);

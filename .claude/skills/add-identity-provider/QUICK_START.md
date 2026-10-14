@@ -1,4 +1,4 @@
-# add-identity-provider — Quick Start & Checklist
+﻿# add-identity-provider — Quick Start & Checklist
 
 ตัวอย่างและ Checklist สำหรับการใช้งาน `/add-identity-provider`
 
@@ -45,7 +45,7 @@
   - [ ] มี XML Documentation (`/// <summary>`) ครบทุก Public class/method (ไม่มี `CS1591`)
 - [ ] **2. Cross-Version Compatibility (`net5.0;net8.0;net10.0`)**
   - [ ] ไม่มี API ของ `.NET 6+` (`ThrowIfNull`, `RandomNumberGenerator.GetBytes`, `HashData`, `IsAsciiLetterOrDigit`)
-  - [ ] ไม่ได้แก้ไขเวอร์ชัน NuGet ใน `Netka.Identity.SDK.csproj`
+  - [ ] ไม่ได้แก้ไขเวอร์ชัน NuGet ใน `Tum.Trust.Security.csproj`
 - [ ] **3. Dependency Injection & Tests**
   - [ ] ลงทะเบียนใน `Application/DependencyInjection.cs`
   - [ ] สร้าง Unit Tests ใน `Tests/<Name>ProviderTests.cs` โดยใช้ `MockHttpMessageHandler`, `AesEncryptionService`, และ `NullLogger<<Name>Provider>.Instance`
@@ -54,4 +54,4 @@
   - [ ] สร้างไฟล์ `docs/providers/<name-lowercase>.md` สรุป Config, Input Parameters และ Output Keys ใน `VerificationResult.Data`
   - [ ] อัปเดต `docs/providers/README.md`, `appsettings.example.json`, และ `README.md`
 - [ ] **5. Build & Test Verification**
-  - [ ] รัน `dotnet test Netka.Identity.SDK.sln` ผ่านครบทั้ง `net5.0`, `net8.0`, และ `net10.0` (0 Warnings, 0 Errors)
+  - [ ] รัน `dotnet test Tum.Trust.Security.sln` ผ่านครบทั้ง `net5.0`, `net8.0`, และ `net10.0` (0 Warnings, 0 Errors)

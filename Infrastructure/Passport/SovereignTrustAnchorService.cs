@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using Netka.Identity.Core.Interfaces;
+using Tum.Trust.Security.Core.Interfaces;
 
-namespace Netka.Identity.Infrastructure.Passport;
+namespace Tum.Trust.Security.Infrastructure.Passport;
 
 /// <summary>
 /// Production-ready cryptographic trust anchor service for sovereign ePassport verification.

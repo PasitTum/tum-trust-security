@@ -19,7 +19,7 @@ Your golden metric is **Time-to-First-Verification (TTFV) < 5 Minutes**: an exte
   * Idiomatic language conventions across C# (Casing, async/await, Task, IAsyncEnumerable), TypeScript, Python, Swift, Kotlin, and Go.
   * Semantic Versioning (SemVer 2.0.0) with zero unexpected breaking changes; gentle deprecation cycles with compiler warnings.
 * **Developer Tooling & Scaffolding:**
-  * CLI tools (`nks-identity init`, `nks-identity test-card`, `nks-identity mock-server`).
+  * CLI tools (`TUM-identity init`, `TUM-identity test-card`, `TUM-identity mock-server`).
   * Instant mock server sandbox: enabling developers to test ThaID, DOPA, Singpass, or mDL without needing live government credentials.
 * **Error Ergonomics & Actionable Diagnostics:**
   * No cryptic exceptions (never throw naked `NullReferenceException` or `HttpRequestException`).

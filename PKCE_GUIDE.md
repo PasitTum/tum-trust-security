@@ -1,4 +1,4 @@
-# PKCE (Proof Key for Code Exchange) Implementation Guide — `Netka.Identity.SDK`
+﻿# PKCE (Proof Key for Code Exchange) Implementation Guide — `Tum.Trust.Security`
 
 **RFC 7636 — มาตรฐานความปลอดภัยเพิ่มเติมสำหรับ OAuth 2.0 / OpenID Connect (`IThaIdProvider`)**
 
@@ -11,7 +11,7 @@
 ```mermaid
 sequenceDiagram
     participant Kiosk as Web App / Kiosk Backend
-    participant Helper as PkceHelper (Netka.Identity.SDK)
+    participant Helper as PkceHelper (Tum.Trust.Security)
     participant ThaID as DOPA ThaID Server
 
     Kiosk->>Helper: 1. GenerateCodeVerifier() & GenerateCodeChallenge(verifier)
@@ -25,12 +25,12 @@ sequenceDiagram
 
 ---
 
-## 2. คลาสและเมธอดที่เกี่ยวข้องใน `Netka.Identity.SDK`
+## 2. คลาสและเมธอดที่เกี่ยวข้องใน `Tum.Trust.Security`
 
-### 2.1 `PkceHelper` (`Netka.Identity.Infrastructure.Security`)
+### 2.1 `PkceHelper` (`Tum.Trust.Security.Infrastructure.Security`)
 
 ```csharp
-using Netka.Identity.Infrastructure.Security;
+using Tum.Trust.Security.Infrastructure.Security;
 
 public static class PkceHelper
 {
@@ -51,11 +51,11 @@ public static class PkceHelper
 }
 ```
 
-### 2.2 การเรียกใช้งานผ่าน `IThaIdProvider` (`Netka.Identity.Core.Interfaces`)
+### 2.2 การเรียกใช้งานผ่าน `IThaIdProvider` (`Tum.Trust.Security.Core.Interfaces`)
 
 ```csharp
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
 
 public interface IThaIdProvider : IVerificationProvider
 {
@@ -83,8 +83,8 @@ public interface IThaIdProvider : IVerificationProvider
 ### ขั้นตอนที่ 1: สร้างลิงก์เข้าสู่ระบบหรือ QR Code พร้อมแนบ `code_challenge`
 
 ```csharp
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Infrastructure.Security;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Infrastructure.Security;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]

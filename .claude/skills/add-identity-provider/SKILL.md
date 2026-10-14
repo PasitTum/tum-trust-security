@@ -1,11 +1,11 @@
----
+﻿---
 name: add-identity-provider
-description: สร้าง Identity Verification Provider ใหม่เข้าสู่โปรเจกต์ Netka.Identity.SDK โดยรับข้อมูลจาก URL, ข้อความ Spec, หรือค้นหาจากเว็บ พร้อมสร้าง Unit Tests (net5.0, net8.0, net10.0) และสร้างเอกสารอ้างอิงใน docs/providers/<provider-name>.md อัตโนมัติ
+description: สร้าง Identity Verification Provider ใหม่เข้าสู่โปรเจกต์ Tum.Trust.Security โดยรับข้อมูลจาก URL, ข้อความ Spec, หรือค้นหาจากเว็บ พร้อมสร้าง Unit Tests (net5.0, net8.0, net10.0) และสร้างเอกสารอ้างอิงใน docs/providers/<provider-name>.md อัตโนมัติ
 ---
 
 # Skill: Add Identity Verification Provider (`add-identity-provider`)
 
-คุณคือสถาปนิกซอฟต์แวร์ผู้เชี่ยวชาญสำหรับโปรเจกต์ `Netka.Identity.SDK`
+คุณคือสถาปนิกซอฟต์แวร์ผู้เชี่ยวชาญสำหรับโปรเจกต์ `Tum.Trust.Security`
 เมื่อถูกเรียกใช้งาน ให้ศึกษาไฟล์คู่ขนานในโฟลเดอร์นี้ (`INSTRUCTIONS.md`, `TEMPLATES.md`, `QUICK_START.md`) และปฏิบัติตามขั้นตอนดังต่อไปนี้อย่างเคร่งครัด:
 
 ---
@@ -16,7 +16,7 @@ description: สร้าง Identity Verification Provider ใหม่เข�
 2. **ส่งเป็นไฟล์หรือวางข้อความ Spec / cURL / JSON หรืออ้างอิงจากโปรเจกต์เดิม:** อ่านและวิเคราะห์จากข้อมูลทั้งหมดที่มีอยู่
 3. **ระบุเฉพาะชื่อบริการ:** ใช้ `WebSearch` ค้นหา Official API Documentation ล่าสุดของบริการนั้น
 4. **🚨 กฎเหล็ก: ห้ามเลือกทำเฉพาะบาง Endpoint (100% Full Provider Endpoint Coverage Rule):**
-   - โปรเจกต์ `Netka.Identity.SDK` คือ **Middleware ตัวกลางของทีม** ที่รวบรวม Identity Providers ทั้งหมดไว้ในที่เดียว
+   - โปรเจกต์ `Tum.Trust.Security` คือ **Middleware ตัวกลางของทีม** ที่รวบรวม Identity Providers ทั้งหมดไว้ในที่เดียว
    - คุณ **ไม่มีสิทธิ์ตัดสินใจแทนผู้ใช้** ว่าจะเลือกทำเฉพาะบาง Endpoint หรือตัด Endpoint ใดทิ้ง
    - หากสเปกของ Provider มีกี่ Endpoint หรือมีวิธีส่งข้อมูลกี่รูปแบบ (เช่น OAuth2 Auth, Token, Refresh, Introspect, Revoke, UserInfo, Discovery, JWKS, ID Token Validation, Card Laser, Card Chip, Biometric Face Verification, Client Credentials Token ฯลฯ) **ต้องสร้างเมธอดใน Interface และ Implementation ให้รองรับครบ 100% ทุกตัว**
 5. **จำแนกประเภท Provider:**
@@ -39,11 +39,11 @@ description: สร้าง Identity Verification Provider ใหม่เข�
      new FormUrlEncodedContent(formFields.Select(kvp => new KeyValuePair<string?, string?>(kvp.Key, kvp.Value)))
      ```
 
-2. **ห้ามเพิ่มหรืออัปเกรด Third-Party NuGet Package (`Netka.Identity.SDK.csproj`):**
-   - ต้องคงเฉพาะ `Microsoft.Extensions.*` Base Version (`5.0.0`, `8.0.0`, `10.0.0`) ใน `Netka.Identity.SDK.csproj` เท่านั้น ห้ามเพิ่ม Library ภายนอก เพื่อให้ผลลัพธ์การ Build เป็น Single-DLL (`Netka.Identity.SDK.dll`) ที่นำไปวางในโฟลเดอร์ `libs/` ของโปรเจกต์ปลายทางได้ทันที
+2. **ห้ามเพิ่มหรืออัปเกรด Third-Party NuGet Package (`Tum.Trust.Security.csproj`):**
+   - ต้องคงเฉพาะ `Microsoft.Extensions.*` Base Version (`5.0.0`, `8.0.0`, `10.0.0`) ใน `Tum.Trust.Security.csproj` เท่านั้น ห้ามเพิ่ม Library ภายนอก เพื่อให้ผลลัพธ์การ Build เป็น Single-DLL (`Tum.Trust.Security.dll`) ที่นำไปวางในโฟลเดอร์ `libs/` ของโปรเจกต์ปลายทางได้ทันที
 
 3. **Reuse `ProviderHelper` First, Customize When Needed:**
-   - **ต้องใช้ `ProviderHelper` (`Netka.Identity.Infrastructure.Helpers`) เป็นแกนหลักเสมอ:**
+   - **ต้องใช้ `ProviderHelper` (`Tum.Trust.Security.Infrastructure.Helpers`) เป็นแกนหลักเสมอ:**
      - แปลง JSON Response เป็น Dictionary: `ProviderHelper.ParseJsonToDictionary(json, "INVALID_<NAME>_RESPONSE")`
      - ดึงค่าจาก Dictionary แบบ Case-Insensitive (`OrdinalIgnoreCase`): `dict.GetStringValue("key1", "key2")`
      - สร้างผลลัพธ์กรณี Error: `ProviderHelper.CreateFailureResult(errorCode, message, httpStatusCode)`
@@ -51,7 +51,7 @@ description: สร้าง Identity Verification Provider ใหม่เข�
      - Mask ข้อมูลส่วนบุคคลเมื่อต้องแสดงผล: `value.Mask()` หรือ `pid.MaskPid()`
 
 4. **Contract, Options & Built-in Mock Mode (`UseMock = true`) ต้องครบ 100%:**
-   - Interface ใหม่ `I<Name>Provider` ต้องสืบทอดจาก `IVerificationProvider` (`Netka.Identity.Core.Interfaces`) ซึ่งบังคับเฉพาะ:
+   - Interface ใหม่ `I<Name>Provider` ต้องสืบทอดจาก `IVerificationProvider` (`Tum.Trust.Security.Core.Interfaces`) ซึ่งบังคับเฉพาะ:
      - `string ProviderName { get; }`
      - `Task<VerificationResult> VerifyAsync(VerificationRequest request, CancellationToken cancellationToken = default);`
      *(ใส่ `GetAuthorizationUrl(...)` เฉพาะใน `I<Name>Provider` ที่เป็น OAuth 2.0 / OIDC Redirect Flow เท่านั้น)*
@@ -103,5 +103,5 @@ description: สร้าง Identity Verification Provider ใหม่เข�
 ## Step 5: การตรวจสอบความถูกต้อง (Verification)
 รันคำสั่งต่อไปนี้เพื่อยืนยันว่า Build และ Unit Tests ผ่านครบทั้ง 3 Runtimes (`net5.0`, `net8.0`, `net10.0`) ด้วย `0 Warning(s)` และ `0 Error(s)`:
 ```powershell
-dotnet test Netka.Identity.SDK.sln -c Release
+dotnet test Tum.Trust.Security.sln -c Release
 ```

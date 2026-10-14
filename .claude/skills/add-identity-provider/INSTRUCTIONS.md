@@ -1,4 +1,4 @@
-# add-identity-provider Skill — Detailed Instructions
+﻿# add-identity-provider Skill — Detailed Instructions
 
 เมื่อผู้ใช้เรียกใช้ `/add-identity-provider` ให้ปฏิบัติตามขั้นตอนต่อไปนี้อย่างเคร่งครัด
 
@@ -32,9 +32,9 @@ Interface ทุกตัวต้องสืบทอดจาก `IVerificati
 
 **ตัวอย่างสำหรับ Type A (OAuth 2.0 / OIDC):**
 ```csharp
-using Netka.Identity.Core.Models;
+using Tum.Trust.Security.Core.Models;
 
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Defines the contract for <Name> (OAuth 2.0 / OIDC) identity verification operations.
@@ -82,15 +82,15 @@ public interface I<Name>Provider : IVerificationProvider
 ```csharp
 using System.Net.Http.Headers;
 using System.Text;
-using Netka.Identity.Core.Attributes;
-using Netka.Identity.Core.Exceptions;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Infrastructure.Helpers;
+using Tum.Trust.Security.Core.Attributes;
+using Tum.Trust.Security.Core.Exceptions;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Netka.Identity.Infrastructure.Providers;
+namespace Tum.Trust.Security.Infrastructure.Providers;
 
 /// <summary>
 /// <Name> identity verification provider implementing <see cref="I<Name>Provider"/>.
@@ -168,7 +168,7 @@ public class <Name>Provider : I<Name>Provider
 2. **FormUrlEncodedContent บน .NET 5.0:**
    - ❌ `new FormUrlEncodedContent(formFields)` (เกิด Warning `CS8620` บน `net5.0`)
    - ✅ `new FormUrlEncodedContent(formFields.Select(kvp => new KeyValuePair<string?, string?>(kvp.Key, kvp.Value)))`
-3. **ห้ามแก้ไข NuGet Versions ใน `Netka.Identity.SDK.csproj`:**
+3. **ห้ามแก้ไข NuGet Versions ใน `Tum.Trust.Security.csproj`:**
    - ต้องคงเวอร์ชัน `5.0.0`, `8.0.0`, `10.0.0` เท่านั้น
 
 ---
@@ -192,18 +192,18 @@ services.AddTransient<IVerificationProvider>(sp => sp.GetRequiredService<<Name>P
 
 ## ขั้นตอนที่ 5: สร้าง Unit Tests (`Tests/<Name>ProviderTests.cs`)
 
-> **สำคัญ:** โปรเจกต์ `Tests/Netka.Identity.SDK.Tests.csproj` **ไม่ได้ใช้ `Moq`** ให้ใช้ `MockHttpMessageHandler`, `AesEncryptionService`, และ `NullLogger<<Name>Provider>.Instance` เหมือนใน `Tests/ThaIdProviderTests.cs` และ `Tests/DopaProviderTests.cs`
+> **สำคัญ:** โปรเจกต์ `Tests/Tum.Trust.Security.Tests.csproj` **ไม่ได้ใช้ `Moq`** ให้ใช้ `MockHttpMessageHandler`, `AesEncryptionService`, และ `NullLogger<<Name>Provider>.Instance` เหมือนใน `Tests/ThaIdProviderTests.cs` และ `Tests/DopaProviderTests.cs`
 
 ```csharp
 using System.Security.Cryptography;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Infrastructure.Providers;
-using Netka.Identity.Infrastructure.Security;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Infrastructure.Providers;
+using Tum.Trust.Security.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 public class <Name>ProviderTests
 {
@@ -258,6 +258,6 @@ public class <Name>ProviderTests
 ## ขั้นตอนที่ 7: Build & Test ยืนยันผลบนทั้ง 3 Runtimes
 
 ```powershell
-dotnet test Netka.Identity.SDK.sln
+dotnet test Tum.Trust.Security.sln
 ```
 ต้องผ่านครบทั้ง `net5.0`, `net8.0`, และ `net10.0` ด้วย `0 Warning(s)` และ `0 Error(s)`

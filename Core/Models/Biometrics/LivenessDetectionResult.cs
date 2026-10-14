@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models.Biometrics;
+﻿namespace Tum.Trust.Security.Core.Models.Biometrics;
 
 /// <summary>
 /// Outcome of an edge AI Presentation Attack Detection (PAD) analysis conforming to ISO/IEC 30107.

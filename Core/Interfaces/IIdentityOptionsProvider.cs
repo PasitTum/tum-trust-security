@@ -1,6 +1,6 @@
-using Netka.Identity.Core.Models;
+﻿using Tum.Trust.Security.Core.Models;
 
-namespace Netka.Identity.Core.Interfaces;
+namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Provides <see cref="IdentityVerificationOptions"/> dynamically at runtime (e.g., from a Database, Distributed Cache, or Tenant Context).

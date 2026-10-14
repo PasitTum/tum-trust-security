@@ -1,7 +1,7 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Netka.Identity.Infrastructure.Security;
+namespace Tum.Trust.Security.Infrastructure.Security;
 
 /// <summary>
 /// Helper class for PKCE (Proof Key for Code Exchange, RFC 7636) operations.

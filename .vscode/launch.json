@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "0.2.0",
   "configurations": [
     {
@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/MockServer/bin/Debug/net8.0/Netka.Identity.MockServer.dll",
+      "program": "${workspaceFolder}/MockServer/bin/Debug/net8.0/Tum.Trust.Security.MockServer.dll",
       "args": [],
       "cwd": "${workspaceFolder}/MockServer",
       "stopAtEntry": false,

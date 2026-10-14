@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Interfaces;
+﻿namespace Tum.Trust.Security.Core.Interfaces;
 
 /// <summary>
 /// Defines the contract for encrypting and decrypting sensitive Personally Identifiable Information (PII).

@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;net8.0;net10.0</TargetFrameworks>
-    <RootNamespace>Netka.Identity.SDK.Tests</RootNamespace>
-    <AssemblyName>Netka.Identity.SDK.Tests</AssemblyName>
+    <RootNamespace>Tum.Trust.Security.Tests</RootNamespace>
+    <AssemblyName>Tum.Trust.Security.Tests</AssemblyName>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Netka.Identity.SDK.csproj" />
+    <ProjectReference Include="..\Tum.Trust.Security.csproj" />
   </ItemGroup>
 
 </Project>

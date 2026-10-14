@@ -1,11 +1,11 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Netka.Identity.Infrastructure.Security;
+namespace Tum.Trust.Security.Infrastructure.Security;
 
 /// <summary>
 /// Implements AES-256-CBC encryption with HMAC-SHA256 integrity verification for PII protection.

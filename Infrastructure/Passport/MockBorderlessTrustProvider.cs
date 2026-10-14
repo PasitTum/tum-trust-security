@@ -1,13 +1,13 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Core.Models.Biometrics;
-using Netka.Identity.Core.Models.Passport;
-using Netka.Identity.Infrastructure.Biometrics;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Core.Models.Biometrics;
+using Tum.Trust.Security.Core.Models.Passport;
+using Tum.Trust.Security.Infrastructure.Biometrics;
 
-namespace Netka.Identity.Infrastructure.Passport;
+namespace Tum.Trust.Security.Infrastructure.Passport;
 
 /// <summary>
 /// Mock implementation of <see cref="IBorderlessTrustProvider"/> enabling global development and testing
@@ -34,7 +34,7 @@ public class MockBorderlessTrustProvider : IBorderlessTrustProvider
     }
 
     /// <inheritdoc />
-    public string ProviderName => "NetkaBorderless";
+    public string ProviderName => "TumBorderless";
 
     /// <inheritdoc />
     public Task<VerificationResult> VerifyAsync(VerificationRequest request, CancellationToken cancellationToken = default)
@@ -42,7 +42,7 @@ public class MockBorderlessTrustProvider : IBorderlessTrustProvider
         var result = new VerificationResult
         {
             IsSuccess = true,
-            Message = "Netka Borderless identity verification succeeded (Mock Mode).",
+            Message = "TUM TRUST SECURITY identity verification succeeded (Mock Mode).",
             Data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
             {
                 ["provider"] = ProviderName,
@@ -112,8 +112,8 @@ public class MockBorderlessTrustProvider : IBorderlessTrustProvider
         // 5. Generate Zero-Knowledge Sovereign Pass Token
         var tokenClaims = new Dictionary<string, object>
         {
-            ["iss"] = "https://trust.netka.io",
-            ["aud"] = "netka-global-ecosystem",
+            ["iss"] = "https://trust.tum.security",
+            ["aud"] = "tum-global-ecosystem",
             ["sub"] = $"sovereign-user-{country.ToLowerInvariant()}-001",
             ["country"] = country,
             ["is_real_human"] = liveness.IsLiveHuman,

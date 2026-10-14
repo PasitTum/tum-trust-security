@@ -1,9 +1,9 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models.Biometrics;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models.Biometrics;
 
-namespace Netka.Identity.Infrastructure.Biometrics;
+namespace Tum.Trust.Security.Infrastructure.Biometrics;
 
 /// <summary>
 /// Edge 1:1 facial biometric feature vector matcher using deep metric angular cosine similarity.

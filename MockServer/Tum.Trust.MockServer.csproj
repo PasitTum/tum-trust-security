@@ -1,17 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Netka.Identity.MockServer</RootNamespace>
-    <AssemblyName>Netka.Identity.MockServer</AssemblyName>
+    <RootNamespace>Tum.Trust.Security.MockServer</RootNamespace>
+    <AssemblyName>Tum.Trust.Security.MockServer</AssemblyName>
     <Description>Standalone Local ThaID (OAuth 2.0 Redirect + PKCE + 20 Scopes) and DOPA Sandbox Mock Server for development testing</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Netka.Identity.SDK.csproj" />
+    <ProjectReference Include="..\Tum.Trust.Security.csproj" />
   </ItemGroup>
 
 </Project>

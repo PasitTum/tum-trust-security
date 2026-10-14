@@ -1,11 +1,11 @@
-using System.Text.Json;
-using Netka.Identity.Core.Exceptions;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
+﻿using System.Text.Json;
+using Tum.Trust.Security.Core.Exceptions;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Netka.Identity.Infrastructure.Helpers;
+namespace Tum.Trust.Security.Infrastructure.Helpers;
 
 /// <summary>
 /// Shared helper and extension methods for identity verification providers (ThaID, DOPA)

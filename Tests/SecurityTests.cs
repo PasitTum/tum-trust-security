@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
-using Netka.Identity.Infrastructure.Security;
+﻿using System.Security.Cryptography;
+using Tum.Trust.Security.Infrastructure.Security;
 using Xunit;
 
-namespace Netka.Identity.SDK.Tests;
+namespace Tum.Trust.Security.Tests;
 
 public class SecurityTests
 {

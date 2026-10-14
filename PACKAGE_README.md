@@ -1,7 +1,7 @@
 ﻿# TUM.Identity.SDK
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/TUMsystem/nks-enterprise-identity)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/TUMsystem/nks-enterprise-identity/blob/main/LICENSE)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/TUMsystem/TUM-enterprise-identity)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/TUMsystem/TUM-enterprise-identity/blob/main/LICENSE)
 [![Target Frameworks](https://img.shields.io/badge/.NET-5.0%20%7C%208.0%20%7C%2010.0-purple.svg)](https://dotnet.microsoft.com/)
 
 **TUM Enterprise Omnichannel Sovereign Trust & Identity Verification SDK** is a high-performance, offline-first verification engine designed for Kiosks, Mobile, Web, and Enterprise Gateways.

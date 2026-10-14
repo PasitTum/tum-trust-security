@@ -1,15 +1,15 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using Netka.Identity.Core.Attributes;
-using Netka.Identity.Core.Exceptions;
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
-using Netka.Identity.Infrastructure.Helpers;
+using Tum.Trust.Security.Core.Attributes;
+using Tum.Trust.Security.Core.Exceptions;
+using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Infrastructure.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Netka.Identity.Infrastructure.Providers;
+namespace Tum.Trust.Security.Infrastructure.Providers;
 
 /// <summary>
 /// DOPA citizen card verification provider implementing <see cref="IDopaProvider"/>.
@@ -904,7 +904,7 @@ public class DopaProvider : IDopaProvider
             ? opts.DgaGdxBaseUrl.TrimEnd('/')
             : "https://api.egov.go.th";
 
-        var agentId = !string.IsNullOrWhiteSpace(opts.AgentId) ? opts.AgentId : "NetkaIdentitySDK";
+        var agentId = !string.IsNullOrWhiteSpace(opts.AgentId) ? opts.AgentId : "TumTrustSecuritySDK";
         var validateUrl = $"{baseUrl}/ws/auth/validate?ConsumerSecret={Uri.EscapeDataString(consumerSecret)}&AgentID={Uri.EscapeDataString(agentId)}";
 
         try

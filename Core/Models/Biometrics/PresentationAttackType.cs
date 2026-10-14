@@ -1,4 +1,4 @@
-namespace Netka.Identity.Core.Models.Biometrics;
+﻿namespace Tum.Trust.Security.Core.Models.Biometrics;
 
 /// <summary>
 /// Categories of Presentation Attacks defined by ISO/IEC 30107 (Presentation Attack Detection - PAD).
