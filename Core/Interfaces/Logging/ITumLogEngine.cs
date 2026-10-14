@@ -58,5 +58,10 @@ namespace Tum.Trust.Security.Core.Interfaces.Logging
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>Read-only list of log entries.</returns>
         Task<IReadOnlyList<TumLogEntry>> GetLogsAsync(int count = 100, LogCategory? filterCategory = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets the enterprise endpoint and PII registry cataloging discovered routes.
+        /// </summary>
+        IEndpointRegistry EndpointRegistry { get; }
     }
 }

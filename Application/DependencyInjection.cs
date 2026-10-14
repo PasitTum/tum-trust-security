@@ -134,11 +134,14 @@ public static class DependencyInjection
         // 5. Register Quantum-Safe Trust Engine (NIST FIPS 204 PQC)
         services.TryAddSingleton<IQuantumSafeTrustEngine, QuantumSafeTrustEngine>();
 
-        // 6. Register TUMLog Engine & Compliance Stack (Thai CCA Sec 26 & PDPA)
+        // 6. Register TUMLog Engine & Compliance Stack (Thai CCA Sec 26 & PDPA, ISO 27001, OWASP)
         services.TryAddSingleton<TumLogOptions>();
         services.TryAddSingleton<ITumPiiSanitizer, TumPiiSanitizer>();
         services.TryAddSingleton<ITumThreatDetector, TumThreatDetector>();
+        services.TryAddSingleton<IOutboundLeakDetector, OutboundLeakDetector>();
+        services.TryAddSingleton<IEndpointRegistry, EndpointRegistry>();
         services.TryAddSingleton<ITamperProofLogStorage, TamperProofLogChain>();
+        services.TryAddSingleton<ILogSinkDispatcher, LogSinkDispatcher>();
         services.TryAddSingleton<ITumLogEngine, TumLogEngine>();
     }
 
@@ -168,7 +171,10 @@ public static class DependencyInjection
         services.TryAddSingleton(options);
         services.TryAddSingleton<ITumPiiSanitizer, TumPiiSanitizer>();
         services.TryAddSingleton<ITumThreatDetector, TumThreatDetector>();
+        services.TryAddSingleton<IOutboundLeakDetector, OutboundLeakDetector>();
+        services.TryAddSingleton<IEndpointRegistry, EndpointRegistry>();
         services.TryAddSingleton<ITamperProofLogStorage, TamperProofLogChain>();
+        services.TryAddSingleton<ILogSinkDispatcher, LogSinkDispatcher>();
         services.TryAddSingleton<ITumLogEngine, TumLogEngine>();
 
         return services;

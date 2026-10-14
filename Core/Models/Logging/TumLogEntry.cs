@@ -113,11 +113,37 @@ namespace Tum.Trust.Security.Core.Models.Logging
         public string MerkleRoot { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the W3C TraceContext or GUID correlation ID tracking this request end-to-end across services.
+        /// </summary>
+        public string CorrelationId { get; set; } = Guid.NewGuid().ToString("N");
+
+        /// <summary>
+        /// Gets or sets the normalized standard action taxonomy conforming to ISO 27001 (e.g. 'AUTH.LOGIN', 'DATA.READ').
+        /// </summary>
+        public string StandardAction { get; set; } = "GENERIC.EVENT";
+
+        /// <summary>
+        /// Gets or sets the list of sensitive data exfiltrations or leaks intercepted on outbound response egress.
+        /// </summary>
+        public List<OutboundLeakDetection> OutboundLeaks { get; set; } = new List<OutboundLeakDetection>();
+
+        /// <summary>
+        /// Gets or sets the list of storage destination sinks to which this entry was successfully dispatched.
+        /// </summary>
+        public List<StorageSinkType> DispatchedSinks { get; set; } = new List<StorageSinkType> { StorageSinkType.LocalWormFile };
+
+        /// <summary>
+        /// Gets or sets the threat defense operating mode applied during the ingestion of this event.
+        /// </summary>
+        public ThreatDefenseMode DefenseModeApplied { get; set; } = ThreatDefenseMode.AuditOnly;
+
+        /// <summary>
         /// Gets or sets the compliance standards satisfied by this log record.
         /// </summary>
         public ComplianceStandard ComplianceFlags { get; set; } =
             ComplianceStandard.ThaiComputerCrimeAct2560Sec26 |
             ComplianceStandard.ThaiPdpa |
-            ComplianceStandard.Gdpr;
+            ComplianceStandard.Gdpr |
+            ComplianceStandard.Iso27001;
     }
 }
