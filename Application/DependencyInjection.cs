@@ -1,5 +1,9 @@
 using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Interfaces.Logging;
 using Tum.Trust.Security.Core.Models;
+using Tum.Trust.Security.Core.Models.Logging;
+using Tum.Trust.Security.Core.Models.QuantumSafe;
+using Tum.Trust.Security.Infrastructure.Logging;
 using Tum.Trust.Security.Infrastructure.Providers;
 using Tum.Trust.Security.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
@@ -126,6 +130,48 @@ public static class DependencyInjection
         services.TryAddSingleton<IHardwareReaderManager, Tum.Trust.Security.Infrastructure.Hardware.PcScSmartcardReaderAdapter>();
         services.TryAddSingleton<IMobileNfcBridge, Tum.Trust.Security.Infrastructure.Mobile.CrossPlatformMobileNfcBridge>();
         services.TryAddSingleton<IIcaoPkdSyncService, Tum.Trust.Security.Infrastructure.Passport.IcaoPkdSyncService>();
+
+        // 5. Register Quantum-Safe Trust Engine (NIST FIPS 204 PQC)
+        services.TryAddSingleton<IQuantumSafeTrustEngine, QuantumSafeTrustEngine>();
+
+        // 6. Register TUMLog Engine & Compliance Stack (Thai CCA Sec 26 & PDPA)
+        services.TryAddSingleton<TumLogOptions>();
+        services.TryAddSingleton<ITumPiiSanitizer, TumPiiSanitizer>();
+        services.TryAddSingleton<ITumThreatDetector, TumThreatDetector>();
+        services.TryAddSingleton<ITamperProofLogStorage, TamperProofLogChain>();
+        services.TryAddSingleton<ITumLogEngine, TumLogEngine>();
+    }
+
+    /// <summary>
+    /// Registers the Quantum-Safe Identity Trust Engine conforming to NIST FIPS 204 (ML-DSA Dilithium / ML-KEM Kyber).
+    /// </summary>
+    public static IServiceCollection AddTumQuantumSafeTrust(this IServiceCollection services)
+    {
+        if (services is null) throw new ArgumentNullException(nameof(services));
+        services.TryAddSingleton<IQuantumSafeTrustEngine, QuantumSafeTrustEngine>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers TUMLog Application-Layer Logging, AI PII Sanitization, Threat Detection, and
+    /// Thai Computer Crime Act Section 26 90-day WORM Merkle chain compliance engine.
+    /// </summary>
+    public static IServiceCollection AddTumLog(
+        this IServiceCollection services,
+        Action<TumLogOptions>? configure = null)
+    {
+        if (services is null) throw new ArgumentNullException(nameof(services));
+
+        var options = new TumLogOptions();
+        configure?.Invoke(options);
+
+        services.TryAddSingleton(options);
+        services.TryAddSingleton<ITumPiiSanitizer, TumPiiSanitizer>();
+        services.TryAddSingleton<ITumThreatDetector, TumThreatDetector>();
+        services.TryAddSingleton<ITamperProofLogStorage, TamperProofLogChain>();
+        services.TryAddSingleton<ITumLogEngine, TumLogEngine>();
+
+        return services;
     }
 
     private static void ConfigureProviderHttpClient<TProvider>(

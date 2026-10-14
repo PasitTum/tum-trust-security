@@ -9,15 +9,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <VersionPrefix>1.2.0</VersionPrefix>
+    <VersionPrefix>1.3.0</VersionPrefix>
     <Authors>Pasit Tum</Authors>
     <Company>TUM Trust Security</Company>
     <Product>TUM Trust Security (Powered by TUM)</Product>
-    <Description>TUM Trust Security — Omnichannel Sovereign Trust &amp; Identity Verification SDK (Powered by TUM). High-performance, offline-first verification engine for ICAO 9303 ePassport NFC (150+ nations), ISO/IEC 18013-5 Mobile Driving License (mDL), Neuromorphic Edge AI Biometrics, ThaID, and DOPA Citizen Identity (.NET 5, .NET 8 &amp; .NET 10).</Description>
+    <Description>TUM Trust Security — Omnichannel Sovereign Trust &amp; Identity Verification SDK (Powered by TUM). High-performance, offline-first verification engine for ICAO 9303 ePassport NFC (150+ nations), ISO/IEC 18013-5 Mobile Driving License (mDL), Neuromorphic Edge AI Biometrics, Post-Quantum Cryptography (NIST FIPS 204 ML-DSA Dilithium / ML-KEM Kyber), TUMLog Thai Computer Crime Act Sec 26 &amp; PDPA Compliance Log Mesh (.NET 5, .NET 8 &amp; .NET 10).</Description>
     <PackageProjectUrl>https://github.com/PasitTum/tum-trust-security</PackageProjectUrl>
     <RepositoryUrl>https://github.com/PasitTum/tum-trust-security</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>identity;passport;icao9303;epassport;nfc;mdl;iso18013-5;biometrics;liveness;deepfake;tum-trust;sovereign-trust</PackageTags>
+    <PackageTags>identity;passport;icao9303;epassport;nfc;mdl;iso18013-5;biometrics;pqc;post-quantum;dilithium;ml-dsa;kyber;tumlog;audit-log;pdpa;computer-crime-act;tum-trust;sovereign-trust</PackageTags>
     <PackageReadmeFile>PACKAGE_README.md</PackageReadmeFile>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>

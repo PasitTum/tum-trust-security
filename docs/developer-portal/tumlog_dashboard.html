@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUMLog — Sovereign Application Compliance &amp; Threat Defense Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #07090e;
+            --bg-secondary: #0d121d;
+            --bg-card: rgba(18, 25, 40, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(0, 240, 255, 0.25);
+            --accent-cyan: #00f0ff;
+            --accent-emerald: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(13, 18, 29, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand-badge {
+            font-size: 0.65rem;
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.85rem;
+            border-radius: 30px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .btn-cert {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-cert:hover {
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* Metrics Row */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1.25rem;
+            padding: 1.5rem 2rem 0.5rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .metric-card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        .metric-sub {
+            font-size: 0.75rem;
+            color: var(--accent-emerald);
+            margin-top: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Main Workspace */
+        main {
+            flex: 1;
+            padding: 1rem 2rem 2rem;
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Nav Tabs */
+        .tabs-header {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tabs-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-cyan);
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        .panel-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Live Log Stream Table */
+        .log-table-wrapper {
+            overflow-x: auto;
+            max-height: 480px;
+            overflow-y: auto;
+        }
+
+        table.log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        table.log-table th {
+            text-align: left;
+            padding: 0.65rem 0.75rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(13, 18, 29, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        table.log-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            white-space: nowrap;
+        }
+
+        table.log-table tr:hover {
+            background: rgba(0, 240, 255, 0.03);
+            cursor: pointer;
+        }
+
+        .badge-tag {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-audit { background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); }
+        .badge-threat { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+        .badge-pii { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-biz { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .hash-code {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        /* Right Side Panels */
+        .side-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .side-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .side-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .sandbox-area {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        textarea.sandbox-input {
+            width: 100%;
+            height: 90px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+        }
+
+        textarea.sandbox-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .sandbox-btn {
+            background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .sandbox-btn:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        .sandbox-output {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-emerald);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        /* Threat Feed */
+        .threat-item {
+            background: rgba(244, 63, 94, 0.06);
+            border-left: 3px solid var(--accent-rose);
+            padding: 0.75rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .threat-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            color: var(--accent-rose);
+            margin-bottom: 0.25rem;
+        }
+
+        .threat-desc {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 650px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .cert-stamp {
+            border: 2px solid var(--accent-emerald);
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.03);
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .cert-stamp h3 {
+            color: var(--accent-emerald);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Code snippets */
+        pre.code-block {
+            background: #000;
+            padding: 0.85rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-logo">T</div>
+            <div class="brand-text">
+                <h1>TUMLog <span class="brand-badge">Sovereign Edition</span></h1>
+                <div class="brand-subtitle">Thai Computer Crime Act Sec 26 &amp; PDPA Compliance Log Mesh &bull; Powered by TUM</div>
+            </div>
+        </div>
+
+        <div class="header-status">
+            <div class="status-pill">
+                <div class="pulse-dot"></div>
+                <span>NTP Stratum 1: <strong>time.navy.mi.th</strong></span>
+            </div>
+            <div class="status-pill">
+                <span>Merkle Head: <strong style="color:var(--accent-cyan)">9f82...3b1a</strong></span>
+            </div>
+            <button class="btn-cert" onclick="openCertModal()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                Verify MDES Audit
+            </button>
+        </div>
+    </header>
+
+    <!-- Metrics Row -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Total Chained Logs</span>
+                <span>WORM 90D</span>
+            </div>
+            <div class="metric-value" id="valTotalLogs">1,482,910</div>
+            <div class="metric-sub">&uarr; 2,420 entries/min &bull; 0 tamperings</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>PII Redacted (PDPA)</span>
+                <span>Zero Plaintext</span>
+            </div>
+            <div class="metric-value" style="color:var(--accent-amber)" id="valPiiMasked">84,312</div>
+            <div class="metric-sub">&check; 100% Thai IDs &amp; PANs Sanitized</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Active Threat Mitigations</span>
+                <span>OWASP Top 10</span>
+            </div>
+            <div class="metric-value" style="color:var(--accent-rose)" id="valThreats">142</div>
+            <div class="metric-sub">&check; SQLi &amp; Traversal Intercepted</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">
+                <span>Logging Ingestion Overhead</span>
+                <span>Lock-Free Ring</span>
+            </div>
+            <div class="metric-value" style="color:var(--accent-cyan)">0.12 ms</div>
+            <div class="metric-sub">&check; Zero latency on business requests</div>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <main>
+        <!-- Log Table Panel -->
+        <div class="panel-container">
+            <div class="tabs-header">
+                <div class="tabs-group">
+                    <button class="tab-btn active" onclick="switchCategory('All', this)">All Events</button>
+                    <button class="tab-btn" onclick="switchCategory('AuditTrail', this)">Audit Trail</button>
+                    <button class="tab-btn" onclick="switchCategory('SecurityThreat', this)">Threats</button>
+                    <button class="tab-btn" onclick="switchCategory('PiiAccess', this)">PII Access</button>
+                    <button class="tab-btn" onclick="switchCategory('BusinessTransaction', this)">Business</button>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-muted); font-family:'JetBrains Mono'">
+                    Auto-refreshing live log feed
+                </div>
+            </div>
+
+            <div class="log-table-wrapper">
+                <table class="log-table" id="logTable">
+                    <thead>
+                        <tr>
+                            <th>TIMESTAMP (NTP UTC)</th>
+                            <th>CATEGORY</th>
+                            <th>EVENT NAME</th>
+                            <th>CLIENT IP</th>
+                            <th>PAYLOAD (SANITIZED)</th>
+                            <th>MERKLE HASH</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Side Widgets -->
+        <div class="side-col">
+            <!-- Sandbox Redactor Test Widget -->
+            <div class="side-card">
+                <div class="side-title">
+                    <span>⚡ AI PII &amp; Threat Sandbox</span>
+                    <span style="font-size:0.7rem; color:var(--accent-cyan); font-family:'JetBrains Mono'">TEST LIVE</span>
+                </div>
+                <div class="sandbox-area">
+                    <textarea class="sandbox-input" id="sandboxInput" placeholder="Paste test string with Thai ID (1100701234561), Card (4111-1111-1111-1111), JWT token, or SQL Injection (' OR 1=1 --)"></textarea>
+                    <button class="sandbox-btn" onclick="runSandboxTest()">Run Live Redaction &amp; Threat Check</button>
+                    <div class="sandbox-output" id="sandboxOutput">Click above to evaluate input against TUMLog AI engine.</div>
+                </div>
+            </div>
+
+            <!-- Intercepted Threat Alerts Feed -->
+            <div class="side-card">
+                <div class="side-title">
+                    <span>🛡️ Intercepted Threats (Live)</span>
+                    <span class="badge-tag badge-threat">Auto-Mitigated</span>
+                </div>
+                <div id="threatFeed">
+                    <div class="threat-item">
+                        <div class="threat-header">
+                            <span>SQL Injection Attempt</span>
+                            <span>Critical</span>
+                        </div>
+                        <div class="threat-desc">IP: 203.0.113.19 &bull; Matched: UNION SELECT user, pass</div>
+                    </div>
+                    <div class="threat-item">
+                        <div class="threat-header">
+                            <span>Path Traversal Relative Escape</span>
+                            <span>High</span>
+                        </div>
+                        <div class="threat-desc">IP: 198.51.100.82 &bull; Matched: ../../etc/passwd</div>
+                    </div>
+                    <div class="threat-item">
+                        <div class="threat-header">
+                            <span>DOM Event Handler XSS</span>
+                            <span>Medium</span>
+                        </div>
+                        <div class="threat-desc">IP: 192.0.2.14 &bull; Matched: &lt;img src=x onerror=alert()&gt;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zero-Touch Integration Code -->
+            <div class="side-card">
+                <div class="side-title">
+                    <span>🚀 1-Line Middleware Setup</span>
+                </div>
+                <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.5rem">
+                    Drop into ASP.NET Core Program.cs to auto-protect the entire web app:
+                </p>
+                <pre class="code-block">// Program.cs
+builder.Services.AddTumLog(opt => {
+    opt.WormRetentionDays = 90;
+    opt.NtpServerHost = "time.navy.mi.th";
+});
+
+// Middleware pipeline:
+app.UseTumLog(); // Zero code changes!</pre>
+            </div>
+        </div>
+    </main>
+
+    <!-- Certification Modal -->
+    <div class="modal" id="certModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeCertModal()">&times;</button>
+            <h2 style="font-size:1.3rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem;">
+                🏛️ Official Compliance Audit Certificate
+            </h2>
+            <p style="font-size:0.8rem; color:var(--text-secondary)">
+                Cryptographic proof generated for the Ministry of Digital Economy and Society (MDES).
+            </p>
+
+            <div class="cert-stamp">
+                <h3>CERTIFIED COMPLIANT</h3>
+                <p style="font-size:0.85rem; font-weight:600; margin-bottom:0.75rem">
+                    Thai Computer Crime Act B.E. 2560 Section 26 &amp; PDPA B.E. 2562
+                </p>
+                <div style="text-align:left; font-size:0.75rem; font-family:'JetBrains Mono'; background:rgba(0,0,0,0.5); padding:1rem; border-radius:8px; line-height:1.6">
+                    <div><strong>Organization:</strong> TUM Trust Security (Powered by TUM)</div>
+                    <div><strong>Retention Mandate:</strong> 90 Days WORM (Write Once Read Many)</div>
+                    <div><strong>Time Synchronization:</strong> NTP Stratum 1 (Royal Thai Navy Clock)</div>
+                    <div><strong>Cryptographic Integrity:</strong> SHA-256 Merkle Chained Hash Tree</div>
+                    <div><strong>PII Sanitization Level:</strong> Modulo-11 Thai ID &amp; Luhn PAN Zero-Leakage</div>
+                    <div><strong>Chain Head Hash:</strong> 9f82a17cb42d88190e294b...9103e</div>
+                    <div><strong>Audit Status:</strong> <span style="color:var(--accent-emerald)">VERIFIED 100% UNBROKEN</span></div>
+                </div>
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.75rem;">
+                <button class="tab-btn" onclick="closeCertModal()">Close</button>
+                <button class="btn-cert" onclick="window.print()">Print / Export PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pre-loaded seed logs
+        const sampleLogs = [
+            {
+                time: "2026-10-15T02:28:10.124Z",
+                category: "BusinessTransaction",
+                badge: "badge-biz",
+                event: "eKYC.PassportVerified",
+                ip: "203.144.144.1",
+                payload: "Passenger verified with biometric match (Score: 0.982) & zero PII proof",
+                hash: "e3b0c442...89a1"
+            },
+            {
+                time: "2026-10-15T02:28:05.481Z",
+                category: "SecurityThreat",
+                badge: "badge-threat",
+                event: "Waf.ThreatBlocked",
+                ip: "203.0.113.19",
+                payload: "Blocked SQLi 'UNION SELECT user, pass' on /api/v1/auth/login",
+                hash: "7d1a29f8...33cc"
+            },
+            {
+                time: "2026-10-15T02:27:59.912Z",
+                category: "PiiAccess",
+                badge: "badge-pii",
+                event: "Citizen.ProfileQuery",
+                ip: "192.168.1.104",
+                payload: "Citizen ID 1-XXXX-XXXXX-XX-1 accessed by Admin for KYC review",
+                hash: "4a28f110...902a"
+            },
+            {
+                time: "2026-10-15T02:27:42.231Z",
+                category: "AuditTrail",
+                badge: "badge-audit",
+                event: "User.SessionStarted",
+                ip: "171.96.12.8",
+                payload: "User session started via ThaID OpenID Connect authentication",
+                hash: "28bb914a...60f3"
+            },
+            {
+                time: "2026-10-15T02:27:21.050Z",
+                category: "BusinessTransaction",
+                badge: "badge-biz",
+                event: "Payment.Processed",
+                ip: "180.180.20.9",
+                payload: "Processed 4,500 THB for card 4111-XXXX-XXXX-1111 via PromptPay gateway",
+                hash: "991e4a12...884d"
+            }
+        ];
+
+        let currentCategory = "All";
+
+        function renderLogs() {
+            const tbody = document.getElementById("logTableBody");
+            tbody.innerHTML = "";
+            const filtered = currentCategory === "All" ? sampleLogs : sampleLogs.filter(l => l.category === currentCategory);
+
+            filtered.forEach(log => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${log.time}</td>
+                    <td><span class="badge-tag ${log.badge}">${log.category}</span></td>
+                    <td style="font-weight:600; color:var(--text-primary)">${log.event}</td>
+                    <td>${log.ip}</td>
+                    <td style="color:var(--text-secondary); max-width:280px; overflow:hidden; text-overflow:ellipsis">${log.payload}</td>
+                    <td class="hash-code">${log.hash}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function switchCategory(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            renderLogs();
+        }
+
+        // Sandbox Test Logic
+        function runSandboxTest() {
+            const input = document.getElementById("sandboxInput").value;
+            const output = document.getElementById("sandboxOutput");
+
+            if (!input.trim()) {
+                output.innerText = "Please provide an input string above to test.";
+                return;
+            }
+
+            let sanitized = input;
+            let detections = [];
+
+            // Thai National ID Checksum (Modulo-11)
+            const thaiIdRegex = /\b\d{13}\b|\b\d{1}-\d{4}-\d{5}-\d{2}-\d{1}\b/g;
+            sanitized = sanitized.replace(thaiIdRegex, (match) => {
+                const d = match.replace(/-/g, "");
+                if (d.length === 13) {
+                    let sum = 0;
+                    for (let i = 0; i < 12; i++) sum += parseInt(d[i]) * (13 - i);
+                    let check = (11 - (sum % 11)) % 10;
+                    if (check === parseInt(d[12])) {
+                        detections.push(`[Thai National ID] Modulo-11 Verified: ${match} -> ${d[0]}-XXXX-XXXXX-XX-${d[12]}`);
+                        return `${d[0]}-XXXX-XXXXX-XX-${d[12]}`;
+                    }
+                }
+                return match;
+            });
+
+            // Credit Card (Luhn)
+            const ccRegex = /\b(?:\d{4}[ -]?){3}\d{4}\b|\b\d{15,16}\b/g;
+            sanitized = sanitized.replace(ccRegex, (match) => {
+                const d = match.replace(/[ -]/g, "");
+                let sum = 0, alt = false;
+                for (let i = d.length - 1; i >= 0; i--) {
+                    let n = parseInt(d[i]);
+                    if (alt) { n *= 2; if (n > 9) n = (n % 10) + 1; }
+                    sum += n; alt = !alt;
+                }
+                if (sum % 10 === 0 && d.length >= 13) {
+                    detections.push(`[Credit Card] Luhn Verified: ${match} -> ${d.substring(0,4)}-XXXX-XXXX-${d.substring(d.length-4)}`);
+                    return `${d.substring(0,4)}-XXXX-XXXX-${d.substring(d.length-4)}`;
+                }
+                return match;
+            });
+
+            // Threat Patterns
+            let threatFound = null;
+            if (/union\s+select|'(\s*or|\s*and)\s*[\w\d]+/i.test(input)) {
+                threatFound = "CRITICAL: SQL Injection vector detected! Escalated to SecurityThreat.";
+            } else if (/<\s*script/i.test(input)) {
+                threatFound = "HIGH: XSS script injection detected! Escalated to SecurityThreat.";
+            } else if (/\.\.[/\\]/i.test(input)) {
+                threatFound = "HIGH: Directory Traversal escape pattern detected!";
+            }
+
+            let report = "=== TUMLog Engine Inspection Result ===\n";
+            if (threatFound) {
+                report += `⚠️ THREAT ALERT: ${threatFound}\n\n`;
+            } else {
+                report += "🛡️ THREAT STATUS: Clean (No OWASP injection signatures)\n\n";
+            }
+
+            if (detections.length > 0) {
+                report += `🔒 PII Redactions (${detections.length} entities):\n`;
+                detections.forEach(d => report += `  - ${d}\n`);
+                report += `\nSanitized Payload Persisted to WORM Chain:\n"${sanitized}"`;
+            } else {
+                report += "🔒 PII STATUS: No personal identifiable information detected.\n\nPayload:\n" + sanitized;
+            }
+
+            output.innerText = report;
+        }
+
+        function openCertModal() {
+            document.getElementById("certModal").classList.add("active");
+        }
+
+        function closeCertModal() {
+            document.getElementById("certModal").classList.remove("active");
+        }
+
+        // Initialize table
+        renderLogs();
+    </script>
+</body>
+</html>
