@@ -1,4 +1,4 @@
-﻿using Tum.Trust.Security.Core.Interfaces;
+using Tum.Trust.Security.Core.Interfaces;
 using Tum.Trust.Security.Core.Models;
 using Tum.Trust.Security.Infrastructure.Providers;
 using Tum.Trust.Security.Infrastructure.Security;
@@ -118,11 +118,12 @@ public static class DependencyInjection
         services.AddTransient<IDopaProvider>(sp => sp.GetRequiredService<DopaProvider>());
         services.AddTransient<IVerificationProvider>(sp => sp.GetRequiredService<DopaProvider>());
 
-        // 4. Register TUM TRUST SECURITY Trust Provider (IBorderlessTrustProvider + IVerificationProvider)
+        // 4. Register TUM TRUST SECURITY Trust Provider & Hardware Reader Adapter
         services.TryAddSingleton<IFaceLivenessDetector, Tum.Trust.Security.Infrastructure.Biometrics.EdgeFaceLivenessDetector>();
         services.TryAddSingleton<IBiometricFaceMatcher, Tum.Trust.Security.Infrastructure.Biometrics.EdgeBiometricFaceMatcher>();
         services.TryAddSingleton<ISovereignTrustAnchorService, Tum.Trust.Security.Infrastructure.Passport.SovereignTrustAnchorService>();
         services.TryAddSingleton<IBorderlessTrustProvider, Tum.Trust.Security.Infrastructure.Passport.MockBorderlessTrustProvider>();
+        services.TryAddSingleton<IHardwareReaderManager, Tum.Trust.Security.Infrastructure.Hardware.PcScSmartcardReaderAdapter>();
     }
 
     private static void ConfigureProviderHttpClient<TProvider>(
