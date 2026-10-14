@@ -124,6 +124,8 @@ public static class DependencyInjection
         services.TryAddSingleton<ISovereignTrustAnchorService, Tum.Trust.Security.Infrastructure.Passport.SovereignTrustAnchorService>();
         services.TryAddSingleton<IBorderlessTrustProvider, Tum.Trust.Security.Infrastructure.Passport.MockBorderlessTrustProvider>();
         services.TryAddSingleton<IHardwareReaderManager, Tum.Trust.Security.Infrastructure.Hardware.PcScSmartcardReaderAdapter>();
+        services.TryAddSingleton<IMobileNfcBridge, Tum.Trust.Security.Infrastructure.Mobile.CrossPlatformMobileNfcBridge>();
+        services.TryAddSingleton<IIcaoPkdSyncService, Tum.Trust.Security.Infrastructure.Passport.IcaoPkdSyncService>();
     }
 
     private static void ConfigureProviderHttpClient<TProvider>(

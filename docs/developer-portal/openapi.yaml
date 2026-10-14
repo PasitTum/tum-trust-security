@@ -1,0 +1,148 @@
+openapi: 3.0.3
+info:
+  title: TUM Trust Security — Sovereign Identity & Verification API
+  version: 1.2.0
+  description: >
+    Official OpenAPI specification for TUM Trust Security (Powered by TUM).
+    Enterprise-grade, offline-first verification engine for ICAO 9303 ePassport NFC,
+    ISO/IEC 18013-5 Mobile Driving License (mDL), Neuromorphic Edge AI Biometrics, and ICAO PKD MasterList Sync.
+  contact:
+    name: TUM Trust Security Developer Relations
+    email: contact@tumtrust.security
+    url: https://github.com/PasitTum/tum-trust-security
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local Kiosk / Terminal Gateway Sandbox
+  - url: https://gateway.tumtrust.security/api/v1
+    description: Production Enterprise Gateway Node
+
+paths:
+  /borderless/passport/verify:
+    post:
+      summary: Verify ICAO 9303 ePassport (NFC & MRZ)
+      description: >
+        Performs full cryptographic verification of an ePassport including MRZ Modulo-10 checksum,
+        CSCA Passive Authentication (EF.SOD), Active Authentication (chip anti-cloning challenge),
+        and ISO 30107 Level 2 Edge AI Biometric Liveness.
+      operationId: verifyPassport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PassportVerificationRequest'
+      responses:
+        '200':
+          description: Verification outcome with Zero-Knowledge Proof token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PassportVerificationResult'
+        '400':
+          description: Malformed MRZ or missing required APDU data groups
+
+  /borderless/mdl/verify:
+    post:
+      summary: Verify ISO/IEC 18013-5 Mobile Driving License (Apple / Google Wallet)
+      description: >
+        Validates cryptographic COSE/CBOR digital credential signatures issued by state DMVs
+        presented over NFC/BLE from mobile digital wallets.
+      operationId: verifyMdl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MdlVerificationRequest'
+      responses:
+        '200':
+          description: Verification outcome and selective disclosure attributes
+
+  /pkd/sync:
+    post:
+      summary: Trigger ICAO PKD MasterList Synchronization
+      description: Ingests and verifies country signing CA certificates across 150+ member states.
+      operationId: syncPkd
+      responses:
+        '200':
+          description: Synchronization summary with updated certificate counts
+
+  /pkd/mesh/ingest:
+    post:
+      summary: Ingest Air-Gapped TUM Sovereign KeyMesh Gossip Payload
+      description: Updates isolated kiosks without direct Internet access using peer-to-peer authenticated gossip.
+      operationId: ingestKeyMesh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ gossipToken ]
+              properties:
+                gossipToken:
+                  type: string
+                  example: tum_mesh_eyJpc3MiOiJ0dW1fa2V5bWVzaF9hdXRob3JpdHkifQ==
+      responses:
+        '200':
+          description: Air-gapped mesh update outcome
+
+components:
+  schemas:
+    PassportVerificationRequest:
+      type: object
+      required: [ mrzRawText ]
+      properties:
+        mrzRawText:
+          type: string
+          description: Two 44-character lines (TD3) or three 30-character lines (TD1)
+          example: "P<JPNTOKYO<<TARO<<<<<<<<<<<<<<<<<<<<<<<<<<<<\nTZ12345674JPN8501015M2801012<<<<<<<<<<<<<<02"
+        validatePassiveAuthentication:
+          type: boolean
+          default: true
+        validateActiveAuthentication:
+          type: boolean
+          default: true
+        validateFaceLiveness:
+          type: boolean
+          default: true
+        liveFaceFrameBase64:
+          type: string
+          description: Base64-encoded camera frame from terminal webcam
+
+    PassportVerificationResult:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+        documentNumber:
+          type: string
+        issuingCountry:
+          type: string
+        isPassiveAuthenticationValid:
+          type: boolean
+        isActiveAuthenticationValid:
+          type: boolean
+        isBiometricMatch:
+          type: boolean
+        isLiveHuman:
+          type: boolean
+        zeroKnowledgeTrustToken:
+          type: string
+          description: Privacy-preserving cryptographically attested claim token
+          example: "ntk_zkp_eyJpc3MiOiJodHRwczovL3RydXN0LnR1bS5zZWN1cml0eSJ9..."
+
+    MdlVerificationRequest:
+      type: object
+      required: [ deviceEngagementPayload ]
+      properties:
+        deviceEngagementPayload:
+          type: string
+          description: Base64-encoded CBOR/COSE engagement structure
+        validateAgeOver21:
+          type: boolean
+          default: true
