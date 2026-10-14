@@ -1,31 +1,31 @@
-# สถาปัตยกรรม ความปลอดภัย PDPA และตารางรหัสข้อผิดพลาด (Architecture, Security & Error Reference)
-**โปรเจกต์:** `Netka.Identity.SDK`  
+﻿# สถาปัตยกรรม ความปลอดภัย PDPA และตารางรหัสข้อผิดพลาด (Architecture, Security & Error Reference)
+**โปรเจกต์:** `TUM.Identity.SDK`  
 
 ---
 
 ## 1. สถาปัตยกรรมระบบ (Clean Architecture & Pass-Through Design)
 
-`Netka.Identity.SDK` แบ่งโครงสร้างออกเป็น 3 เลเยอร์หลักภายใน Assembly เดียว (`Netka.Identity.SDK.dll`) เพื่อให้สะดวกต่อการแจกจ่ายแบบ Single-DLL:
+`TUM.Identity.SDK` แบ่งโครงสร้างออกเป็น 3 เลเยอร์หลักภายใน Assembly เดียว (`TUM.Identity.SDK.dll`) เพื่อให้สะดวกต่อการแจกจ่ายแบบ Single-DLL:
 
 ```text
 ┌───────────────────────────────────────────────────────────────────────────┐
 │                     Host Project (Kiosk / Web API)                        │
 │        Controllers / Minimal APIs / Services / EF Core DbContext          │
 └─────────────────────────────────────┬─────────────────────────────────────┘
-                                      │ References libs/Netka.Identity.SDK.dll
+                                      │ References libs/TUM.Identity.SDK.dll
                                       ▼
 ┌───────────────────────────────────────────────────────────────────────────┐
-│ 1. Application Layer (Netka.Identity.Application)                         │
+│ 1. Application Layer (TUM.Identity.Application)                         │
 │    - DependencyInjection.AddIdentityVerification() (4 Overloads)          │
 │    - IdentityResilienceHandler (Built-in Retry + Circuit Breaker)         │
 ├───────────────────────────────────────────────────────────────────────────┤
-│ 2. Core Layer (Netka.Identity.Core)                                       │
+│ 2. Core Layer (TUM.Identity.Core)                                       │
 │    - Interfaces: IVerificationProvider, IThaIdProvider, IDopaProvider,    │
 │                  IEncryptionService, IIdentityOptionsProvider             │
 │    - Models: VerificationRequest, VerificationResult, VerificationError,  │
 │              IdentityVerificationOptions, ThaIdOptions, DopaOptions       │
 ├───────────────────────────────────────────────────────────────────────────┤
-│ 3. Infrastructure Layer (Netka.Identity.Infrastructure)                   │
+│ 3. Infrastructure Layer (TUM.Identity.Infrastructure)                   │
 │    - Providers: ThaIdProvider, DopaProvider (Live HTTP + Built-in Mock)   │
 │    - Security: AesEncryptionService (AES-256-CBC + HMAC-SHA256), PkceHelper│
 │    - Helpers: ProviderHelper (Modulo 11 PID Validator, PII Vault Logger)  │
@@ -48,7 +48,7 @@
 - `ThaIdProvider.VerifyAsync` ตรวจสอบค่า `expected_state` เทียบกับ `request.State` แบบ Ordinal ก่อนอนุญาตให้แลก Token เสมอ
 
 ### 2.3 ระบบความทนทานต่อโครงข่ายล่มในตัว (`IdentityResilienceHandler`)
-เพื่อให้ `Netka.Identity.SDK.dll` ไม่มี Dependency ภายนอก (`Zero Third-Party DLLs`) ตัว SDK จึงมี `IdentityResilienceHandler : DelegatingHandler` ฝังอยู่ในตัว:
+เพื่อให้ `TUM.Identity.SDK.dll` ไม่มี Dependency ภายนอก (`Zero Third-Party DLLs`) ตัว SDK จึงมี `IdentityResilienceHandler : DelegatingHandler` ฝังอยู่ในตัว:
 - **Exponential Backoff Retry (3 ครั้ง):** เมื่อเจอ HTTP `5xx`, `408 Request Timeout`, `429 Too Many Requests` หรือ `HttpRequestException` ระบบจะลองใหม่อัตโนมัติที่ระยะเวลา `400ms`, `800ms`, และ `1600ms`
 - **Circuit Breaker (ตัดวงจรอัตโนมัติ):** หากเกิดความล้มเหลวระดับโครงข่ายติดต่อกันครบ **5 ครั้ง** ระบบจะเปิดวงจร (Open Circuit) เป็นเวลา **30 วินาที** เพื่อไม่ให้ตู้ Kiosk ค้างรอ Timeout ซ้ำซ้อน
 

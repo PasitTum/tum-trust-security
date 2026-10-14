@@ -1,9 +1,9 @@
-# เอกสารอ้างอิงการเชื่อมต่อ DOPA (`DOPA`)
+﻿# เอกสารอ้างอิงการเชื่อมต่อ DOPA (`DOPA`)
 
 - **ProviderName:** `"DOPA"`
 - **Config Section:** `"IdentityVerification:Dopa"`
-- **Interface:** `Netka.Identity.Core.Interfaces.IDopaProvider` (สืบทอดจาก `IVerificationProvider`)
-- **Implementation:** `Netka.Identity.Infrastructure.Providers.DopaProvider`
+- **Interface:** `TUM.Identity.Core.Interfaces.IDopaProvider` (สืบทอดจาก `IVerificationProvider`)
+- **Implementation:** `TUM.Identity.Infrastructure.Providers.DopaProvider`
 - **เอกสารอ้างอิงทางการ (Official Documentation & Spec URLs):**
   - **แนวทางการพัฒนาระบบโดยใช้ API Laser Code (สพร. / DGA):** [https://kb.dga.or.th/gdx/5api-lasercode/](https://kb.dga.or.th/gdx/5api-lasercode/)
   - **แนวทางการพัฒนาระบบโดยใช้ API สำหรับผู้พัฒนาหน่วยงาน (สพร. / DGA):** [https://kb.dga.or.th/gdx/4api/](https://kb.dga.or.th/gdx/4api/)
@@ -214,7 +214,7 @@ VerificationResult result = await _dopaProvider.VerifyAsync(request, ct);
 >    - **Linux / macOS:** รันสคริปต์ [`./run-mockserver.sh`](../../run-mockserver.sh)
 > 3. **หรือรันผ่าน Terminal จากโฟลเดอร์ใดก็ได้ (ตรวจหา Path อัตโนมัติด้วย Git):**
 >    ```bash
->    dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/Netka.Identity.MockServer.csproj)"
+>    dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/TUM.Identity.MockServer.csproj)"
 >    ```
 >
 > 📡 **ขั้นตอนการยิงทดสอบ API:**

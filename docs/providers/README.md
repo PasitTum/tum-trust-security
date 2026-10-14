@@ -1,13 +1,13 @@
-# สารบัญเอกสารการเชื่อมต่อ Identity Providers (`docs/providers/`)
+﻿# สารบัญเอกสารการเชื่อมต่อ Identity Providers (`docs/providers/`)
 
-โฟลเดอร์นี้เก็บข้อมูลอ้างอิงทางเทคนิค (API Specification, แหล่งอ้างอิง Endpoint จริง, การตั้งค่า `appsettings.json` / Database, พารามิเตอร์ขาเข้า `VerificationRequest` และโครงสร้างข้อมูลขาออก `VerificationResult.Data`) ของแต่ละ Provider ใน `Netka.Identity.SDK`
+โฟลเดอร์นี้เก็บข้อมูลอ้างอิงทางเทคนิค (API Specification, แหล่งอ้างอิง Endpoint จริง, การตั้งค่า `appsettings.json` / Database, พารามิเตอร์ขาเข้า `VerificationRequest` และโครงสร้างข้อมูลขาออก `VerificationResult.Data`) ของแต่ละ Provider ใน `TUM.Identity.SDK`
 
 > **กฎเหล็กสำคัญสำหรับ AI Agents / Claude Code (ห้ามละเมิดโดยเด็ดขาด):**
 > 1. **ห้ามลบหรือเขียนทับข้อมูลอ้างอิงเดิม (Append-Only Documentation Rule):** เมื่ออัปเดตไฟล์ใน `docs/providers/*.md` **ห้ามลบ** URL อ้างอิง, ข้อมูล OpenID Configuration, รายชื่อ Scopes, ตารางพารามิเตอร์ หรือตัวอย่างที่มีอยู่เดิมโดยเด็ดขาด ให้ใช้วิธี **เพิ่มเติม (Append/Expand)** เท่านั้น
 > 2. **ห้ามตัดทอนหรือเลือกทำเฉพาะบาง Endpoint (100% Full Provider Endpoint Rule):** โปรเจคนี้คือ Middleware ตัวกลางของทีม เมื่อเพิ่มหรืออัปเดต Provider ใดๆ ต้องรองรับ Endpoint และโหมดการยืนยันตัวตน **ครบ 100% ทุกตัว** ตามสเปกของ Provider นั้น ห้ามตัดสินใจตัด Endpoint ใดออกเองโดยเด็ดขาด
 > 3. **ห้ามใส่ Key หรือ Secret จริงลงในเอกสารเด็ดขาด (Strict No-Secret In Docs Rule):** ห้ามนำ API Key, Consumer-Key, ConsumerSecret, Client Secret, Private Key, Encryption Key หรือ Secret จริงใดๆ มาบันทึกหรือใส่ลงในโฟลเดอร์ `docs/providers/` โดยเด็ดขาด ทั้งในไฟล์ `.md` และ `.http` ให้ใช้ Placeholder เช่น `<YOUR_API_KEY>`, `<YOUR_CLIENT_SECRET>` หรือ `{{variable}}` เท่านั้น
 > 4. **เมื่อใช้ Skill `/add-identity-provider`:** ให้สร้างหรืออัปเดตไฟล์ `<provider-name>.md` ในโฟลเดอร์นี้ทุกครั้งที่มีการเพิ่ม Provider ใหม่ และเพิ่มรายชื่อลงในตารางด้านล่าง
-> 5. **เมื่อใช้ Skill `/integrate-netka-identity`:** ให้อ่านไฟล์ของ Provider ที่ต้องการเชื่อมในโฟลเดอร์นี้ เพื่อดูชื่อ Key ใน `appsettings.json` / `IdentityVerificationOptions`, พารามิเตอร์ใน `VerificationRequest`, และชื่อ Key ที่อยู่ใน `VerificationResult.Data`
+> 5. **เมื่อใช้ Skill `/integrate-TUM-identity`:** ให้อ่านไฟล์ของ Provider ที่ต้องการเชื่อมในโฟลเดอร์นี้ เพื่อดูชื่อ Key ใน `appsettings.json` / `IdentityVerificationOptions`, พารามิเตอร์ใน `VerificationRequest`, และชื่อ Key ที่อยู่ใน `VerificationResult.Data`
 
 ## รายชื่อ Providers ที่รองรับปัจจุบัน
 
@@ -15,6 +15,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `"ThaID"` | ThaID (DOPA Digital ID — OAuth 2.0 + PKCE + OIDC) | `IThaIdProvider` | `GetAuthorizationUrl`, `ExchangeCodeAsync`, `RefreshTokenAsync`, `InspectTokenAsync`, `RevokeTokenAsync`, `GetUserInfoAsync`, `GetOpenIdConfigurationAsync`, `GetJwksAsync`, `ValidateIdTokenAsync`, `VerifyAsync` | [thaid.md](./thaid.md) | [thaid.http](./thaid.http) |
 | `"DOPA"` | กรมการปกครอง (ตรวจสอบสถานะบัตร Laser / Chip / เปรียบเทียบใบหน้า 1:1) | `IDopaProvider` | `VerifyByLaserAsync`, `VerifyByChipAsync`, `VerifyByFaceAsync`, `RequestAccessTokenAsync`, `VerifyAsync` | [dopa.md](./dopa.md) | [dopa.http](./dopa.http) |
+| `"TUMBorderless"` | TUM TRUST SECURITY (Universal ePassport ICAO 9303 & mDL ISO 18013-5) | `IBorderlessTrustProvider` | `VerifyPassportAsync`, `VerifyMdlAsync`, `VerifyAsync` | [borderless.md](./borderless.md) | [borderless.http](./borderless.http) |
 
 ---
 
@@ -28,7 +29,7 @@
   - บน Mac/Linux: รัน [`./run-mockserver.sh`](../../run-mockserver.sh)
 - **วิธีที่ 3 (Terminal คำสั่งเดียวจากทุกโฟลเดอร์):**
   ```bash
-  dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/Netka.Identity.MockServer.csproj)"
+  dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/TUM.Identity.MockServer.csproj)"
   ```
 
 ### ขั้นตอนที่ 2: ติดตั้ง Extension และยิงทดสอบ

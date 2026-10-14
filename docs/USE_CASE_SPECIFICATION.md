@@ -1,10 +1,10 @@
-# รายงาน Use Case และข้อกำหนดการจำลอง (Use Case & Scenario Specification Report)
-**โปรเจกต์:** `Netka.Identity.SDK`  
+﻿# รายงาน Use Case และข้อกำหนดการจำลอง (Use Case & Scenario Specification Report)
+**โปรเจกต์:** `TUM.Identity.SDK`  
 **ขอบเขต:** มาตรฐาน 12 Use Cases สำหรับการพิสูจน์และยืนยันตัวตนผ่าน **DOPA ThaID (6 Use Cases)** และ **DOPA Check Card Service (6 Use Cases)**  
 **รองรับทั้งใน:**
-1. โหมดจำลองในตัวไลบรารี **`UseMock = true`** (ภายในไฟล์ `Netka.Identity.SDK.dll` โดยไม่ต้องต่ออินเทอร์เน็ต)
+1. โหมดจำลองในตัวไลบรารี **`UseMock = true`** (ภายในไฟล์ `TUM.Identity.SDK.dll` โดยไม่ต้องต่ออินเทอร์เน็ต)
 2. เซิร์ฟเวอร์จำลองแยกอิสระ **`MockServer`** (`http://localhost:5199`)
-3. ชุดทดสอบอัตโนมัติ **`Tests`** (`Netka.Identity.SDK.Tests`)
+3. ชุดทดสอบอัตโนมัติ **`Tests`** (`TUM.Identity.SDK.Tests`)
 
 
 ---

@@ -1,0 +1,93 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "TUM Global Identity & AI Kiosk Ecosystem",
+  "version": "1.0.0",
+  "total_agents": 34,
+  "pillars": [
+    {
+      "id": "01-executive-strategy",
+      "name": "Global Executive & Strategy",
+      "agents": [
+        { "id": "cto", "file": "01-executive-strategy/cto.md", "title": "Chief Technology Officer (CTO)", "focus": "Tech Strategy, Global System Architecture, Business Alignment" },
+        { "id": "global-ai-product-head", "file": "01-executive-strategy/global-ai-product-head.md", "title": "Global Head of AI & Product", "focus": "Global AI & Product Strategy, Innovation Roadmap" },
+        { "id": "global-identity-architect", "file": "01-executive-strategy/global-identity-architect.md", "title": "Global Identity Standards & Trust Framework Architect", "focus": "eIDAS 2.0, mDL ISO 18013-5, W3C DID/VC, OID4VP" }
+      ]
+    },
+    {
+      "id": "02-tri-temporal-research",
+      "name": "Tri-Temporal Research Division",
+      "agents": [
+        { "id": "legacy-retro-researcher", "file": "02-tri-temporal-research/legacy-retro-researcher.md", "title": "Legacy & Retro-Systems Researcher", "focus": "Historical Failures, Legacy Hardware/Protocols (ISO 7816, RS-232, Windows Embedded)" },
+        { "id": "current-sota-researcher", "file": "02-tri-temporal-research/current-sota-researcher.md", "title": "Current & Market SOTA Researcher", "focus": "FIDO2, Passkeys, OAuth 2.1, Competitor Intelligence, Market Standards" },
+        { "id": "frontier-future-researcher", "file": "02-tri-temporal-research/frontier-future-researcher.md", "title": "Frontier & Next-Gen Tech Researcher", "focus": "Post-Quantum Cryptography, Zero-Knowledge Proofs, Iris/Vein Biometrics" }
+      ]
+    },
+    {
+      "id": "03-global-product-management",
+      "name": "Global Product & Business Expansion",
+      "agents": [
+        { "id": "regional-pm-us", "file": "03-global-product-management/regional-pm-us.md", "title": "Regional Product Manager (US)", "focus": "NIST SP 800-63, REAL ID, US Federal/Commercial Regulations" },
+        { "id": "regional-pm-eu", "file": "03-global-product-management/regional-pm-eu.md", "title": "Regional Product Manager (EU)", "focus": "eIDAS 2.0, GDPR, EU Digital Identity Wallet Framework" },
+        { "id": "regional-pm-apac", "file": "03-global-product-management/regional-pm-apac.md", "title": "Regional Product Manager (APAC)", "focus": "ThaID, Singpass, Aadhaar, APAC Digital Governance" },
+        { "id": "international-ba", "file": "03-global-product-management/international-ba.md", "title": "International Business Analyst (Global BA)", "focus": "Cross-Border Business Requirements, Localization Specs" },
+        { "id": "project-manager", "file": "03-global-product-management/project-manager.md", "title": "Project Manager (PM)", "focus": "Delivery Milestones, Budget, Dependencies, Risk Management" },
+        { "id": "scrum-master", "file": "03-global-product-management/scrum-master.md", "title": "Scrum Master", "focus": "Agile Facilitation, Impediment Removal, Sprint Velocity" }
+      ]
+    },
+    {
+      "id": "04-dx-architecture",
+      "name": "Developer Experience & Architecture",
+      "agents": [
+        { "id": "dx-lead-sdk-ergonomics", "file": "04-dx-architecture/dx-lead-sdk-ergonomics.md", "title": "Developer Experience (DX) Lead & SDK Ergonomics Architect", "focus": "Frictionless Integration, 5-Min Time-to-First-Verification, Scaffolding, Docs" },
+        { "id": "cross-platform-software-architect", "file": "04-dx-architecture/cross-platform-software-architect.md", "title": "Cross-Platform Software Architect", "focus": "Clean Architecture, Native AOT, Cross-OS Portability (Windows, Linux, Android)" },
+        { "id": "lead-dev-code-quality", "file": "04-dx-architecture/lead-dev-code-quality.md", "title": "Leader Dev & Code Quality Gatekeeper", "focus": "Code Conventions, Pull Request Review, Tech Debt Management" },
+        { "id": "uiux-kiosk-experience-designer", "file": "04-dx-architecture/uiux-kiosk-experience-designer.md", "title": "UI/UX & Kiosk Experience Designer", "focus": "Kiosk Ergonomics, Accessibility (ADA/WCAG), Hardware Guidance Animations" },
+        { "id": "global-solutions-architect", "file": "04-dx-architecture/global-solutions-architect.md", "title": "Global Solutions Architect & Enterprise Onboarding", "focus": "Enterprise Client PoC, Legacy Banking/Gov Integration, Technical Presales" }
+      ]
+    },
+    {
+      "id": "05-polyglot-sdk-engineering",
+      "name": "Polyglot & Mobile SDK Engineering",
+      "agents": [
+        { "id": "csharp-dotnet-sdk-engineer", "file": "05-polyglot-sdk-engineering/csharp-dotnet-sdk-engineer.md", "title": "Core C# / .NET SDK Engineer", "focus": ".NET Standard 2.0/.NET 8/10, NuGet, Memory & Performance Optimization" },
+        { "id": "java-kotlin-android-engineer", "file": "05-polyglot-sdk-engineering/java-kotlin-android-engineer.md", "title": "Java / Kotlin & Android Systems Engineer", "focus": "Android Kiosks, Smart POS Terminals (Sunmi, Pax), BiometricPrompt" },
+        { "id": "swift-ios-engineer", "file": "05-polyglot-sdk-engineering/swift-ios-engineer.md", "title": "Swift & iOS Systems Engineer", "focus": "iPad Kiosks, Apple Wallet, ISO 18013-5 mDL, CoreNFC" },
+        { "id": "cross-platform-mobile-engineer", "file": "05-polyglot-sdk-engineering/cross-platform-mobile-engineer.md", "title": "Cross-Platform Mobile Engineer (Flutter & React Native)", "focus": "Hybrid App Plugins, Unified Dart/TS Bridge to Native SDKs" },
+        { "id": "typescript-web-engineer", "file": "05-polyglot-sdk-engineering/typescript-web-engineer.md", "title": "TypeScript / Node.js & Web SDK Engineer", "focus": "Electron Kiosks, Web SDK, Wasm Integration, NPM Packaging" },
+        { "id": "python-ai-pipeline-engineer", "file": "05-polyglot-sdk-engineering/python-ai-pipeline-engineer.md", "title": "Python SDK & AI Pipeline Engineer", "focus": "PyPI Package, Data Science Bindings, Enterprise AI Backend Integration" },
+        { "id": "cpp-native-systems-engineer", "file": "05-polyglot-sdk-engineering/cpp-native-systems-engineer.md", "title": "C/C++ & Native Systems Engineer", "focus": "High-Performance Core, LibUSB, PC/SC P/Invoke, Embedded Linux/IoT" }
+      ]
+    },
+    {
+      "id": "06-hardware-quality",
+      "name": "Hardware Ecosystem & Quality Assurance",
+      "agents": [
+        { "id": "kiosk-hardware-systems-engineer", "file": "06-hardware-quality/kiosk-hardware-systems-engineer.md", "title": "Kiosk & Hardware Systems Engineer", "focus": "Smart Card Readers, Web/Industrial Cameras, Session Auto-Reset, Peripheral Failover" },
+        { "id": "global-oem-partner-lead", "file": "06-hardware-quality/global-oem-partner-lead.md", "title": "Hardware Ecosystem & Global OEM Partner Lead", "focus": "HID Global, Thales, Zebra, Ingenico, Hardware Abstraction Layer (HAL)" },
+        { "id": "qa-automation-chaos-tester", "file": "06-hardware-quality/qa-automation-chaos-tester.md", "title": "QA Automation & Chaos Testing Engineer", "focus": "Zero-Bug Standard, Stress Test, Network Flapping, Card Jam, Hardware Glitch Injection" }
+      ]
+    },
+    {
+      "id": "07-ai-biometrics-lifecycle",
+      "name": "Global AI & Biometrics Engine",
+      "agents": [
+        { "id": "ai-product-manager", "file": "07-ai-biometrics-lifecycle/ai-product-manager.md", "title": "AI Product Manager", "focus": "Biometric Vision, Face Liveness, Fraud Detection, AI Kiosk Assistant" },
+        { "id": "feature-engineer", "file": "07-ai-biometrics-lifecycle/feature-engineer.md", "title": "Feature Engineer", "focus": "Biometric Signal Processing, Image Preprocessing, Vector Embeddings" },
+        { "id": "data-scientist", "file": "07-ai-biometrics-lifecycle/data-scientist.md", "title": "Data Scientist", "focus": "Model Architecture, Training, FAR/FRR Optimization, Bias Prevention" },
+        { "id": "ai-developer", "file": "07-ai-biometrics-lifecycle/ai-developer.md", "title": "AI Developer", "focus": "Intelligent SDK Features Delivery, Packaging ML Models into Libraries" },
+        { "id": "applied-ai-edge-engineer", "file": "07-ai-biometrics-lifecycle/applied-ai-edge-engineer.md", "title": "Applied AI Engineer (Kiosk Edge/ONNX)", "focus": "Low-Latency Edge Inference, ONNX Runtime, OpenVINO, Memory Footprint < 150MB" }
+      ]
+    },
+    {
+      "id": "08-security-governance-legal",
+      "name": "Security, Compliance & Governance",
+      "agents": [
+        { "id": "cybersecurity-anti-tamper-specialist", "file": "08-security-governance-legal/cybersecurity-anti-tamper-specialist.md", "title": "Kiosk Cybersecurity & Anti-Tamper Specialist (Red Team)", "focus": "Hardware Sniffing, ISO 30107 Presentation Attack Detection, Memory Scraping, PenTest" },
+        { "id": "legal-compliance-attorney", "file": "08-security-governance-legal/legal-compliance-attorney.md", "title": "Legal & Regulatory Compliance Attorney", "focus": "PDPA, GDPR, US Privacy, e-KYC Financial Regulations, Cross-Border Data Transfer" },
+        { "id": "ai-copyright-ip-specialist", "file": "08-security-governance-legal/ai-copyright-ip-specialist.md", "title": "AI Copyright & Intellectual Property Specialist", "focus": "Training Data Rights, Model Copyright, AI Output Ownership, Global EULA/Indemnity" },
+        { "id": "data-governance-specialist", "file": "08-security-governance-legal/data-governance-specialist.md", "title": "Data Governance Specialist", "focus": "Data Lineage, Data Classification (PII/CID/Laser), Retention & Masking Policies" },
+        { "id": "cloud-infra-devops-engineer", "file": "08-security-governance-legal/cloud-infra-devops-engineer.md", "title": "Cloud, Infrastructure & DevOps Engineer", "focus": "Container, CI/CD, Multi-Cloud Resilience, Telemetry, Proactive Incident Prevention" }
+      ]
+    }
+  ]
+}

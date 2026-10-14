@@ -1,6 +1,6 @@
-# รายงานผลการทดสอบ Unit Test (Unit Test Verification Report)
-**โปรเจกต์:** `Netka.Identity.SDK`  
-**โปรเจกต์ทดสอบ:** `Tests/Netka.Identity.SDK.Tests.csproj` (xUnit Test Framework)  
+﻿# รายงานผลการทดสอบ Unit Test (Unit Test Verification Report)
+**โปรเจกต์:** `TUM.Identity.SDK`  
+**โปรเจกต์ทดสอบ:** `Tests/TUM.Identity.SDK.Tests.csproj` (xUnit Test Framework)  
 **Target Frameworks ที่ทดสอบ:** `.NET 5.0` (`net5.0`), `.NET 8.0` (`net8.0`), และ `.NET 10.0` (`net10.0`)
 
 ---
@@ -16,7 +16,7 @@
 
 > **คำสั่งสำหรับรันตรวจสอบซ้ำ:**
 > ```powershell
-> dotnet test "Netka.Identity.SDK.sln" -c Release
+> dotnet test "TUM.Identity.SDK.sln" -c Release
 > ```
 
 ---
@@ -109,5 +109,5 @@
 
 | ลำดับ | ชื่อ Test Method | สิ่งที่ทดสอบ (Test Objective) | ผลลัพธ์ที่คาดหวัง | สถานะ |
 | :---: | :--- | :--- | :--- | :---: |
-| 42 | `SdkAssembly_IsCompiledForCurrentTargetFramework` | ตรวจสอบ `TargetFrameworkAttribute` ของ `Netka.Identity.SDK.dll` ในแต่ละ Runtime | ตรงกับ `.NETCoreApp,Version=v5.0`, `v8.0`, และ `v10.0` ตามลำดับ | ✅ PASS |
+| 42 | `SdkAssembly_IsCompiledForCurrentTargetFramework` | ตรวจสอบ `TargetFrameworkAttribute` ของ `TUM.Identity.SDK.dll` ในแต่ละ Runtime | ตรงกับ `.NETCoreApp,Version=v5.0`, `v8.0`, และ `v10.0` ตามลำดับ | ✅ PASS |
 | 43 | `SdkCoreTypes_CanBeInstantiatedOnCurrentRuntime` | ทดสอบสร้าง Instance และเรียกใช้งานฟีเจอร์หลักบน Runtime ปัจจุบัน | ทำงานได้สมบูรณ์ทั้งบน .NET 5.0, .NET 8.0 และ .NET 10.0 | ✅ PASS |

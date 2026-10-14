@@ -87,8 +87,49 @@ app.MapGet("/", (HttpContext ctx) =>
                 <tr><td>GET</td><td><code>/api/v2/oauth2/userinfo/</code></td><td>คืนข้อมูลประชาชน 20 Scopes จาก Bearer Token</td></tr>
                 <tr><td>POST</td><td><code>/CheckCardByLaser</code></td><td>จำลองการตรวจสอบสถานะบัตรประชาชนด้วยเลขหลังบัตร (DOPA Laser ID)</td></tr>
                 <tr><td>POST</td><td><code>/CheckCardByCID</code></td><td>จำลองการตรวจสอบสถานะบัตรประชาชนด้วยเลขชิป (DOPA Chip / BP1)</td></tr>
+                <tr><td>POST</td><td><code>/api/v1/borderless/passport/verify</code></td><td><strong>Netka Borderless:</strong> ตรวจสอบ ePassport NFC (150+ ประเทศ), Passive/Active Auth, AI Liveness, Zero-Knowledge Pass</td></tr>
+                <tr><td>POST</td><td><code>/api/v1/borderless/mdl/verify</code></td><td><strong>Netka Borderless:</strong> ตรวจสอบใบขับขี่และบัตรประชาชนดิจิทัล ISO 18013-5 (Apple/Google Wallet)</td></tr>
             </table>
         </div>
+
+        <div class="card" style="border: 2px solid #3b82f6; background: #eff6ff;">
+            <h3 style="color: #1d4ed8; margin-top: 0;">🌐 Netka Borderless: Global Sovereign Trust Console (Live Demo)</h3>
+            <p>ทดสอบยิงยืนยันตัวตนหนังสือเดินทางสากล ICAO 9303 และกระเป๋าเงินดิจิทัล mDL ได้แบบ Real-Time:</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                <button onclick="testBorderless('USA')" style="background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">🇺🇸 USA Passport</button>
+                <button onclick="testBorderless('GBR')" style="background: #1e40af; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">🇬🇧 UK Passport</button>
+                <button onclick="testBorderless('DEU')" style="background: #0f172a; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">🇩🇪 Germany Passport</button>
+                <button onclick="testBorderless('JPN')" style="background: #dc2626; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">🇯🇵 Japan Passport</button>
+                <button onclick="testBorderless('THA')" style="background: #047857; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">🇹🇭 Thailand Passport</button>
+                <button onclick="testMdl()" style="background: #7c3aed; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">📱 Apple/Google Wallet (mDL)</button>
+            </div>
+            <pre id="borderlessConsoleOutput" style="max-height: 240px; overflow-y: auto;">คลิกปุ่มด้านบนเพื่อทดสอบการยืนยันตัวตนระดับ Global ทันที...</pre>
+        </div>
+
+        <script>
+            async function testBorderless(country) {
+                const out = document.getElementById('borderlessConsoleOutput');
+                out.innerText = 'Connecting to Netka Borderless Engine for ' + country + '...';
+                try {
+                    const res = await fetch('/api/v1/borderless/passport/verify?country=' + country, { method: 'POST' });
+                    const data = await res.json();
+                    out.innerText = JSON.stringify(data, null, 2);
+                } catch(e) {
+                    out.innerText = 'Error: ' + e;
+                }
+            }
+            async function testMdl() {
+                const out = document.getElementById('borderlessConsoleOutput');
+                out.innerText = 'Connecting to Netka Borderless mDL Wallet Reader...';
+                try {
+                    const res = await fetch('/api/v1/borderless/mdl/verify', { method: 'POST' });
+                    const data = await res.json();
+                    out.innerText = JSON.stringify(data, null, 2);
+                } catch(e) {
+                    out.innerText = 'Error: ' + e;
+                }
+            }
+        </script>
     </body>
     </html>
     """;
@@ -631,6 +672,71 @@ app.MapPost("/oauth/token", async (HttpContext ctx) =>
         access_token = "mock-dopa-access-token-2026",
         token_type = "Bearer",
         expires_in = 3600
+    });
+});
+
+// ============================================================================
+// 6. Netka Borderless: Global ePassport & mDL Sovereign Verification Endpoints
+// ============================================================================
+
+app.MapPost("/api/v1/borderless/passport/verify", (HttpContext ctx) =>
+{
+    var country = ctx.Request.Query["country"].ToString();
+    if (string.IsNullOrWhiteSpace(country)) country = "USA";
+
+    var profile = country.ToUpperInvariant() switch
+    {
+        "GBR" => new { Name = "Oliver Arthur", DocNum = "987654321", Nationality = "GBR" },
+        "DEU" => new { Name = "Lukas Schmidt", DocNum = "C01X00T47", Nationality = "DEU" },
+        "JPN" => new { Name = "Kenji Tanaka", DocNum = "TK1234567", Nationality = "JPN" },
+        "THA" => new { Name = "Somchai Jaidee", DocNum = "AA1234567", Nationality = "THA" },
+        _ => new { Name = "John Smith", DocNum = "E12345678", Nationality = "USA" }
+    };
+
+    var tokenClaims = new Dictionary<string, object>
+    {
+        ["iss"] = "https://trust.netka.io",
+        ["aud"] = "netka-global-ecosystem",
+        ["sub"] = $"sovereign-user-{country.ToLowerInvariant()}-001",
+        ["country"] = profile.Nationality,
+        ["is_real_human"] = true,
+        ["is_sovereign_verified"] = true,
+        ["age_over_21"] = true,
+        ["zkp_guarantee"] = "ZERO_RAW_PII_PERSISTED",
+        ["exp"] = DateTimeOffset.UtcNow.AddHours(24).ToUnixTimeSeconds()
+    };
+
+    var rawToken = JsonSerializer.Serialize(tokenClaims);
+    var zkpToken = $"ntk_zkp_{Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(rawToken))}";
+
+    return Results.Json(new
+    {
+        is_success = true,
+        message = $"Sovereign ePassport verified successfully ({profile.Nationality}).",
+        issuing_country = profile.Nationality,
+        is_passive_auth_valid = true,
+        is_active_auth_valid = true,
+        is_live_human = true,
+        biometric_match_score = 0.988,
+        liveness_score = 0.995,
+        holder_name = profile.Name,
+        document_number = profile.DocNum,
+        zero_knowledge_trust_token = zkpToken,
+        zkp_guarantee = "ZERO_RAW_PII_PERSISTED"
+    });
+});
+
+app.MapPost("/api/v1/borderless/mdl/verify", () =>
+{
+    return Results.Json(new
+    {
+        is_success = true,
+        message = "ISO/IEC 18013-5 Mobile Driving License (mDL) verified from digital wallet.",
+        doc_type = "org.iso.18013.5.mDL",
+        wallet_issuer = "Apple_Google_Wallet",
+        is_age_over_21 = true,
+        driving_privileges = "CLASS_C_VALID",
+        status = "AUTHORIZED"
     });
 });
 

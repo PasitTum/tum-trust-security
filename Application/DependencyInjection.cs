@@ -117,6 +117,12 @@ public static class DependencyInjection
 
         services.AddTransient<IDopaProvider>(sp => sp.GetRequiredService<DopaProvider>());
         services.AddTransient<IVerificationProvider>(sp => sp.GetRequiredService<DopaProvider>());
+
+        // 4. Register Netka Borderless Trust Provider (IBorderlessTrustProvider + IVerificationProvider)
+        services.TryAddSingleton<IFaceLivenessDetector, Netka.Identity.Infrastructure.Biometrics.EdgeFaceLivenessDetector>();
+        services.TryAddSingleton<IBiometricFaceMatcher, Netka.Identity.Infrastructure.Biometrics.EdgeBiometricFaceMatcher>();
+        services.TryAddSingleton<ISovereignTrustAnchorService, Netka.Identity.Infrastructure.Passport.SovereignTrustAnchorService>();
+        services.TryAddSingleton<IBorderlessTrustProvider, Netka.Identity.Infrastructure.Passport.MockBorderlessTrustProvider>();
     }
 
     private static void ConfigureProviderHttpClient<TProvider>(

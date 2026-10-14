@@ -1,6 +1,6 @@
-# add-identity-provider Skill
+﻿# add-identity-provider Skill
 
-ชุดคำสั่ง (Skill) สำหรับการสร้าง **Identity Provider ตัวใหม่** เข้าสู่โปรเจกต์ `Netka.Identity.SDK` โดยปฏิบัติตามกฎสถาปัตยกรรมของโปรเจกต์อย่างเคร่งครัด
+ชุดคำสั่ง (Skill) สำหรับการสร้าง **Identity Provider ตัวใหม่** เข้าสู่โปรเจกต์ `TUM.Identity.SDK` โดยปฏิบัติตามกฎสถาปัตยกรรมของโปรเจกต์อย่างเคร่งครัด
 
 ## 📁 File Structure
 
@@ -64,4 +64,4 @@ new FormUrlEncodedContent(
 ```
 
 ### 5️⃣ สร้างเอกสาร Provider ลงใน `docs/providers/<name>.md` ทุกครั้ง
-ทุกครั้งที่เพิ่ม Provider ใหม่ ต้องสร้างไฟล์ `docs/providers/<name-lowercase>.md` และอัปเดต `docs/providers/README.md` เพื่อให้ Skill `integrate-netka-identity` นำไปใช้อ้างอิงตอนติดตั้งในโปรเจกต์ปลายทาง
+ทุกครั้งที่เพิ่ม Provider ใหม่ ต้องสร้างไฟล์ `docs/providers/<name-lowercase>.md` และอัปเดต `docs/providers/README.md` เพื่อให้ Skill `integrate-TUM-identity` นำไปใช้อ้างอิงตอนติดตั้งในโปรเจกต์ปลายทาง

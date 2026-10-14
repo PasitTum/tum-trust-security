@@ -1,7 +1,7 @@
-# Netka.Identity.SDK
+﻿# TUM.Identity.SDK
 
 **Enterprise Identity Verification & Authentication SDK (`.NET 5.0`, `.NET 8.0`, & `.NET 10.0` Multi-Target)**  
-ไลบรารีมาตรฐานกลางของทีม Netka สำหรับพิสูจน์และยืนยันตัวตน (Digital Identity & Citizen Card Verification) ในระบบ **Web Application** และ **ตู้ยืนยันตัวตน (Browser-Based Kiosk)** ออกแบบตามหลัก **Clean Architecture**, **Stateless Pass-Through Adapter**, และ **Zero Third-Party Dependency Single-DLL** เพื่อให้สามารถคัดลอกเฉพาะไฟล์ `Netka.Identity.SDK.dll` ไปใช้งานในโปรเจกต์ปลายทางได้ทันทีโดยไม่มีปัญหาเรื่อง Git Submodule หรือ Private Repo
+ไลบรารีมาตรฐานกลางของทีม TUM สำหรับพิสูจน์และยืนยันตัวตน (Digital Identity & Citizen Card Verification) ในระบบ **Web Application** และ **ตู้ยืนยันตัวตน (Browser-Based Kiosk)** ออกแบบตามหลัก **Clean Architecture**, **Stateless Pass-Through Adapter**, และ **Zero Third-Party Dependency Single-DLL** เพื่อให้สามารถคัดลอกเฉพาะไฟล์ `TUM.Identity.SDK.dll` ไปใช้งานในโปรเจกต์ปลายทางได้ทันทีโดยไม่มีปัญหาเรื่อง Git Submodule หรือ Private Repo
 
 ---
 
@@ -29,8 +29,8 @@
 
 * **Multi-Targeting (`.NET 5.0`, `.NET 8.0` & `.NET 10.0`):**
   * ตั้งค่า `<TargetFrameworks>net5.0;net8.0;net10.0</TargetFrameworks>` รองรับตั้งแต่โปรเจกต์รุ่น `.NET 5.0` ไปจนถึง `.NET 8.0 (LTS)` และ `.NET 10.0`
-* **Single-DLL Distribution (`libs/Netka.Identity.SDK.dll`):**
-  * ไม่มี Third-Party NuGet DLL พ่วงท้าย สามารถก๊อปปี้เฉพาะ `Netka.Identity.SDK.dll` (และ `.xml`) ไปวางในโฟลเดอร์ `libs/` ของโปรเจกต์ปลายทางแล้ว Commit ขึ้น Git ของโปรเจกต์นั้นได้เลย ใคร `git clone` ไปก็รันและ Build ผ่าน 100%
+* **Single-DLL Distribution (`libs/TUM.Identity.SDK.dll`):**
+  * ไม่มี Third-Party NuGet DLL พ่วงท้าย สามารถก๊อปปี้เฉพาะ `TUM.Identity.SDK.dll` (และ `.xml`) ไปวางในโฟลเดอร์ `libs/` ของโปรเจกต์ปลายทางแล้ว Commit ขึ้น Git ของโปรเจกต์นั้นได้เลย ใคร `git clone` ไปก็รันและ Build ผ่าน 100%
 * **รองรับทั้ง Database Configuration และ `appsettings.json` (พร้อม Lazy Validation & Runtime Hot-Reload):**
   * ดึงค่า `ClientId`, `ClientSecret`, `RedirectUri`, `LaserUrl`, `ChipUrl`, `FaceUrl`, `TokenUrl`, `ApiKey`, `EncryptionKey` จากตารางในฐานข้อมูล (`DbContext` / `ISettingRepository` / `IIdentityOptionsProvider`) หรือจาก `appsettings.json` ได้โดยตรง และรองรับการแก้ค่าใน Database แบบ Hot-Reload
 * **Built-in `UseMock = true` (จำลองครบทุก Endpoint + Loopback Redirect ในตัว `.dll`):**
@@ -45,7 +45,7 @@
   * **AI-Driven Provider Onboarding** — ทีม Architecture ออกแบบให้ AI (เช่น Claude Code) สามารถช่วย:
     - ✓ ค้นหา OAuth 2.0 endpoints โดยอัตโนมัติจากชื่อ Provider
     - ✓ สร้าง `IVerificationProvider` implementation จากการวิเคราะห์เอกสาร API
-    - ✓ แมป scopes/fields จากผู้ให้บริการใหม่ไปยัง Netka Unified Data Model
+    - ✓ แมป scopes/fields จากผู้ให้บริการใหม่ไปยัง TUM Unified Data Model
     - ✓ สร้าง Unit Tests และ Mock Scenarios โดยอัตโนมัติ
     - (ดู [Provider Extensibility Guide](docs/providers/README.md) สำหรับรายละเอียด)
 
@@ -227,11 +227,11 @@ VALUES (
 
 ## 3. วิธีติดตั้งและใช้งานอย่างย่อ (Quick Start)
 
-### 3.1 อ้างอิง `libs/Netka.Identity.SDK.dll` ใน `.csproj` ของโปรเจกต์ปลายทาง
+### 3.1 อ้างอิง `libs/TUM.Identity.SDK.dll` ใน `.csproj` ของโปรเจกต์ปลายทาง
 ```xml
 <ItemGroup>
-  <Reference Include="Netka.Identity.SDK">
-    <HintPath>libs\Netka.Identity.SDK.dll</HintPath>
+  <Reference Include="TUM.Identity.SDK">
+    <HintPath>libs\TUM.Identity.SDK.dll</HintPath>
   </Reference>
 </ItemGroup>
 ```
@@ -240,7 +240,7 @@ VALUES (
 
 **แบบดึงจาก Database (หรือเปิดโหมด `UseMock = true`):**
 ```csharp
-using Netka.Identity.Application;
+using TUM.Identity.Application;
 
 builder.Services.AddIdentityVerification((sp, options) =>
 {
@@ -270,14 +270,14 @@ builder.Services.AddIdentityVerification(builder.Configuration);
 
 ```powershell
 # 1. รัน Unit Tests ทั้งหมด (43 Tests x 3 Target Frameworks = 129 Executions)
-dotnet test "Netka.Identity.SDK.sln" -c Release
+dotnet test "TUM.Identity.SDK.sln" -c Release
 
-# 2. Build ไฟล์ Netka.Identity.SDK.dll (Release) สำหรับนำไปแจกจ่ายใส่โฟลเดอร์ libs/
-dotnet build "Netka.Identity.SDK.csproj" -c Release
+# 2. Build ไฟล์ TUM.Identity.SDK.dll (Release) สำหรับนำไปแจกจ่ายใส่โฟลเดอร์ libs/
+dotnet build "TUM.Identity.SDK.csproj" -c Release
 
 # 3. (ทางเลือกเสริม) รัน Standalone Sandbox Mock Server บน http://localhost:5199
-dotnet run --project "MockServer/Netka.Identity.MockServer.csproj"
+dotnet run --project "MockServer/TUM.Identity.MockServer.csproj"
 
-# 4. ซิงค์ AI Skills (/integrate-netka-identity และ /add-identity-provider) ไปยังระดับ Global
+# 4. ซิงค์ AI Skills (/integrate-TUM-identity และ /add-identity-provider) ไปยังระดับ Global
 .\install-global-skills.ps1
 ```

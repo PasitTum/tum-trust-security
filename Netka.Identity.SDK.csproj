@@ -4,16 +4,30 @@
     <TargetFrameworks>net5.0;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>Netka.Identity</RootNamespace>
     <AssemblyName>Netka.Identity.SDK</AssemblyName>
-    <PackageId>Netka.Identity.SDK</PackageId>
+    <PackageId>Tum.Trust.Security</PackageId>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <VersionPrefix>1.0.1</VersionPrefix>
-    <Authors>Netka Team</Authors>
-    <Description>Netka Enterprise Identity Verification SDK for ThaID and DOPA Citizen Card providers (.NET 5, .NET 8 &amp; .NET 10)</Description>
-    <PackageProjectUrl>https://github.com/netkasystem/nks-enterprise-identity</PackageProjectUrl>
+    <VersionPrefix>1.1.0</VersionPrefix>
+    <Authors>Pasit Tum</Authors>
+    <Company>TUM Trust Security</Company>
+    <Product>TUM Trust Security (Powered by TUM)</Product>
+    <Description>TUM Trust Security — Omnichannel Sovereign Trust &amp; Identity Verification SDK (Powered by TUM). High-performance, offline-first verification engine for ICAO 9303 ePassport NFC (150+ nations), ISO/IEC 18013-5 Mobile Driving License (mDL), Neuromorphic Edge AI Biometrics, ThaID, and DOPA Citizen Identity (.NET 5, .NET 8 &amp; .NET 10).</Description>
+    <PackageProjectUrl>https://github.com/PasitTum/tum-trust-security</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/PasitTum/tum-trust-security</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>identity;passport;icao9303;epassport;nfc;mdl;iso18013-5;biometrics;liveness;deepfake;tum-trust;sovereign-trust</PackageTags>
+    <PackageReadmeFile>PACKAGE_README.md</PackageReadmeFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageOutputPath>artifacts/nuget</PackageOutputPath>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE_README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Tests\**" />
@@ -22,6 +36,9 @@
     <Compile Remove="MockServer\**" />
     <EmbeddedResource Remove="MockServer\**" />
     <None Remove="MockServer\**" />
+    <Compile Remove="examples\**" />
+    <EmbeddedResource Remove="examples\**" />
+    <None Remove="examples\**" />
   </ItemGroup>
 
   <!-- Use base x.0.0 minimum versions so consuming apps on any 5.0.x / 8.0.x / 10.0.x patch never hit NU1605 package downgrade errors -->

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # DOPA (กรมการปกครอง) — VS Code REST Client Test File
 # Extension ที่แนะนำใน VS Code: "REST Client" (humao.rest-client)
 # วิธีใช้งาน:
@@ -7,7 +7,7 @@
 #      - หรือคลิกผ่าน Markdown doc: dopa.md -> [▶️ กดรัน MockServer ทันที]
 #      - หรือดับเบิลคลิก run-mockserver.cmd (Windows) / run-mockserver.ps1 (PowerShell) / ./run-mockserver.sh (Mac/Linux)
 #      - หรือ Terminal คำสั่งเดียวจากโฟลเดอร์ใดก็ได้:
-#        dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/Netka.Identity.MockServer.csproj)"
+#        dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/TUM.Identity.MockServer.csproj)"
 #   2. ติดตั้ง Extension "REST Client" (Id: humao.rest-client) ใน VS Code
 #   3. คลิกปุ่ม "Send Request" เหนือหัวข้อ ### ที่ต้องการยิงทดสอบได้ทันที
 # ============================================================================

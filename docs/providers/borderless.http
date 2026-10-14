@@ -1,0 +1,65 @@
+﻿### ============================================================================
+### TUM TRUST SECURITY: Global ePassport & mDL Sovereign Verification Sandbox
+### Endpoint: http://localhost:5199/api/v1/borderless
+### ============================================================================
+
+@baseUrl = http://localhost:5199
+
+### 1. Verify United States ePassport (USA)
+POST {{baseUrl}}/api/v1/borderless/passport/verify?country=USA
+Content-Type: application/json
+
+{
+  "mrz_line1": "P<USAERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<",
+  "mrz_line2": "L898902C36USA7408122F1204159ZE184226B<<<<<10",
+  "has_camera_liveness": true
+}
+
+### 2. Verify United Kingdom ePassport (GBR)
+POST {{baseUrl}}/api/v1/borderless/passport/verify?country=GBR
+Content-Type: application/json
+
+{
+  "mrz_line1": "P<GBRARTHUR<<OLIVER<<<<<<<<<<<<<<<<<<<<<<<<<",
+  "mrz_line2": "9876543212GBR9001015M2801018<<<<<<<<<<<<<<04",
+  "has_camera_liveness": true
+}
+
+### 3. Verify Germany ePassport (DEU)
+POST {{baseUrl}}/api/v1/borderless/passport/verify?country=DEU
+Content-Type: application/json
+
+{
+  "mrz_line1": "P<DEUSCHMIDT<<LUKAS<<<<<<<<<<<<<<<<<<<<<<<<<",
+  "mrz_line2": "C01X00T478DEU8505154M3105158<<<<<<<<<<<<<<06",
+  "has_camera_liveness": true
+}
+
+### 4. Verify Japan ePassport (JPN)
+POST {{baseUrl}}/api/v1/borderless/passport/verify?country=JPN
+Content-Type: application/json
+
+{
+  "mrz_line1": "P<JPNTANAKA<<KENJI<<<<<<<<<<<<<<<<<<<<<<<<<<",
+  "mrz_line2": "TK12345674JPN9203158M3003158<<<<<<<<<<<<<<02",
+  "has_camera_liveness": true
+}
+
+### 5. Verify Thailand ePassport (THA)
+POST {{baseUrl}}/api/v1/borderless/passport/verify?country=THA
+Content-Type: application/json
+
+{
+  "mrz_line1": "P<THASOMCHAI<<JAIDEE<<<<<<<<<<<<<<<<<<<<<<<<",
+  "mrz_line2": "AA12345672THA9001314M3001308<<<<<<<<<<<<<<08",
+  "has_camera_liveness": true
+}
+
+### 6. Verify Mobile Driving License (ISO 18013-5 mDL / Apple & Google Wallet)
+POST {{baseUrl}}/api/v1/borderless/mdl/verify
+Content-Type: application/json
+
+{
+  "mdoc_cbor_base64": "pWlkb2Nf...[CBOR/COSE Base64 mDoc payload]",
+  "reader_engagement": "NFC_PROXIMITY"
+}

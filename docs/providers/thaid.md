@@ -1,9 +1,9 @@
-# เอกสารอ้างอิงการเชื่อมต่อ ThaID (`ThaID`)
+﻿# เอกสารอ้างอิงการเชื่อมต่อ ThaID (`ThaID`)
 
 - **ProviderName:** `"ThaID"`
 - **Config Section:** `"IdentityVerification:ThaId"`
-- **Interface:** `Netka.Identity.Core.Interfaces.IThaIdProvider` (สืบทอดจาก `IVerificationProvider`)
-- **Implementation:** `Netka.Identity.Infrastructure.Providers.ThaIdProvider`
+- **Interface:** `TUM.Identity.Core.Interfaces.IThaIdProvider` (สืบทอดจาก `IVerificationProvider`)
+- **Implementation:** `TUM.Identity.Infrastructure.Providers.ThaIdProvider`
 - **มาตรฐานการเชื่อมต่อ:** OAuth 2.0 Authorization Code Flow + PKCE (`S256`) + HTTP Basic Authentication (`ClientId:ClientSecret`) + Optional API Gateway Header (`x-api-key`)
 - **OpenID Connect Discovery (Live URL):** [https://imauth.bora.dopa.go.th/.well-known/openid-configuration](https://imauth.bora.dopa.go.th/.well-known/openid-configuration)
 - **JWKS Endpoint (Live URL):** [https://imauth.bora.dopa.go.th/jwks/](https://imauth.bora.dopa.go.th/jwks/)
@@ -211,7 +211,7 @@ SDK ส่งค่า JSON ดิบจาก ThaID กลับมาใน `r
 >    - **Linux / macOS:** รันสคริปต์ [`./run-mockserver.sh`](../../run-mockserver.sh)
 > 3. **หรือรันผ่าน Terminal จากโฟลเดอร์ใดก็ได้ (ตรวจหา Path อัตโนมัติด้วย Git):**
 >    ```bash
->    dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/Netka.Identity.MockServer.csproj)"
+>    dotnet run --project "$((git rev-parse --show-toplevel)/MockServer/TUM.Identity.MockServer.csproj)"
 >    ```
 >
 > 📡 **ขั้นตอนการยิงทดสอบ API:**

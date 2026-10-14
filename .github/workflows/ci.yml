@@ -1,0 +1,42 @@
+﻿name: TUM TRUST SECURITY SDK CI/CD
+
+on:
+  push:
+    branches: [ main, master, release/* ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (Multi-Framework .NET 5 / 8 / 10)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDKs
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          5.0.x
+          8.0.x
+          10.0.x
+
+    - name: Restore Dependencies
+      run: dotnet restore TUM.Identity.SDK.sln
+
+    - name: Build Solution (Release Mode)
+      run: dotnet build TUM.Identity.SDK.sln -c Release --no-restore
+
+    - name: Run Multi-Target Unit & Integration Tests
+      run: dotnet test Tests/TUM.Identity.SDK.Tests.csproj -c Release --no-build --verbosity normal
+
+    - name: Pack NuGet Artifacts
+      run: dotnet pack TUM.Identity.SDK.csproj -c Release --no-build -o artifacts/nuget
+
+    - name: Upload NuGet Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: artifacts/nuget/*.nupkg

@@ -1,0 +1,21 @@
+﻿version: '3.8'
+
+services:
+  TUM-identity-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: TUMsystem/identity-gateway:1.1.0
+    container_name: TUM-identity-gateway
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - IdentityVerification__EnableMock=true
+      - IdentityVerification__Passport__EnableActiveAuthentication=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

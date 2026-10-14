@@ -1,5 +1,5 @@
-# เอกสารส่งมอบระบบ (System Handover & Integration Guide)
-**โปรเจกต์:** `Netka.Identity.SDK`  
+﻿# เอกสารส่งมอบระบบ (System Handover & Integration Guide)
+**โปรเจกต์:** `TUM.Identity.SDK`  
 **รุ่น Framework ที่รองรับ:** `.NET 5.0`, `.NET 8.0 (LTS)`, และ `.NET 10.0` (Multi-Target)  
 **สถาปัตยกรรม:** Clean Architecture / Stateless Pass-Through Identity Verification SDK (Single-DLL Distribution)
 
@@ -7,19 +7,19 @@
 
 ## 1. บทสรุปผู้บริหารและขอบเขตงานที่ส่งมอบ (Executive Summary)
 
-`Netka.Identity.SDK` คือไลบรารีมาตรฐานกลางของทีมสำหรับเชื่อมต่อระบบพิสูจน์และยืนยันตัวตนภาครัฐ ได้แก่:
+`TUM.Identity.SDK` คือไลบรารีมาตรฐานกลางของทีมสำหรับเชื่อมต่อระบบพิสูจน์และยืนยันตัวตนภาครัฐ ได้แก่:
 1. **DOPA ThaID (`IThaIdProvider`)** — มาตรฐาน OAuth 2.0 / OpenID Connect (OIDC) พร้อม PKCE (`S256`) รองรับข้อมูลประชาชนครบทั้ง **20 Scopes** ตามคู่มือกรมการปกครอง
 2. **DOPA Check Card Service (`IDopaProvider`)** — ตรวจสอบสถานะบัตรประจำตัวประชาชนผ่านเลขหลังบัตร (`CheckCardByLaser`) และผ่านเครื่องอ่านสมาร์ทการ์ด (`CheckCardByCID`)
 
 ### จุดเด่นสำคัญในการส่งมอบครั้งนี้
-- **Single-DLL Zero-Dependency Distribution (`libs/Netka.Identity.SDK.dll`):**
+- **Single-DLL Zero-Dependency Distribution (`libs/TUM.Identity.SDK.dll`):**
   - ถอด Dependency ภายนอก (`Polly`) ออกและสร้าง `IdentityResilienceHandler` (Exponential Backoff Retry + Circuit Breaker) ไว้ภายใน SDK โดยตรง
-  - โปรเจกต์ปลายทางสามารถก๊อปปี้เฉพาะไฟล์ **`Netka.Identity.SDK.dll`** (และ `Netka.Identity.SDK.xml`) ไปวางในโฟลเดอร์ `libs/` แล้ว Commit ขึ้น Git ของโปรเจกต์ปลายทางได้ทันที **ตัดปัญหาเพื่อนร่วมทีม `git clone` แล้ว Build ไม่ผ่าน หรือติดสิทธิ์ Private Repo ข้ามโปรเจกต์ 100%**
+  - โปรเจกต์ปลายทางสามารถก๊อปปี้เฉพาะไฟล์ **`TUM.Identity.SDK.dll`** (และ `TUM.Identity.SDK.xml`) ไปวางในโฟลเดอร์ `libs/` แล้ว Commit ขึ้น Git ของโปรเจกต์ปลายทางได้ทันที **ตัดปัญหาเพื่อนร่วมทีม `git clone` แล้ว Build ไม่ผ่าน หรือติดสิทธิ์ Private Repo ข้ามโปรเจกต์ 100%**
 - **Database-Backed Configuration & Hot-Reload:**
   - รองรับการดึงค่า Config (`ClientId`, `ClientSecret`, `RedirectUri`, `LaserUrl`, `ApiKey`, `EncryptionKey`) จากทั้ง **`appsettings.json`** และ **Database (`DbContext` / `ISettingRepository` / `IIdentityOptionsProvider`)**
   - ใช้ระบบ **Lazy Validation** (ไม่โยน Exception ตอน Startup หากค่าใน Database ยังเป็นค่าว่าง แต่จะคืน `ErrorCode = "MISSING_CONFIGURATION"` เมื่อถูกเรียกใช้งานจริง)
 - **Built-in `UseMock = true` (In-Memory Simulation ในตัว `.dll`) + Standalone `MockServer`:**
-  - แม้นักพัฒนาจะมีแค่ไฟล์ `Netka.Identity.SDK.dll` ไฟล์เดียว ก็สามารถเปิด `UseMock = true` เพื่อจำลองการยืนยันตัวตนครบทั้ง **12 มาตรฐาน Use Cases** รวมถึง **Loopback Redirect** และ **การสร้างรูป QR Code** โดยไม่ต้องต่ออินเทอร์เน็ตหรือใช้ Credentials จริง
+  - แม้นักพัฒนาจะมีแค่ไฟล์ `TUM.Identity.SDK.dll` ไฟล์เดียว ก็สามารถเปิด `UseMock = true` เพื่อจำลองการยืนยันตัวตนครบทั้ง **12 มาตรฐาน Use Cases** รวมถึง **Loopback Redirect** และ **การสร้างรูป QR Code** โดยไม่ต้องต่ออินเทอร์เน็ตหรือใช้ Credentials จริง
 
 ---
 
@@ -58,11 +58,11 @@ NKS-Kiosk-Identity-SDK/
 │       └── PkceHelper.cs                         # PKCE (RFC 7636) Code Verifier & S256 Challenge Generator
 │
 ├── MockServer/                                   # Standalone Sandbox Mock Server (http://localhost:5199)
-│   ├── Netka.Identity.MockServer.csproj          # ASP.NET Core Minimal API จำลอง ThaID & DOPA เสมือนจริง
+│   ├── TUM.Identity.MockServer.csproj          # ASP.NET Core Minimal API จำลอง ThaID & DOPA เสมือนจริง
 │   └── Program.cs                                # หน้าเว็บจำลอง QR/Consent + 12 Use Cases Endpoints
 │
 ├── Tests/                                        # Unit Tests (xUnit - 43 Tests x 3 Runtimes = 129 Runs)
-│   ├── Netka.Identity.SDK.Tests.csproj           # Multi-Target: net5.0;net8.0;net10.0
+│   ├── TUM.Identity.SDK.Tests.csproj           # Multi-Target: net5.0;net8.0;net10.0
 │   ├── MockHttpMessageHandler.cs                 # In-Memory HTTP Mock Handler
 │   ├── ThaIdProviderTests.cs                     # ทดสอบ ThaID ครบทุก Use Case + Redirect + UseMock
 │   ├── DopaProviderTests.cs                      # ทดสอบ DOPA ครบทุก Use Case + UseMock
@@ -72,7 +72,7 @@ NKS-Kiosk-Identity-SDK/
 │   └── RuntimeCompatibilityTests.cs              # ทดสอบความเข้ากันได้บน .NET 5.0, .NET 8.0, .NET 10.0
 │
 ├── .claude/skills/                               # AI Agent Skills สำหรับ Claude Code / Antigravity
-│   ├── integrate-netka-identity/SKILL.md         # Skill สำหรับติดตั้ง SDK เข้าโปรเจกต์ปลายทางอัตโนมัติ
+│   ├── integrate-TUM-identity/SKILL.md         # Skill สำหรับติดตั้ง SDK เข้าโปรเจกต์ปลายทางอัตโนมัติ
 │   └── add-identity-provider/SKILL.md            # Skill สำหรับสร้าง Provider ใหม่เพิ่มใน SDK
 │
 ├── docs/                                         # เอกสารโครงการและรายงานส่งมอบ
@@ -83,8 +83,8 @@ NKS-Kiosk-Identity-SDK/
 │   └── providers/                                # เอกสารอ้างอิงรายผู้ให้บริการ (ThaID & DOPA)
 │
 ├── install-global-skills.ps1                     # สคริปต์ติดตั้ง Global Skills ไปยัง ~/.claude/skills/
-├── Netka.Identity.SDK.csproj                     # ไฟล์โปรเจกต์หลักของ SDK (net5.0;net8.0;net10.0)
-└── Netka.Identity.SDK.sln                        # Solution File
+├── TUM.Identity.SDK.csproj                     # ไฟล์โปรเจกต์หลักของ SDK (net5.0;net8.0;net10.0)
+└── TUM.Identity.SDK.sln                        # Solution File
 ```
 
 ---
@@ -95,21 +95,21 @@ NKS-Kiosk-Identity-SDK/
 
 ### ขั้นตอนที่ 1: Build ไฟล์ Release `.dll` จากโปรเจกต์ SDK
 ```powershell
-dotnet build "Netka.Identity.SDK.csproj" -c Release
+dotnet build "TUM.Identity.SDK.csproj" -c Release
 ```
 ไฟล์ที่ได้จะอยู่ใน:
-- `bin/Release/net5.0/Netka.Identity.SDK.dll` (สำหรับโปรเจกต์ .NET 5.0)
-- `bin/Release/net8.0/Netka.Identity.SDK.dll` (สำหรับโปรเจกต์ .NET 6.0 / 7.0 / 8.0)
-- `bin/Release/net10.0/Netka.Identity.SDK.dll` (สำหรับโปรเจกต์ .NET 9.0 / 10.0)
+- `bin/Release/net5.0/TUM.Identity.SDK.dll` (สำหรับโปรเจกต์ .NET 5.0)
+- `bin/Release/net8.0/TUM.Identity.SDK.dll` (สำหรับโปรเจกต์ .NET 6.0 / 7.0 / 8.0)
+- `bin/Release/net10.0/TUM.Identity.SDK.dll` (สำหรับโปรเจกต์ .NET 9.0 / 10.0)
 
 ### ขั้นตอนที่ 2: คัดลอกไฟล์ไปไว้ที่ `libs/` ของโปรเจกต์ปลายทาง
-คัดลอกไฟล์ `Netka.Identity.SDK.dll` และ `Netka.Identity.SDK.xml` ไปไว้ที่ `<โปรเจกต์ปลายทาง>/libs/`
+คัดลอกไฟล์ `TUM.Identity.SDK.dll` และ `TUM.Identity.SDK.xml` ไปไว้ที่ `<โปรเจกต์ปลายทาง>/libs/`
 
 ### ขั้นตอนที่ 3: อ้างอิงในไฟล์ `.csproj` ของโปรเจกต์ปลายทาง
 ```xml
 <ItemGroup>
-  <Reference Include="Netka.Identity.SDK">
-    <HintPath>libs\Netka.Identity.SDK.dll</HintPath>
+  <Reference Include="TUM.Identity.SDK">
+    <HintPath>libs\TUM.Identity.SDK.dll</HintPath>
   </Reference>
 </ItemGroup>
 ```
@@ -122,14 +122,14 @@ dotnet build "Netka.Identity.SDK.csproj" -c Release
 
 ### รูปแบบที่ 1: ดึงค่าจาก `appsettings.json` (`IConfiguration`)
 ```csharp
-using Netka.Identity.Application;
+using TUM.Identity.Application;
 
 builder.Services.AddIdentityVerification(builder.Configuration);
 ```
 
 ### รูปแบบที่ 2: ดึงค่าจาก Database ผ่าน `IServiceProvider` (รองรับ Scoped `DbContext` / Repository อัตโนมัติ)
 ```csharp
-using Netka.Identity.Application;
+using TUM.Identity.Application;
 
 builder.Services.AddIdentityVerification((sp, options) =>
 {
@@ -153,8 +153,8 @@ builder.Services.AddIdentityVerification((sp, options) =>
 ### รูปแบบที่ 3: ดึงค่าจาก Database แบบ Hot-Reload ทุกครั้งที่เรียกใช้ (`IIdentityOptionsProvider`)
 เหมาะสำหรับระบบที่มีหน้า Admin Backoffice ให้แก้ไข `ClientId`, `ClientSecret`, หรือสลับ `UseMock` ในฐานข้อมูลแล้วต้องการให้มีผลทันทีโดยไม่ต้อง Restart IIS/Docker:
 ```csharp
-using Netka.Identity.Core.Interfaces;
-using Netka.Identity.Core.Models;
+using TUM.Identity.Core.Interfaces;
+using TUM.Identity.Core.Models;
 
 public class DbIdentityOptionsProvider : IIdentityOptionsProvider
 {
@@ -195,5 +195,5 @@ builder.Services.AddIdentityVerification(options =>
 ```powershell
 .\install-global-skills.ps1
 ```
-1. **`/integrate-netka-identity`** — สั่งให้ AI วิเคราะห์โปรเจกต์ปลายทาง, Build และคัดลอก `Netka.Identity.SDK.dll` ไปยัง `libs/`, ผูก DI (รองรับทั้ง Database และ `appsettings.json`), และเชื่อมต่อเข้ากับ Controller/Service ของโปรเจกต์ปลายทางอัตโนมัติ
+1. **`/integrate-TUM-identity`** — สั่งให้ AI วิเคราะห์โปรเจกต์ปลายทาง, Build และคัดลอก `TUM.Identity.SDK.dll` ไปยัง `libs/`, ผูก DI (รองรับทั้ง Database และ `appsettings.json`), และเชื่อมต่อเข้ากับ Controller/Service ของโปรเจกต์ปลายทางอัตโนมัติ
 2. **`/add-identity-provider`** — สั่งให้ AI สร้าง Identity Provider ใหม่เพิ่มเข้าไปใน SDK ตามมาตรฐาน Clean Architecture + Tri-Log Strategy
