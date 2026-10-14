@@ -19,6 +19,9 @@
    - [คู่มือผู้ให้บริการ DOPA ThaID (`IThaIdProvider`)](docs/providers/thaid.md)
    - [คู่มือผู้ให้บริการ DOPA Check Card & Face Verification (`IDopaProvider`)](docs/providers/dopa.md)
    - [คู่มือการขยายระบบเพิ่มผู้ให้บริการใหม่](docs/providers/README.md)
+6. 🤖 **แนวทางการจัดการแค่คำปลายทางของ Identity Provider (Automated Provider Roadmap):**
+   - [บันทึกแนวทางการปรับปรุงสถาปัตยกรรม Secret Management & Provider Discovery](docs/ROADMAP_SECRET_MANAGEMENT.md)
+   - ใช้ `/add-identity-provider` Skill เพื่อให้ AI ค้นหา OAuth Endpoints และสร้าง Provider Implementation อัตโนมัติ
 
 ---
 
@@ -35,6 +38,16 @@
 * **Enterprise Security & PDPA Compliance:**
   * เข้ารหัสข้อมูลส่วนบุคคล (PII เช่น เลขประจำตัวประชาชน 13 หลัก) ด้วย **AES-256-CBC + HMAC-SHA256 (`AesEncryptionService`)** ก่อนบันทึกลง `[PII-VAULT]` Log เสมอ
   * รองรับ **PKCE (RFC 7636 - S256)**, `PkceHelper.RandomUrlSafe(...)`, `ProviderHelper.MaskPid()`, และตรวจสอบความถูกต้องของเลขบัตรประชาชน 13 หลัก (**Modulo 11 Checksum**) ก่อนยิง API
+* **Automated Provider Discovery & Extensibility (AI-Ready):**
+  * **OpenID Connect Discovery** — SDK สามารถดึง Endpoint URLs โดยอัตโนมัติจาก `.well-known/openid-configuration` ของ OAuth 2.0 Provider ใดๆ ไม่ต้องกำหนดเอง
+  * **Provider Registry Pattern** — Architecture รองรับการค้นหา (Discovery) และการลงทะเบียนผู้ให้บริการใหม่ที่เพิ่มเข้ามาในลักษณะ Plug-and-Play โดยไม่ต้องแก้ไข Core SDK Code
+  * **Multi-Provider Factory** — ระบบ `IProviderFactory` เลือก Provider ที่เหมาะสมอัตโนมัติตามการตั้งค่าบน Kiosk (จะขยายรองรับ Azure AD, Google, Apple SignIn, eIDAS ฯลฯ ในอนาคต)
+  * **AI-Driven Provider Onboarding** — ทีม Architecture ออกแบบให้ AI (เช่น Claude Code) สามารถช่วย:
+    - ✓ ค้นหา OAuth 2.0 endpoints โดยอัตโนมัติจากชื่อ Provider
+    - ✓ สร้าง `IVerificationProvider` implementation จากการวิเคราะห์เอกสาร API
+    - ✓ แมป scopes/fields จากผู้ให้บริการใหม่ไปยัง Netka Unified Data Model
+    - ✓ สร้าง Unit Tests และ Mock Scenarios โดยอัตโนมัติ
+    - (ดู [Provider Extensibility Guide](docs/providers/README.md) สำหรับรายละเอียด)
 
 ---
 
@@ -64,6 +77,151 @@
 | **3** | `VerifyByFaceAsync(pid, faceImageBase64, threshold, ct)` | `pid`, `image` (ตัด `data:image/...;base64,` อัตโนมัติ) | ตรวจสอบเปรียบเทียบใบหน้า 1:1 กับฐานข้อมูลทะเบียนราษฎร (`similarity`, `confidence`, `match`, `result_code`) |
 | **4** | `RequestAccessTokenAsync(ct)` | `grant_type=client_credentials`, `client_id`, `client_secret` | ขอ OAuth 2.0 Bearer Access Token จาก DOPA Gateway (SDK เรียกและ Cache ให้อัตโนมัติเมื่อตั้งค่า `TokenUrl` + `ClientId`) |
 | **5** | `VerifyAsync(request, ct)` | `request.AdditionalParameters` | ส่งพารามิเตอร์ตรวจสอบแบบยืดหยุ่นผ่าน Dictionary (รองรับทั้งตรวจบัตรและตรวจใบหน้า) |
+
+---
+
+## 2.5 🤖 AI-Powered Provider Discovery & Integration
+
+SDK ออกแบบให้ AI tools (Claude Code / ChatGPT) สามารถช่วยค้นหาและเพิ่มผู้ให้บริการด้านตัวตนใหม่โดยอัตโนมัติ ผ่านกระบวนการต่อไปนี้:
+
+### 🔍 **Phase A: Automated Provider Discovery**
+
+**AI ค้นหา OAuth/OIDC Endpoints เอง:**
+
+```csharp
+// ❌ Old Way (Manual Configuration)
+options.ThaId.AuthorizeUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/";
+options.ThaId.TokenUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/token/";
+options.ThaId.UserInfoUrl = "https://imauth.bora.dopa.go.th/api/v2/oauth2/userinfo/";
+options.ThaId.JwksUrl = "https://imauth.bora.dopa.go.th/jwks/";
+
+// ✅ New Way (AI Discovered Automatically)
+// AI reads .well-known/openid-configuration and populates all endpoints
+var discoveredConfig = await discoveryService.FetchOpenIdConfigAsync(
+    discoveryEndpoint: "https://imauth.bora.dopa.go.th/.well-known/openid-configuration"
+);
+// → Endpoints auto-populated: authorize_endpoint, token_endpoint, userinfo_endpoint, jwks_uri
+```
+
+### 📋 **Phase B: AI-Generated Provider Implementation Template**
+
+AI สามารถสร้าง `IVerificationProvider` implementation ใหม่จากชื่อ Provider และ API Docs:
+
+**Input ที่ AI ต้องการ:**
+```
+Provider Name: "Microsoft Entra ID"
+Discovery Endpoint: "https://login.microsoftonline.com/common/.well-known/openid-configuration"
+Target Scopes: ["openid", "profile", "email", "offline_access"]
+Required Claims: ["oid", "sub", "email"]
+```
+
+**Output ที่ AI สร้างออกมา:**
+```csharp
+public class MicrosoftEntraIdProvider : IOAuthProvider
+{
+    public string ProviderName => "Microsoft Entra ID";
+
+    public async Task<VerificationResult> VerifyAsync(VerificationRequest request, CancellationToken ct)
+    {
+        var openIdConfig = await _discoveryService.FetchOpenIdConfigAsync(
+            "https://login.microsoftonline.com/common/.well-known/openid-configuration", ct
+        );
+        
+        var authUrl = $"{openIdConfig.AuthorizeEndpoint}?" +
+            $"client_id={_options.ClientId}&" +
+            $"redirect_uri={Uri.EscapeDataString(_options.RedirectUri)}&" +
+            $"response_type=code&scope=openid+profile+email";
+        
+        return new VerificationResult 
+        { 
+            Success = true, 
+            AuthorizationUrl = authUrl,
+            ProviderName = ProviderName 
+        };
+    }
+}
+```
+
+### 🧪 **Phase C: Automated Test Generation**
+
+AI สร้าง Mock Scenarios + Unit Tests ให้:
+
+```csharp
+// AI generates these test cases automatically
+public class MicrosoftEntraIdProviderTests
+{
+    [Fact]
+    public async Task VerifyAsync_WithValidCode_ReturnsUserInfo()
+    {
+        // Arrange
+        var provider = new MicrosoftEntraIdProvider(_options, _httpClient);
+        var request = new VerificationRequest 
+        { 
+            AuthorizationCode = "mock-auth-code",
+            RedirectUri = "http://localhost:5201/callback"
+        };
+        
+        // Act
+        var result = await provider.VerifyAsync(request);
+        
+        // Assert
+        Assert.True(result.Success);
+        Assert.Equal("Microsoft Entra ID", result.ProviderName);
+        Assert.NotNull(result.Data);
+    }
+}
+```
+
+### 📦 **Phase D: Provider Registry Auto-Population**
+
+DB migration ที่ AI สร้าง:
+
+```sql
+-- AI generates INSERT statements for new provider
+INSERT INTO identity_providers (id, name, type, enabled, priority, config)
+VALUES (
+    'b4c2a8f0-1234-5678-90ab-cdef12345678',
+    'Microsoft Entra ID',
+    'oauth',
+    true,
+    10,
+    JSON_OBJECT(
+        'discovery_endpoint', 'https://login.microsoftonline.com/common/.well-known/openid-configuration',
+        'client_id', '<SET_BY_ADMIN>',
+        'client_secret', '<ENCRYPTED>',
+        'redirect_uri', 'http://kiosk-web:5201/callback',
+        'scopes', JSON_ARRAY('openid', 'profile', 'email')
+    )
+);
+```
+
+---
+
+### 🚀 **How to Use AI for Provider Discovery**
+
+**ทีมสามารถใช้ Claude Code Skill: `/add-identity-provider`**
+
+```bash
+# Example: Let AI discover and add Google One Tap
+/add-identity-provider "Google One Tap"
+
+# AI จะทำให้อัตโนมัติ:
+# 1. ✓ ค้นหา https://accounts.google.com/.well-known/openid-configuration
+# 2. ✓ สร้าง GoogleOneProviderTapProvider class
+# 3. ✓ สร้าง Unit Tests (ทั้งสำเร็จและ error scenarios)
+# 4. ✓ สร้าง Mock Scenarios สำหรับ Sandbox Testing
+# 5. ✓ อัปเดต Provider Registry ในฐานข้อมูล
+# 6. ✓ Commit code พร้อม commit message
+```
+
+---
+
+### 🔐 **Security Guarantees**
+
+- ✓ **Secret Isolation:** AI generates placeholders (`<SET_BY_ADMIN>`, `<ENCRYPTED>`), ไม่ embed secrets
+- ✓ **PKCE Always:** AI generates code ที่บังคับใช้ PKCE (RFC 7636) โดยค่าเริ่มต้น
+- ✓ **Scope Validation:** AI ตรวจสอบ Scopes ก่อนสร้าง Implementation
+- ✓ **Mock Server:** AI สร้าง Mock endpoint สำหรับทดสอบแม้ไม่มีการเข้าถึง Provider จริง
 
 ---
 
