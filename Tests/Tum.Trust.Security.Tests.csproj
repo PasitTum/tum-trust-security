@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net5.0;net8.0;net10.0</TargetFrameworks>
@@ -51,6 +51,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tum.Trust.Security.csproj" />
+    <ProjectReference Include="..\Tum.Log\Tum.Log.csproj" />
   </ItemGroup>
 
 </Project>
