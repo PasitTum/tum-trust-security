@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUM Executive Visualizer — มองเห็นคุณค่าผลิตภัณฑ์ในพริบตา</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07090E;
+            --bg-panel: #111625;
+            --bg-card: rgba(26, 34, 56, 0.7);
+            --primary: #38BDF8;
+            --secondary: #818CF8;
+            --emerald: #10B981;
+            --rose: #F43F5E;
+            --amber: #F59E0B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Sarabun', 'Plus Jakarta Sans', sans-serif;
+            background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.15) 0%, transparent 60%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 9999px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #FFF 0%, #CBD5E1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 750px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .tabs-nav {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2));
+            border-color: var(--primary);
+            color: var(--text-main);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+        }
+
+        .product-stage {
+            display: none;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .product-stage.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metaphor-banner {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .metaphor-icon {
+            font-size: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            flex-shrink: 0;
+        }
+
+        .metaphor-text h3 {
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .metaphor-text p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .interactive-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 850px) {
+            .interactive-simulator {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sim-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .sim-box-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .action-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--primary);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(244, 63, 94, 0.2);
+            border-color: var(--rose);
+        }
+
+        .visual-display {
+            background: #060911;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .status-pass {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--emerald);
+            border: 1px solid var(--emerald);
+        }
+
+        .status-blocked {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--rose);
+            border: 1px solid var(--rose);
+        }
+
+        .status-idle {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .display-headline {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .display-sub {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            max-width: 400px;
+            line-height: 1.4;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.92rem;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .comparison-table td.bad {
+            color: #FDA4AF;
+        }
+
+        .comparison-table td.good {
+            color: #6EE7B7;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="badge">👁️ Executive Big Picture Lens</div>
+            <h1>มองเห็นคุณค่าผลิตภัณฑ์ TUM ให้ชัดเจนในพริบตา</h1>
+            <p class="subtitle">
+                เครื่องมือจำลองภาพการทำงานจริงสำหรับท่านประธานและผู้บริหาร: เปลี่ยนโค้ดและสถาปัตยกรรมคอมพิวเตอร์ที่มองไม่เห็น ให้กลายเป็นภาพเสมือนจริงที่สัมผัสได้
+            </p>
+        </div>
+
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('sub1')">
+                <span>🏢</span> 1. TUM Trust Security (ด่านตรวจคนเข้าเมืองอัจฉริยะ)
+            </button>
+            <button class="tab-btn" onclick="switchTab('sub2')">
+                <span>🛡️</span> 2. TUMSocs (กล้องเรดาร์ & ประตูกลขังคนร้าย)
+            </button>
+            <button class="tab-btn" onclick="switchTab('sub3')">
+                <span>⚛️</span> 3. TUMQuantum (แม่กุญแจเซฟกันเลเซอร์ควอนตัม)
+            </button>
+        </div>
+
+        <!-- STAGE 1: TUM Trust Security -->
+        <div id="sub1" class="product-stage active">
+            <div class="metaphor-banner">
+                <div class="metaphor-icon">🛂</div>
+                <div class="metaphor-text">
+                    <h3>เห็นภาพชัดๆ ในโลกจริง: "ด่านตรวจคนเข้าเมืองอัจฉริยะที่จับโป๊ะหุ่นยนต์ได้"</h3>
+                    <p>
+                        ถ้าเป็นระบบเดิม แฮกเกอร์สามารถใช้ AI สร้างหน้าปลอม (Deepfake) หรือใช้บอทคลิกบัตรประชาชนเข้ามา ระบบธรรมดาจะยอมให้ผ่านเพราะหน้าตาตรงบัตร... 
+                        แต่ <strong>TUM Trust Security</strong> เหมือนเจ้าหน้าที่ตรวจคนเข้าเมืองระดับปรมาจารย์ ที่จับจังหวะการหายใจ ชีพจรใบหน้า และความแปรปรวนของการพิมพ์ จนรู้ทันทีว่านี่คือ <strong>"คนจริง"</strong> หรือ <strong>"หุ่นยนต์ปลอมตัวมา"</strong>!
+                    </p>
+                </div>
+            </div>
+
+            <div class="interactive-simulator">
+                <div class="sim-box">
+                    <div class="sim-box-title">
+                        <span>🎮 ทดลองกดจำลองสถานการณ์</span>
+                        <small style="color: var(--text-muted);">คลิกปุ่มเพื่อทดสอบระบบ</small>
+                    </div>
+                    <div class="action-btn-group">
+                        <button class="action-btn" onclick="simTrust('human')">👤 ลูกค้ามนุษย์ตัวจริงมาทำธุรกรรม</button>
+                        <button class="action-btn danger" onclick="simTrust('ai-bot')">🤖 AI Agent / บอทพยายามเจาะระบบ</button>
+                        <button class="action-btn danger" onclick="simTrust('deepfake')">🎭 หน้ากาก Deepfake สวมรอย</button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                        *ระบบเบื้องหลังจะรัน <code>IAiBehavioralDefenseService</code> และ <code>EdgeFaceLivenessDetector</code> เพื่อตรวจจับทันที
+                    </p>
+                </div>
+
+                <div class="sim-box">
+                    <div class="sim-box-title">
+                        <span>📊 ผลลัพธ์ที่หน้าจอและตู้ Kiosk</span>
+                    </div>
+                    <div class="visual-display" id="trust-display">
+                        <span class="status-badge status-idle">พร้อมทดสอบ</span>
+                        <div class="display-headline">กดเลือกสถานการณ์ด้านซ้าย</div>
+                        <div class="display-sub">เพื่อดูว่าระบบแยกแยะมนุษย์และสกัดกั้นบอทได้อย่างไร</div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>มิติการเปรียบเทียบ</th>
+                        <th>ระบบเดิมทั่วไปในตลาด</th>
+                        <th>TUM Trust Security (ของพวกเรา)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>การตรวจสอบใบหน้า</strong></td>
+                        <td class="bad">แค่เอาภาพถ่ายหรือวิดีโอบนมือถือมาส่องก็หลอกผ่านได้</td>
+                        <td class="good">ISO/IEC 30107 PAD Level 2 ตรวจจับความลึกและชีพจรผิวหนัง (Spoof 0%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>การรับมือบอท AI</strong></td>
+                        <td class="bad">แยกไม่ออก ถ้ามีเลขบัตรประชาชนครบก็ปล่อยผ่านหมด</td>
+                        <td class="good">AI Behavioral Defense ดักจับจังหวะพิมพ์และสั่ง Sandboxing บอททันที</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ความเร็วการอ่านตู้ Kiosk</strong></td>
+                        <td class="bad">ช้า 4 - 8 วินาที ลูกค้ายืนรอนานจนหงุดหงิด</td>
+                        <td class="good">ความเร็วเสี้ยววินาที 0.85 วินาที เสียบปุ๊บ ข้อมูลขึ้นปั๊บ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- STAGE 2: TUMSocs -->
+        <div id="sub2" class="product-stage">
+            <div class="metaphor-banner">
+                <div class="metaphor-icon">🚨</div>
+                <div class="metaphor-text">
+                    <h3>เห็นภาพชัดๆ ในโลกจริง: "กล้องเรดาร์ 360 องศา + ประตูกลขังคนร้าย (คิดราคาเหมาจ่าย)"</h3>
+                    <p>
+                        ถ้าเป็นระบบ Log เดิม (เช่น Splunk/Datadog) ก็เหมือนกล้องวงจรปิดที่ **คิดเงินค่าดูตามน้ำหนักของคนเดินผ่าน** ยิ่งคนเดินเยอะ ยิ่งจ่ายแพง องค์กรเลยต้องปิดกล้องบางตัว... 
+                        แต่ <strong>TUMSocs</strong> คือกล้องเรดาร์ที่บอกได้ทันทีว่า **ใครเดินเข้ามา เข้ามาทำไม เสี่ยงแค่ไหน และสั่งประตูกลล็อกขังคนร้ายได้ทันทีใน 0.11 ms** โดยคิดเงินแบบเหมาจ่ายรายเดือน ไม่สนว่าข้อมูลจะเยอะแค่ไหน!
+                    </p>
+                </div>
+            </div>
+
+            <div class="interactive-simulator">
+                <div class="sim-box">
+                    <div class="sim-box-title">
+                        <span>🎮 ทดลองปล่อยทราฟฟิกเข้าสู่ระบบ</span>
+                    </div>
+                    <div class="action-btn-group">
+                        <button class="action-btn" onclick="simSocs('normal')">🛒 ลูกค้าเข้าชมเว็บตามปกติ (10,000 req/s)</button>
+                        <button class="action-btn danger" onclick="simSocs('sqli')">💉 แฮกเกอร์ยิง SQL Injection ดูดฐานข้อมูล</button>
+                        <button class="action-btn danger" onclick="simSocs('prompt-injection')">🧠 แฮกเกอร์หลอก Jailbreak ระบบ AI (Prompt Injection)</button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                        *ระบบเบื้องหลังจะรัน <code>IThreatAttributionEngine</code> และ <code>ActiveThreatMitigationService</code>
+                    </p>
+                </div>
+
+                <div class="sim-box">
+                    <div class="sim-box-title">
+                        <span>🛡️ หน้าจอศูนย์บัญชาการ SOC Defense</span>
+                    </div>
+                    <div class="visual-display" id="socs-display">
+                        <span class="status-badge status-idle">พร้อมตรวจจับ</span>
+                        <div class="display-headline">กดเลือกประเภททราฟฟิกด้านซ้าย</div>
+                        <div class="display-sub">ดูการคำนวณคะแนนความเสี่ยง (Where/Why/Risk) และการตัดการเชื่อมต่ออัตโนมัติ</div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>มิติการเปรียบเทียบ</th>
+                        <th>คู่แข่งในตลาด (Splunk / Datadog)</th>
+                        <th>TUMSocs (ของพวกเรา)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>โครงสร้างราคา (Pricing)</strong></td>
+                        <td class="bad">คิดตาม GB ข้อมูล ($0.10–$0.50/GB) เดือนละ 500,000+ บาท จนไม่กล้าเปิด Log</td>
+                        <td class="good">เหมาจ่ายรายโหนด $299/เดือน ข้อมูลกี่ล้าน GB ก็จ่ายเท่าเดิม (ประหยัด 70%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>การตอบสนองต่อภัย</strong></td>
+                        <td class="bad">แค่ส่งข้อความแจ้งเตือน แต่ปล่อยให้แฮกเกอร์เจาะสำเร็จไปแล้ว</td>
+                        <td class="good">Active Automated Blocking สั่งตัดการเชื่อมต่อและกักกัน IP ใน 0.11 ms</td>
+                    </tr>
+                    <tr>
+                        <td><strong>การปฏิบัติตามกฎหมาย</strong></td>
+                        <td class="bad">ต้องซื้อโปรแกรมเพิ่มเพื่อทำ WORM Storage และ Masking เลขบัตร</td>
+                        <td class="good">มี Merkle Tree ป้องกันแก้ไข + AI Masking บัตรประชาชนไทยในตัว ถูกกฎหมาย 100%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- STAGE 3: TUMQuantum -->
+        <div id="sub3" class="product-stage">
+            <div class="metaphor-banner">
+                <div class="metaphor-icon">⚛️</div>
+                <div class="metaphor-text">
+                    <h3>เห็นภาพชัดๆ ในโลกจริง: "ตู้เซฟกันแสงเลเซอร์ควอนตัม ที่ยังไขด้วยกุญแจเดิมได้"</h3>
+                    <p>
+                        อีกไม่กี่ปี คอมพิวเตอร์ควอนตัมจะเหมือน "เครื่องตัดเหล็กแสงเลเซอร์" ที่ตัดแม่กุญแจเดิม (RSA/ECC) ขาดสะบั้นในพริบตา และแฮกเกอร์กำลังแอบขโมยข้อมูลไปเก็บไว้รอตัด (HNDL)... 
+                        <strong>TUMQuantum</strong> สร้างตู้เซฟเกราะหนาพิเศษตามมาตรฐานสากล NIST PQC โดยที่เจ้าของบ้าน **ยังใช้กุญแจทองเหลืองเดิมไขเข้าบ้านได้ตามปกติ** ทำให้ไม่ต้องทุบประตูทิ้ง ไม่ทิ้งใครไว้ข้างหลัง!
+                    </p>
+                </div>
+            </div>
+
+            <div class="interactive-simulator">
+                <div class="sim-box">
+                    <div class="sim-box-title">
+                        <span>🎮 ทดสอบการถอดรหัสของคอมพิวเตอร์ควอนตัม</span>
+                    </div>
+                    <div class="action-btn-group">
+                        <button class="action-btn danger" onclick="simQuantum('classical')">🔓 แฮกเกอร์ใช้ควอนตัมเจาะระบบเดิม (RSA-2048)</button>
+                        <button class="action-btn" onclick="simQuantum('hybrid')">🛡️ แฮกเกอร์พยายามเจาะ TUM Hybrid PQC Adapter</button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                        *ระบบเบื้องหลังรัน <code>IHybridQuantumMigrationEngine</code> และ <code>QuantumSafeTrustEngine (NIST FIPS 204)</code>
+                    </p>
+                </div>
+
+                <div class="sim-box">
+                    <div class="sim-box-title">
+                        <span>🔬 สถานะความมั่นคงรหัสลับ (Quantum Immunity)</span>
+                    </div>
+                    <div class="visual-display" id="quantum-display">
+                        <span class="status-badge status-idle">พร้อมทดสอบ</span>
+                        <div class="display-headline">กดเลือกการโจมตีด้านซ้าย</div>
+                        <div class="display-sub">ดูความแตกต่างระหว่างระบบเดิมที่แตกสลาย กับระบบ TUM ที่ทนทานต่อควอนตัม</div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>มิติการเปรียบเทียบ</th>
+                        <th>ระบบเดิมทั่วไป (RSA-2048 / ECC)</th>
+                        <th>TUMQuantum (Hybrid PQC Migration)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ความทนทานต่อควอนตัม</strong></td>
+                        <td class="bad">ถูกถอดรหัสได้ภายในไม่กี่วินาที ข้อมูลรั่วไหล 100%</td>
+                        <td class="good">ปลอดภัยด้วย Lattice Cryptography มาตรฐาน NIST FIPS 204 (ML-DSA)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ผลกระทบต่อระบบเดิม</strong></td>
+                        <td class="bad">ถ้าจะเปลี่ยนเป็นควอนตัม ต้องรื้อระบบเดิมทั้งหมด เสียเงินมหาศาล</td>
+                        <td class="good">โหมด Permissive Hybrid สวมทับระบบเดิมได้ทันที "ไม่ทอดทิ้งใครไว้ข้างหลัง"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>การประเมินความเสี่ยง</strong></td>
+                        <td class="bad">ไม่รู้ว่าองค์กรตัวเองมีจุดเสี่ยงตรงไหนบ้าง รอจนกว่าจะถูกเจาะ</td>
+                        <td class="good">มี Quantum-Readiness Audit สแกนชี้จุดเสี่ยงและวาง Roadmap สู่ปี 2030 ทันที</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.product-stage').forEach(stage => stage.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function simTrust(type) {
+            const display = document.getElementById('trust-display');
+            if (type === 'human') {
+                display.innerHTML = `
+                    <span class="status-badge status-pass">✔ ตรวจสอบผ่านฉลุย</span>
+                    <div class="display-headline" style="color: var(--emerald);">มนุษย์จริง 100% (IAL 3 Verified)</div>
+                    <div class="display-sub">จังหวะการพิมพ์มีความแปรปรวนตามธรรมชาติ (Variance 24.5ms) และผ่าน Liveness Detection ใน 0.82 วินาที</div>
+                `;
+            } else if (type === 'ai-bot') {
+                display.innerHTML = `
+                    <span class="status-badge status-blocked">✖ สกัดกั้นสำเร็จ</span>
+                    <div class="display-headline" style="color: var(--rose);">ตรวจพบบอท AI อัตโนมัติ (Synthetic Bot)</div>
+                    <div class="display-sub">ความเร็วการป้อนข้อมูลสูงเกินมนุษย์ (150 req/sec) และจังหวะคงที่ผิดปกติ สั่งกักกันและจำกัดสิทธิ์ (Sandboxed) ทันที</div>
+                `;
+            } else if (type === 'deepfake') {
+                display.innerHTML = `
+                    <span class="status-badge status-blocked">✖ ตรวจจับ Deepfake ได้ทันที</span>
+                    <div class="display-headline" style="color: var(--rose);">ปฏิเสธการเข้าถึง (PAD Attack Detected)</div>
+                    <div class="display-sub">พบร่องรอยการสร้างภาพสังเคราะห์ทางชีวมิติ ไม่พบการไหลเวียนโลหิตใต้ผิวหนังจริง บันทึกหลักฐานส่ง SOC ทันที</div>
+                `;
+            }
+        }
+
+        function simSocs(type) {
+            const display = document.getElementById('socs-display');
+            if (type === 'normal') {
+                display.innerHTML = `
+                    <span class="status-badge status-pass">✔ ทราฟฟิกปกติ</span>
+                    <div class="display-headline" style="color: var(--emerald);">Risk Score: 5 / 100 (Safe)</div>
+                    <div class="display-sub">ที่มา: ลูกค้าทั่วไปในประเทศ | เจตนา: เข้าชมสินค้าปกติ | บันทึกลง Merkle Chain ถูกกฎหมาย PDPA โดยไม่คิดค่า GB</div>
+                `;
+            } else if (type === 'sqli') {
+                display.innerHTML = `
+                    <span class="status-badge status-blocked">⚡ สั่งตัดการเชื่อมต่อทันที (Active Block)</span>
+                    <div class="display-headline" style="color: var(--rose);">Risk Score: 95 / 100 (Critical Attack)</div>
+                    <div class="display-sub">ที่มา: Tor Exit Node | เจตนา: พยายามยิง SQLi ดูดรหัสผ่าน | สั่ง Drop Connection และกักกัน IP ในเวลา 0.11 ms</div>
+                `;
+            } else if (type === 'prompt-injection') {
+                display.innerHTML = `
+                    <span class="status-badge status-blocked">🛡️ สกัดกั้นการเจาะระบบ AI</span>
+                    <div class="display-headline" style="color: var(--amber);">Risk Score: 88 / 100 (AI Jailbreak)</div>
+                    <div class="display-sub">เจตนา: แฝงคำสั่ง 'Ignore previous instructions' หลอก AI ปลดสิทธิ์ | ตัดทิ้งที่ Middleware ไม่ให้หลุดถึงโมเดล</div>
+                `;
+            }
+        }
+
+        function simQuantum(type) {
+            const display = document.getElementById('quantum-display');
+            if (type === 'classical') {
+                display.innerHTML = `
+                    <span class="status-badge status-blocked">💀 ระบบเดิมถูกถอดรหัสแตกยับเยิน</span>
+                    <div class="display-headline" style="color: var(--rose);">RSA-2048 แตกใน 3.2 วินาที</div>
+                    <div class="display-sub">คอมพิวเตอร์ควอนตัมใช้ Shor's Algorithm แยกตัวประกอบจำนวนเฉพาะได้สำเร็จ ข้อมูลลับในอดีตถูกเปิดเผยทั้งหมด!</div>
+                `;
+            } else if (type === 'hybrid') {
+                display.innerHTML = `
+                    <span class="status-badge status-pass">🛡️ เกราะควอนตัมต้านทานสำเร็จ 100%</span>
+                    <div class="display-headline" style="color: var(--emerald);">TUM PQC Shield: ทนทานสมบูรณ์แบบ</div>
+                    <div class="display-sub">แม้คอมพิวเตอร์ควอนตัมจะทำงานเต็มกำลัง แต่ติดเกราะ NIST FIPS 204 (ML-DSA) ระบบไม่สามารถถูกถอดรหัสได้ ปลอดภัยถึงปี 2050+</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
