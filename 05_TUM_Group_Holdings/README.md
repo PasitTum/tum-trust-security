@@ -42,6 +42,7 @@
 │   ├── TUM_FAMILY_DIRECTORY_AND_PROFILES.md            # ทะเบียนประวัติครอบครัว TUM
 │   └── TUM_PEOPLE_AND_CULTURE_CHARTER.md               # ธรรมนูญฝ่ายบุคคล
 ├── Strategy_and_OKRs/           # เป้าหมายเชิงยุทธศาสตร์ระดับเครือและบริษัทย่อย
+│   ├── TUM_GROUP_20_SPRINT_MASTER_EXECUTION_ROADMAP.md # แผนยุทธศาสตร์ปฏิบัติการ 20 สปรินต์ (SCRUM-23)
 │   └── TUM_GROUP_AND_SUBSIDIARY_OKRS_2026_2027.md      # OKRs 2026-2027
 ├── Presentations/               # สไลด์นำเสนอ Working Group & Keynotes
 │   ├── tum_working_group_sprint_1_and_2.html           # Interactive Slide Deck Sprint 1 & 2
