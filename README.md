@@ -1,27 +1,36 @@
-﻿# TUM.Identity.SDK
+# TUM Group Holdings — Sovereign Trust, Deep Cyber Defense & Quantum Innovation
 
-**Enterprise Identity Verification & Authentication SDK (`.NET 5.0`, `.NET 8.0`, & `.NET 10.0` Multi-Target)**  
-ไลบรารีมาตรฐานกลางของทีม TUM สำหรับพิสูจน์และยืนยันตัวตน (Digital Identity & Citizen Card Verification) ในระบบ **Web Application** และ **ตู้ยืนยันตัวตน (Browser-Based Kiosk)** ออกแบบตามหลัก **Clean Architecture**, **Stateless Pass-Through Adapter**, และ **Zero Third-Party Dependency Single-DLL** เพื่อให้สามารถคัดลอกเฉพาะไฟล์ `TUM.Identity.SDK.dll` ไปใช้งานในโปรเจกต์ปลายทางได้ทันทีโดยไม่มีปัญหาเรื่อง Git Submodule หรือ Private Repo
+> **แผนผังโครงสร้างโฟลเดอร์สำหรับผู้บริหาร:** ดูรายละเอียดการจัดหมวดหมู่แยกตามรายบริษัททั้งหมดได้ที่ **[COMPANY_DIRECTORY_MAP.md](COMPANY_DIRECTORY_MAP.md)** 🗺️
+
+```
+D:\TUM\tum-trust-security\
+├── 01_TUM_Trust_Security/       # [บริษัทที่ 1] Sovereign Identity, ThaID, DOPA, Kiosk PC/SC HAL & ICAO 9303
+├── 02_TUM_Socs/                 # [บริษัทที่ 2] Full-Spectrum Cyber Defense, RingBuffer & Tamper-Evident Ledger
+├── 03_TUM_Quantum/              # [บริษัทที่ 3] Post-Quantum Cryptography, NIST FIPS 203/204 & Hybrid Migration
+├── 04_Central_Director/         # [ส่วนกลาง] Interactive Cyber Attack Map & Executive HUD Visualizer
+├── 05_TUM_Group_Holdings/       # [สำนักงานใหญ่] Governance, People & Culture (HR), OKRs & Working Group Slides
+├── Tests/                       # Unified Test Suite (125/125 Tests Passing 100%)
+├── MockServer/                  # Local Sandbox Mock Server (ThaID & DOPA)
+└── examples/                    # Host Application Integration Quickstart
+```
 
 ---
 
-## 📚 สารบัญเอกสารโครงการ (Project Documentation Index)
+## 📚 สารบัญเอกสารและแผนผังเครือ TUM (Project Directory Index)
 
-1. 📄 **[เอกสารส่งมอบระบบและคู่มือการติดตั้ง (System Handover & Integration Guide)](docs/HANDOVER_GUIDE.md)**
-   - ภาพรวมระบบ, โครงสร้างโปรเจกต์, วิธีนำเฉพาะไฟล์ `.dll` ไปติดตั้งใน `libs/`, และวิธีตั้งค่าทั้งจาก **Database (`DbContext` / `ISettingRepository`)** และ **`appsettings.json`**
-2. 🧪 **[รายงานผลการทดสอบ Unit Test (Unit Test Verification Report)](docs/UNIT_TEST_REPORT.md)**
-   - รายงานผลการทดสอบ **45 Test Cases x 3 Runtimes (`.NET 5.0`, `.NET 8.0`, `.NET 10.0`) = 135 Executions (Pass 100%)**
-3. 📋 **[รายงาน Use Case และข้อกำหนดการจำลอง (Use Case & Scenario Specification)](docs/USE_CASE_SPECIFICATION.md)**
-   - รายละเอียด **12 มาตรฐาน Use Cases** (6 ThaID + 6 DOPA), การทำงานของ **OAuth 2.0 Redirect & QR Code**, และตัวอย่าง JSON ครบ **20 Scopes**
-4. 🔐 **[สถาปัตยกรรม ความปลอดภัย PDPA และตารางรหัสข้อผิดพลาด (Security, Architecture & Error Catalog)](docs/SECURITY_AND_ARCHITECTURE.md)**
-   - มาตรฐานการเข้ารหัส `AES-256-CBC + HMAC-SHA256`, `PKCE (RFC 7636)`, `IdentityResilienceHandler` (Retry & Circuit Breaker), และตารางรวม `ErrorCode` ทั้งหมด
-5. 🔌 **คู่มืออ้างอิงรายผู้ให้บริการ (Provider Reference Docs):**
-   - [คู่มือผู้ให้บริการ DOPA ThaID (`IThaIdProvider`)](docs/providers/thaid.md)
-   - [คู่มือผู้ให้บริการ DOPA Check Card & Face Verification (`IDopaProvider`)](docs/providers/dopa.md)
-   - [คู่มือการขยายระบบเพิ่มผู้ให้บริการใหม่](docs/providers/README.md)
-6. 🤖 **แนวทางการจัดการแค่คำปลายทางของ Identity Provider (Automated Provider Roadmap):**
-   - [บันทึกแนวทางการปรับปรุงสถาปัตยกรรม Secret Management & Provider Discovery](docs/ROADMAP_SECRET_MANAGEMENT.md)
-   - ใช้ `/add-identity-provider` Skill เพื่อให้ AI ค้นหา OAuth Endpoints และสร้าง Provider Implementation อัตโนมัติ
+1. 🗺️ **[แผนผังโครงสร้างโฟลเดอร์สำหรับท่าน CEO (Company Directory Map)](COMPANY_DIRECTORY_MAP.md)**
+2. 🏢 **[TUM Trust Security Overview & SDK Guide](01_TUM_Trust_Security/README.md)**
+3. 🛡️ **[TUMSocs Cyber Defense & SIEM Overview](02_TUM_Socs/README.md)**
+4. ⚛️ **[TUMQuantum Research Lab & PQC Engine](03_TUM_Quantum/README.md)**
+5. 🌐 **[Central Director Team Charter & Visualizer](04_Central_Director/README.md)**
+6. 🏛️ **[TUM Group Holdings Governance & HR Portal](05_TUM_Group_Holdings/README.md)**
+   - 👥 [ประกาศรับสมัคร Scrum Master & Agile Lead](05_TUM_Group_Holdings/People_and_Culture/JOB_SPEC_SCRUM_MASTER.md)
+   - 📢 [รายงานความคืบหน้าการรับสมัครและช่องทางการสรรหา](05_TUM_Group_Holdings/People_and_Culture/RECRUITMENT_PROGRESS_REPORT_SCRUM_MASTER.md)
+   - 📊 [สไลด์นำเสนอ Working Group Sprint 1 & 2](05_TUM_Group_Holdings/Presentations/tum_working_group_sprint_1_and_2.html)
+7. 📄 **[เอกสารส่งมอบระบบและคู่มือการติดตั้ง (System Handover Guide)](05_TUM_Group_Holdings/Governance/HANDOVER_GUIDE.md)**
+8. 🧪 **[รายงานผลการทดสอบ Unit Test (Unit Test Report)](01_TUM_Trust_Security/docs/UNIT_TEST_REPORT.md)**
+9. 📋 **[รายงาน Use Case และข้อกำหนดการจำลอง (Use Case Specification)](01_TUM_Trust_Security/docs/USE_CASE_SPECIFICATION.md)**
+10. 🔐 **[สถาปัตยกรรม ความปลอดภัย PDPA (Security & Architecture)](01_TUM_Trust_Security/docs/SECURITY_AND_ARCHITECTURE.md)**
 
 ---
 

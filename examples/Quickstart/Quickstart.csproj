@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Tum.Trust.Security.csproj" />
+    <ProjectReference Include="..\..\01_TUM_Trust_Security\Tum.Trust.Security.csproj" />
   </ItemGroup>
 
   <ItemGroup>

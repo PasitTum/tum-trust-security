@@ -51,8 +51,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tum.Trust.Security.csproj" />
-    <ProjectReference Include="..\Tum.Log\Tum.Log.csproj" />
+    <ProjectReference Include="..\01_TUM_Trust_Security\Tum.Trust.Security.csproj" />
+    <ProjectReference Include="..\02_TUM_Socs\Tum.Log\Tum.Log.csproj" />
+    <ProjectReference Include="..\03_TUM_Quantum\Tum.Quantum.csproj" />
   </ItemGroup>
 
 </Project>

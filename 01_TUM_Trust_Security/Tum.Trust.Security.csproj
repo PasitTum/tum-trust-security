@@ -31,22 +31,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Tests\**" />
-    <EmbeddedResource Remove="Tests\**" />
-    <None Remove="Tests\**" />
-    <Compile Remove="MockServer\**" />
-    <EmbeddedResource Remove="MockServer\**" />
-    <None Remove="MockServer\**" />
-    <Compile Remove="examples\**" />
-    <EmbeddedResource Remove="examples\**" />
-    <None Remove="examples\**" />
-    <Compile Remove="Tum.Log\**" />
-    <EmbeddedResource Remove="Tum.Log\**" />
-    <None Remove="Tum.Log\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="Tum.Log\Tum.Log.csproj" />
+    <ProjectReference Include="..\02_TUM_Socs\Tum.Log\Tum.Log.csproj" />
+    <ProjectReference Include="..\03_TUM_Quantum\Tum.Quantum.csproj" />
   </ItemGroup>
 
   <!-- Use base x.0.0 minimum versions so consuming apps on any 5.0.x / 8.0.x / 10.0.x patch never hit NU1605 package downgrade errors -->
