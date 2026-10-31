@@ -1,4 +1,4 @@
-ï»¿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using Tum.Trust.Security.Infrastructure.Security;
 using Xunit;
 
@@ -18,7 +18,7 @@ public class SecurityTests
     {
         // Arrange
         var service = new AesEncryptionService(GenerateBase64Key32Bytes());
-        string original = "1234567890121|à¸ªà¸¡à¸Šà¸²à¸¢ à¹ƒà¸ˆà¸”à¸µ";
+        string original = "1234567890121|ÊÁªÒÂ ã¨´Õ";
 
         // Act
         string encrypted = service.Encrypt(original);
@@ -86,5 +86,37 @@ public class SecurityTests
         Assert.False(string.IsNullOrWhiteSpace(challenge));
         Assert.True(PkceHelper.VerifyCodeChallenge(verifier, challenge));
         Assert.False(PkceHelper.VerifyCodeChallenge(wrongVerifier, challenge));
+    }
+
+    [Fact]
+    public void IdentityVerificationOptions_FallbackToEnvironmentVariables_WhenConfigMissing()
+    {
+        // Arrange
+        const string testKey = "VGVzdEVuY3J5cHRpb25LZXkzMkJ5dGVzTG9uZzEyMw==";
+        const string testClientId = "env-thaid-client-id";
+        const string testClientSecret = "env-thaid-client-secret";
+
+        Environment.SetEnvironmentVariable("TUM_IDENTITY_ENCRYPTION_KEY", testKey);
+        Environment.SetEnvironmentVariable("TUM_THAID_CLIENT_ID", testClientId);
+        Environment.SetEnvironmentVariable("TUM_THAID_CLIENT_SECRET", testClientSecret);
+
+        try
+        {
+            var emptyConfig = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+
+            // Act
+            var options = Tum.Trust.Security.Core.Models.IdentityVerificationOptions.FromConfiguration(emptyConfig);
+
+            // Assert
+            Assert.Equal(testKey, options.EncryptionKey);
+            Assert.Equal(testClientId, options.ThaId.ClientId);
+            Assert.Equal(testClientSecret, options.ThaId.ClientSecret);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TUM_IDENTITY_ENCRYPTION_KEY", null);
+            Environment.SetEnvironmentVariable("TUM_THAID_CLIENT_ID", null);
+            Environment.SetEnvironmentVariable("TUM_THAID_CLIENT_SECRET", null);
+        }
     }
 }

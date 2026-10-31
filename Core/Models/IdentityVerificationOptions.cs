@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace Tum.Trust.Security.Core.Models;
 
@@ -75,7 +75,9 @@ public class IdentityVerificationOptions
 
         return new IdentityVerificationOptions
         {
-            EncryptionKey = configuration["IdentityVerification:EncryptionKey"],
+            EncryptionKey = configuration["IdentityVerification:EncryptionKey"]
+                ?? Environment.GetEnvironmentVariable("TUM_IDENTITY_ENCRYPTION_KEY")
+                ?? Environment.GetEnvironmentVariable("KIOSK_IDENTITY_ENCRYPTION_KEY"),
             ThaId = thaIdOpts,
             Dopa = dopaOpts
         };
@@ -200,8 +202,12 @@ public class ThaIdOptions
         {
             UseMock = bool.TryParse(section["UseMock"], out var useMock) && useMock,
             MockScenario = section["MockScenario"],
-            ClientId = section["ClientId"],
-            ClientSecret = section["ClientSecret"],
+            ClientId = section["ClientId"]
+                ?? Environment.GetEnvironmentVariable("TUM_THAID_CLIENT_ID")
+                ?? Environment.GetEnvironmentVariable("KIOSK_THAID_CLIENT_ID"),
+            ClientSecret = section["ClientSecret"]
+                ?? Environment.GetEnvironmentVariable("TUM_THAID_CLIENT_SECRET")
+                ?? Environment.GetEnvironmentVariable("KIOSK_THAID_CLIENT_SECRET"),
             AuthorizeUrl = section["AuthorizeUrl"] ?? section["AuthorizationUrl"],
             TokenUrl = section["TokenUrl"],
             InspectUrl = section["InspectUrl"],
@@ -405,7 +411,9 @@ public class DopaOptions
             UseMock = bool.TryParse(section["UseMock"], out var useMock) && useMock,
             Mode = mode,
             ConsumerKey = section["ConsumerKey"] ?? section["Consumer-Key"],
-            ConsumerSecret = section["ConsumerSecret"],
+            ConsumerSecret = section["ConsumerSecret"]
+                ?? Environment.GetEnvironmentVariable("TUM_DOPA_CONSUMER_SECRET")
+                ?? Environment.GetEnvironmentVariable("KIOSK_DOPA_CONSUMER_SECRET"),
             AgentId = section["AgentId"] ?? section["AgentID"],
             DgaGdxBaseUrl = section["DgaGdxBaseUrl"] ?? "https://api.egov.go.th",
             VerificationUrl = section["VerificationUrl"],
@@ -415,7 +423,9 @@ public class DopaOptions
             FaceThreshold = threshold,
             TokenUrl = section["TokenUrl"],
             ClientId = section["ClientId"],
-            ClientSecret = section["ClientSecret"],
+            ClientSecret = section["ClientSecret"]
+                ?? Environment.GetEnvironmentVariable("TUM_DOPA_CLIENT_SECRET")
+                ?? Environment.GetEnvironmentVariable("KIOSK_DOPA_CLIENT_SECRET"),
             ApiKey = section["ApiKey"],
             AllowUntrustedCertificates = bool.TryParse(section["AllowUntrustedCertificates"], out var allow) && allow
         };
