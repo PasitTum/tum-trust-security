@@ -33,6 +33,7 @@
 │   ├── TUM_GROUP_REBRANDING_AND_MIGRATION_BLUEPRINT.md # พิมพ์เขียวการจัดตั้งเครือ TUM
 │   ├── ORGANIZATION_AND_OPERATING_MODEL.md             # โครงสร้างองค์กรและสายบังคับบัญชา
 │   ├── C_LEVEL_EXECUTIVE_MEETING_UPDATE_2026.md        # รายงานการประชุมผู้บริหารระดับสูง
+│   ├── TUM_INNOVATION_AND_RESEARCH_COUNCIL_CHARTER.md  # ธรรมนูญสภาการวิจัยและนวัตกรรม (ทางเลือกที่ 3)
 │   └── HANDOVER_GUIDE.md                               # คู่มือการส่งมอบงานระดับกลุ่ม
 ├── People_and_Culture/          # ฝ่ายบุคคลและการสรรหาบุคลากร
 │   ├── JOB_SPEC_SCRUM_MASTER.md                        # ข้อกำหนดงาน Scrum Master
