@@ -139,6 +139,7 @@ public static class DependencyInjection
         services.TryAddSingleton<IMobileNfcBridge, Tum.Trust.Security.Infrastructure.Mobile.CrossPlatformMobileNfcBridge>();
         services.TryAddSingleton<IIcaoPkdSyncService, Tum.Trust.Security.Infrastructure.Passport.IcaoPkdSyncService>();
         services.TryAddSingleton<IThaiIdSmartCardReader, Tum.Trust.Security.Infrastructure.Hardware.ThaiIdSmartCardReader>();
+        services.TryAddSingleton<IIcaoNfcDataGroupInspector, Tum.Trust.Security.Infrastructure.Passport.IcaoNfcDataGroupInspector>();
 
         // 5. Register Quantum-Safe Trust Engine (NIST FIPS 204 PQC)
         services.TryAddSingleton<IQuantumSafeTrustEngine, QuantumSafeTrustEngine>();
