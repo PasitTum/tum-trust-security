@@ -34,3 +34,6 @@ appsettings.local.json
 # Claude Code (track skills in repo, ignore local settings)
 .claude/*
 !.claude/skills/
+
+# Local scratch
+scratch/
