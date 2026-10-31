@@ -88,6 +88,14 @@ public static class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Registers TUM Trust Security services with default configuration.
+    /// </summary>
+    public static IServiceCollection AddTumTrustSecurity(this IServiceCollection services, Action<IdentityVerificationOptions>? configure = null)
+    {
+        return services.AddIdentityVerification(configure ?? (_ => { }));
+    }
+
     private static void RegisterCoreServicesAndProviders(IServiceCollection services)
     {
         // 1. Register AES-256 Encryption Service (resolves EncryptionKey lazily/dynamically from IIdentityOptionsProvider)
@@ -130,6 +138,7 @@ public static class DependencyInjection
         services.TryAddSingleton<IHardwareReaderManager, Tum.Trust.Security.Infrastructure.Hardware.PcScSmartcardReaderAdapter>();
         services.TryAddSingleton<IMobileNfcBridge, Tum.Trust.Security.Infrastructure.Mobile.CrossPlatformMobileNfcBridge>();
         services.TryAddSingleton<IIcaoPkdSyncService, Tum.Trust.Security.Infrastructure.Passport.IcaoPkdSyncService>();
+        services.TryAddSingleton<IThaiIdSmartCardReader, Tum.Trust.Security.Infrastructure.Hardware.ThaiIdSmartCardReader>();
 
         // 5. Register Quantum-Safe Trust Engine (NIST FIPS 204 PQC)
         services.TryAddSingleton<IQuantumSafeTrustEngine, QuantumSafeTrustEngine>();

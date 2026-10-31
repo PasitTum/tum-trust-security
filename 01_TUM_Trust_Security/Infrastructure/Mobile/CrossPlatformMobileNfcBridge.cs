@@ -44,6 +44,8 @@ public class CrossPlatformMobileNfcBridge : IMobileNfcBridge
         string dateOfExpiry, 
         CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        await Task.CompletedTask;
         var sw = Stopwatch.StartNew();
 
         if (string.IsNullOrWhiteSpace(documentNumber))

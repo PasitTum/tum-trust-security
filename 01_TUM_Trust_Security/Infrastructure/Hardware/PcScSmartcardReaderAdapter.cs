@@ -17,6 +17,8 @@ namespace Tum.Trust.Security.Infrastructure.Hardware;
 public class PcScSmartcardReaderAdapter : IHardwareReaderManager
 {
     private readonly ConcurrentDictionary<string, ReaderDeviceInfo> _connectedReaders = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, bool> _cardInsertedState = new(StringComparer.OrdinalIgnoreCase);
+    private Func<string, byte[], byte[]?>? _customApduHandler;
 
     /// <inheritdoc />
     public event EventHandler<CardScanEventArgs>? OnCardInserted;
@@ -67,9 +69,18 @@ public class PcScSmartcardReaderAdapter : IHardwareReaderManager
         });
     }
 
+    /// <summary>
+    /// Sets a custom APDU handler callback for testing edge cases, faults, and negative flows.
+    /// </summary>
+    public void SetCustomApduHandler(Func<string, byte[], byte[]?>? handler)
+    {
+        _customApduHandler = handler;
+    }
+
     /// <inheritdoc />
     public Task<IReadOnlyList<ReaderDeviceInfo>> EnumerateReadersAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         IReadOnlyList<ReaderDeviceInfo> readers = _connectedReaders.Values.ToList();
         return Task.FromResult(readers);
     }
@@ -77,6 +88,8 @@ public class PcScSmartcardReaderAdapter : IHardwareReaderManager
     /// <inheritdoc />
     public Task<byte[]> TransmitApduAsync(string readerName, byte[] apduCommand, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(readerName))
             throw new ArgumentException("Reader name must be specified.", nameof(readerName));
 
@@ -85,6 +98,14 @@ public class PcScSmartcardReaderAdapter : IHardwareReaderManager
 
         if (!_connectedReaders.ContainsKey(readerName))
             throw new InvalidOperationException($"Reader '{readerName}' is not currently connected.");
+
+        // Check custom hook for test injection
+        if (_customApduHandler != null)
+        {
+            var customResponse = _customApduHandler(readerName, apduCommand);
+            if (customResponse != null)
+                return Task.FromResult(customResponse);
+        }
 
         // ISO/IEC 7816-4 APDU handling simulation
         byte cla = apduCommand[0];
@@ -97,7 +118,84 @@ public class PcScSmartcardReaderAdapter : IHardwareReaderManager
             return Task.FromResult(new byte[] { 0x90, 0x00 });
         }
 
-        // 0x00 0xB0: READ BINARY
+        // 0x80 0xB0: Thai National ID MoI proprietary read binary
+        if (cla == 0x80 && ins == 0xB0)
+        {
+            byte p1 = apduCommand.Length > 2 ? apduCommand[2] : (byte)0;
+            byte p2 = apduCommand.Length > 3 ? apduCommand[3] : (byte)0;
+
+            // 0x00 0x04: Citizen ID (13 bytes)
+            if (p1 == 0x00 && p2 == 0x04)
+            {
+                byte[] cidBytes = System.Text.Encoding.ASCII.GetBytes("1100500123451");
+                return Task.FromResult(AppendStatusWord(cidBytes, 0x90, 0x00));
+            }
+
+            // 0x00 0x11: Full Name (Thai & English)
+            if (p1 == 0x00 && p2 == 0x11)
+            {
+                byte[] personalBytes = System.Text.Encoding.UTF8.GetBytes("นาย#สมชาย##ใจดี#Mr.#Somchai##Jaidee");
+                return Task.FromResult(AppendStatusWord(personalBytes, 0x90, 0x00));
+            }
+
+            // 0x00 0xD1: Date of Birth (YYYYMMDD Buddhist Era)
+            if (p1 == 0x00 && p2 == 0xD1)
+            {
+                byte[] dobBytes = System.Text.Encoding.ASCII.GetBytes("25350512");
+                return Task.FromResult(AppendStatusWord(dobBytes, 0x90, 0x00));
+            }
+
+            // 0x00 0xE1: Gender (1 = Male, 2 = Female)
+            if (p1 == 0x00 && p2 == 0xE1)
+            {
+                byte[] genderBytes = System.Text.Encoding.ASCII.GetBytes("1");
+                return Task.FromResult(AppendStatusWord(genderBytes, 0x90, 0x00));
+            }
+
+            // 0x15 0x79: Address
+            if (p1 == 0x15 && p2 == 0x79)
+            {
+                byte[] addrBytes = System.Text.Encoding.UTF8.GetBytes("123/45 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร");
+                return Task.FromResult(AppendStatusWord(addrBytes, 0x90, 0x00));
+            }
+
+            // 0x01 0x67: Issue Date
+            if (p1 == 0x01 && p2 == 0x67)
+            {
+                byte[] issueBytes = System.Text.Encoding.ASCII.GetBytes("25650115");
+                return Task.FromResult(AppendStatusWord(issueBytes, 0x90, 0x00));
+            }
+
+            // 0x01 0x6F: Expiration Date
+            if (p1 == 0x01 && p2 == 0x6F)
+            {
+                byte[] expiryBytes = System.Text.Encoding.ASCII.GetBytes("25730512");
+                return Task.FromResult(AppendStatusWord(expiryBytes, 0x90, 0x00));
+            }
+
+            // 0x00 0xF6: Issuer Office
+            if (p1 == 0x00 && p2 == 0xF6)
+            {
+                byte[] issuerBytes = System.Text.Encoding.UTF8.GetBytes("สำนักบริหารการทะเบียน กรมการปกครอง");
+                return Task.FromResult(AppendStatusWord(issuerBytes, 0x90, 0x00));
+            }
+
+            // Photo block read: P1 = 0x01, P2 = 0x7B (or photo segments)
+            if (p1 == 0x01 && p2 == 0x7B)
+            {
+                // Simulated JPEG header bytes
+                byte[] simulatedJpeg = new byte[]
+                {
+                    0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
+                    0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43,
+                    0x00, 0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08, 0x07, 0x07, 0x07, 0x09,
+                    0xFF, 0xD9
+                };
+                return Task.FromResult(AppendStatusWord(simulatedJpeg, 0x90, 0x00));
+            }
+        }
+
+        // 0x00 0xB0: READ BINARY (Generic / ePassport)
         if (cla == 0x00 && ins == 0xB0)
         {
             // Return simulated ePassport DG header + 0x90 0x00
@@ -109,11 +207,22 @@ public class PcScSmartcardReaderAdapter : IHardwareReaderManager
         return Task.FromResult(new byte[] { 0x90, 0x00 });
     }
 
+    private static byte[] AppendStatusWord(byte[] data, byte sw1, byte sw2)
+    {
+        byte[] res = new byte[data.Length + 2];
+        Buffer.BlockCopy(data, 0, res, 0, data.Length);
+        res[res.Length - 2] = sw1;
+        res[res.Length - 1] = sw2;
+        return res;
+    }
+
     /// <summary>
     /// Programmatically simulates a card tap/insertion event for automated Kiosk testing and integration.
     /// </summary>
     public void SimulateCardInsertion(string readerName, byte[]? atrBytes = null, byte[]? dg1Bytes = null, byte[]? dg2Bytes = null, byte[]? sodBytes = null)
     {
+        _cardInsertedState[readerName] = true;
+
         var eventArgs = new CardScanEventArgs
         {
             ReaderName = readerName,
@@ -132,7 +241,16 @@ public class PcScSmartcardReaderAdapter : IHardwareReaderManager
     /// </summary>
     public void SimulateCardRemoval(string readerName)
     {
+        _cardInsertedState[readerName] = false;
         OnCardRemoved?.Invoke(this, readerName);
+    }
+
+    /// <summary>
+    /// Checks whether a card is currently reported as inserted in the reader.
+    /// </summary>
+    public bool IsCardInserted(string readerName)
+    {
+        return _cardInsertedState.TryGetValue(readerName, out var inserted) && inserted;
     }
 
     /// <summary>
@@ -152,6 +270,7 @@ public class PcScSmartcardReaderAdapter : IHardwareReaderManager
     {
         if (_connectedReaders.TryRemove(deviceName, out _))
         {
+            _cardInsertedState.TryRemove(deviceName, out _);
             OnReaderDisconnected?.Invoke(this, deviceName);
         }
     }
