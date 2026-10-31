@@ -10,8 +10,11 @@ This repository is governed by the **ECC (Agent Harness OS)** engineering standa
 - **Purpose**: Enterprise-grade Sovereign Identity Verification SDK & Hardware Security Platform
 - **Target Runtimes**: Multi-targeted for `.NET 5.0`, `.NET 8.0`, and `.NET 10.0`
 - **Key Modules**:
-  - `Tum.Trust.Security`: Core SDK, PKCE, OIDC, DOPA, ThaID, ICAO PKD, Biometrics, Hardware Kiosks, Sovereign Trust Anchors
-  - `Tum.Log`: High-performance tamper-evident enterprise audit logging engine
+  - `01_TUM_Trust_Security`: Core SDK, PKCE, OIDC, DOPA, ThaID, ICAO PKD, Biometrics, Hardware Kiosks, Sovereign Trust Anchors
+  - `02_TUM_Socs`: Full-spectrum cyber defense, SIEM telemetry, eBPF kernel tracing, compliance log mesh (formerly `Tum.Log`)
+  - `03_TUM_Quantum`: Post-Quantum Cryptography (NIST FIPS 203 ML-KEM, FIPS 204 ML-DSA, hybrid migration)
+  - `04_Central_Director`: Interactive WebGL attack visualizers, executive dashboards
+  - `05_TUM_Group_Holdings`: Governance, BoD resolutions, People & Culture (HR), OKRs, Working Group slide decks
   - `Tests`: Comprehensive xUnit test suite (`Tum.Trust.Security.Tests`)
   - `MockServer`: Standalone local mock server for testing identity providers without live credentials
 
@@ -25,6 +28,10 @@ This repository is governed by the **ECC (Agent Harness OS)** engineering standa
 4. **Immutability & Modern C#**: Use C# `record`, `init`-only properties, nullable reference types (`#nullable enable`), and cancellation tokens (`CancellationToken`) across all async operations.
 5. **No Secret Leakage**: Zero hardcoded secrets, test API keys, or private tokens. All credentials must come from secure configuration or environment variables.
 6. **Strict Verification**: Every change must pass the 6-phase verification loop before declaring done.
+7. **Autonomous Orca Jira Automation (Mandatory & Non-Negotiable)**:
+   - All AI agents MUST automatically use `orca jira` CLI on **every single task, sprint cycle, feature delivery, bug fix, and architectural reorganization**.
+   - The agent MUST proactively search, create, update, and transition tickets (`To Do` -> `In Progress` -> `Testing` -> `Done`), post progress audit comments, and trigger webhook sync.
+   - **The CEO NEVER needs to manually request or remind the agent to use Orca/Jira.**
 
 ---
 
@@ -34,6 +41,7 @@ The repository provides the following specialized skills in `.agents/skills/` an
 
 | Skill | Trigger / When to Use |
 | :--- | :--- |
+| `orca-jira-automation` | **Autonomous execution on EVERY task without CEO prompt**: Project management, ticket triage, transitions, and comments via Orca CLI. |
 | `dotnet-patterns` | Writing or refactoring C# code, service contracts, DI lifecycles, async/await, or error handling. |
 | `csharp-testing` | Creating or reviewing xUnit tests, mocks, test fixtures, and assertions. |
 | `security-review` | Implementing authentication, token parsing, PKCE, cryptography, secrets, or input validation. |
@@ -67,6 +75,9 @@ dotnet test --no-build --verbosity normal
 # 4. Security Audit
 git diff --staged
 # Verify no keys, secrets, or sensitive logs are staged
+
+# 5. Orca Jira Transition
+# Verify the active Jira ticket is updated and transitioned to Done via orca jira
 ```
 
 ---
