@@ -28,10 +28,10 @@ This repository is governed by the **ECC (Agent Harness OS)** engineering standa
 4. **Immutability & Modern C#**: Use C# `record`, `init`-only properties, nullable reference types (`#nullable enable`), and cancellation tokens (`CancellationToken`) across all async operations.
 5. **No Secret Leakage**: Zero hardcoded secrets, test API keys, or private tokens. All credentials must come from secure configuration or environment variables.
 6. **Strict Verification**: Every change must pass the 6-phase verification loop before declaring done.
-7. **Autonomous Orca Jira Automation (Mandatory & Non-Negotiable)**:
-   - All AI agents MUST automatically use `orca jira` CLI on **every single task, sprint cycle, feature delivery, bug fix, and architectural reorganization**.
-   - The agent MUST proactively search, create, update, and transition tickets (`To Do` -> `In Progress` -> `Testing` -> `Done`), post progress audit comments, and trigger webhook sync.
-   - **The CEO NEVER needs to manually request or remind the agent to use Orca/Jira.**
+7. **Autonomous Dual-Tracking: Orca Jira + GitHub Issues (Mandatory & Non-Negotiable)**:
+   - All AI agents MUST automatically use `orca jira` CLI and `gh issue` CLI on **every single task, sprint cycle, feature delivery, bug fix, and architectural reorganization**.
+   - The agent MUST proactively search, create, update, and transition Jira tickets (`To Do` -> `In Progress` -> `Testing` -> `Done`), create and synchronize matching **GitHub Issues** on target repositories, post progress audit comments, and trigger webhook sync.
+   - **The CEO NEVER needs to manually request or remind the agent to use Orca/Jira or GitHub Issues.**
 
 ---
 

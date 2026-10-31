@@ -6,9 +6,9 @@ See [AGENTS.md](./AGENTS.md) for repository architecture, core principles, and t
 
 ## Antigravity Workspace Guidelines
 
-- **Autonomous Orca Jira Synchronization (MANDATORY)**:
-  - On **EVERY SINGLE TASK, PROMPT, FEATURE, BUG FIX, OR SPRINT DELIVERY**, the agent MUST proactively invoke the `orca` CLI to search, create, update, or transition Jira tickets and add progress comments.
-  - **The CEO NEVER needs to manually request Orca or Jira operations.** It is a built-in default reflex of the agent.
+- **Autonomous Orca Jira & GitHub Issues Synchronization (MANDATORY)**:
+  - On **EVERY SINGLE TASK, PROMPT, FEATURE, BUG FIX, OR SPRINT DELIVERY**, the agent MUST proactively invoke the `orca` CLI to search, create, update, or transition Jira tickets, and synchronize corresponding **GitHub Issues** on the affected repositories (`gh issue create/edit/close`).
+  - **The CEO NEVER needs to manually request Orca, Jira, or GitHub Issue operations.** It is a built-in default reflex of the agent.
   - Jira site: `z-3mP_i47N7xAgZ9psDZoJll` (`https://daywakler.atlassian.net`), Project: `SCRUM`.
 - **Skill Discovery**: Skills are registered under `.agents/skills/`. The agent activates them automatically based on context.
 - **Rules Precedence**: The rules defined in this file and `AGENTS.md` take absolute precedence during code generation, editing, and execution.
