@@ -1,4 +1,4 @@
-﻿namespace Tum.Trust.Security.Infrastructure.Helpers;
+namespace Tum.Trust.Security.Infrastructure.Helpers;
 
 /// <summary>
 /// String masking utilities for secure logging and display of sensitive data.
@@ -36,4 +36,12 @@ public static class StringMaskingHelper
 
         return pid[..1] + "********" + pid[^4..];
     }
+
+    /// <summary>
+    /// Masks a Thai National ID (PID) for safe display/logging.
+    /// Alias for <see cref="MaskThaiNationalId(string?)"/>.
+    /// </summary>
+    /// <param name="pid">Thai National ID to mask</param>
+    /// <returns>Masked PID (e.g., "1********1234" or "***")</returns>
+    public static string MaskPid(string? pid) => MaskThaiNationalId(pid);
 }
