@@ -17,7 +17,7 @@
 | **`02_`** | **[`02_TUM_Socs/`](file:///D:/TUM/tum-trust-security/02_TUM_Socs/)** | **TUMSocs Co., Ltd.**<br/>*(วิวัฒนาการจาก TUMLog)* | ศูนย์บัญชาการไซเบอร์เชิงรุก (Active Cyber Defense), วิเคราะห์บริบท Where/Why/Risk, Ledger ทรงหลักฐาน (Merkle Hash Tree), ตัดต่อภัยคุกคามอัตโนมัติ |
 | **`03_`** | **[`03_TUM_Quantum/`](file:///D:/TUM/tum-trust-security/03_TUM_Quantum/)** | **TUMQuantum Co., Ltd.**<br/>*(อนาคตของกลุ่ม TUM)* | ศูนย์วิจัยวิทยาการรหัสลับหลังควอนตัม (PQC), มาตรฐาน NIST FIPS 203 (ML-KEM) & FIPS 204 (ML-DSA), อะแดปเตอร์เชื่อมต่อระบบเก่าแบบไม่ทอดทิ้งใคร (Hybrid Migration) |
 | **`04_`** | **[`04_Central_Director/`](file:///D:/TUM/tum-trust-security/04_Central_Director/)** | **Central Director Team** | หน้าจอภาพเสมือนจริงผู้บริหาร (Interactive Cyber Attack Map & Executive HUD), แดชบอร์ดสรุปความปลอดภัยรวม, ระบบรายงานความสอดคล้องคลิกเดียว |
-| **`05_`** | **[`05_TUM_Group_Holdings/`](file:///D:/TUM/tum-trust-security/05_TUM_Group_Holdings/)** | **TUM Group Central / Holdings** | การกำกับดูแลกิจการ (Governance & BoD Resolutions), สภาวิจัยและนวัตกรรม (TUM Innovation Council), ฝ่ายบุคคลและการสรรหา (People & Culture / HR), แผนยุทธศาสตร์และ OKRs, สไลด์ Working Group |
+| **`05_`** | **[`05_TUM_Group_Holdings/`](file:///D:/TUM/tum-trust-security/05_TUM_Group_Holdings/)** | **TUM Group Central / Holdings** | การกำกับดูแลกิจการ (Governance & BoD Resolutions), สภาวิจัยและนวัตกรรม (TUM Innovation Council), ยุทธศาสตร์ Multi-Repo & ศูนย์บ่มเพาะไอเดียใหม่, ฝ่ายบุคคลและการสรรหา (People & Culture / HR), แผนยุทธศาสตร์ 20 สปรินต์และ OKRs |
 | — | **[`Tests/`](file:///D:/TUM/tum-trust-security/Tests/)** | **Unified Test Suite** | ชุดทดสอบรวมระบบทั้งหมด 125 ชุดทดสอบ (xUnit) ครอบคลุมทั้ง Trust Security, TUMSocs, และ Quantum ผ่าน 100% |
 | — | **[`MockServer/`](file:///D:/TUM/tum-trust-security/MockServer/)** | **Developer Local Sandbox** | เซิร์ฟเวอร์จำลอง ThaID OAuth 2.0 PKCE และ DOPA Sandbox สำหรับทดสอบออฟไลน์โดยไม่ต้องใช้คีย์จริง |
 | — | **[`examples/`](file:///D:/TUM/tum-trust-security/examples/)** | **Integration Quickstarts** | โค้ดตัวอย่างการนำ SDK ไปเรียกใช้งานในแอปพลิเคชันจริงของลูกค้า |
@@ -53,9 +53,12 @@
 - `Governance/`: 
   - มติที่ประชุมบอร์ดและพิมพ์เขียวการจัดตั้งเครือ TUM (`TUM_GROUP_REBRANDING_AND_MIGRATION_BLUEPRINT.md`)
   - **ธรรมนูญสภาการวิจัยและนวัตกรรมแห่งเครือ TUM (`TUM_INNOVATION_AND_RESEARCH_COUNCIL_CHARTER.md`)** *(ทางเลือกที่ 3: R&D Guild & Innovation Council)*
+  - **ยุทธศาสตร์การแยก Git Repository และศูนย์บ่มเพาะไอเดียใหม่ (`MULTI_REPO_ORCHESTRATION_AND_IDEA_INCUBATOR_GUIDE.md`)** *(Jira SCRUM-24)*
   - โครงสร้างองค์กรและสายบังคับบัญชา (`ORGANIZATION_AND_OPERATING_MODEL.md`)
 - `People_and_Culture/`: ข้อมูลฝ่ายบุคคล, ประกาศรับสมัคร **Scrum Master** (`JOB_SPEC_SCRUM_MASTER.md`), รายงานความคืบหน้าการรับสมัคร (`RECRUITMENT_PROGRESS_REPORT_SCRUM_MASTER.md`)
-- `Strategy_and_OKRs/`: เป้าหมาย OKRs ปี 2026-2027 ของเครือและทั้ง 3 บริษัท
+- `Strategy_and_OKRs/`: 
+  - **แผนยุทธศาสตร์ปฏิบัติการแบบไร้รอยต่อ 20 สปรินต์ (`TUM_GROUP_20_SPRINT_MASTER_EXECUTION_ROADMAP.md`)** *(Jira SCRUM-23)*
+  - เป้าหมาย OKRs ปี 2026-2027 ของเครือและทั้ง 3 บริษัท (`TUM_GROUP_AND_SUBSIDIARY_OKRS_2026_2027.md`)
 - `Presentations/`: สไลด์นำเสนอ Working Group (`tum_working_group_sprint_1_and_2.html` และ Markdown)
 - `Townhall/`: สรุปการประชุม Town Hall ประจำงวด
 - `Frameworks/`: ระเบียบวิธีปฏิบัติงานแบบ TUM Shape Up (รอบละ 6 สัปดาห์ + 2 สัปดาห์ Cooldown)
@@ -63,7 +66,19 @@
 
 ---
 
-## 3. ความพร้อมทางเทคนิคและการรับรองคุณภาพ (Technical Quality Gates)
+## 3. ศูนย์ควบคุม Workspace กลางและการสร้างไอเดียใหม่ (Multi-Repo & Idea Incubator)
+
+1. **ศูนย์ควบคุม Multi-Root Workspace:**
+   - ไฟล์ควบคุม: **[`D:\TUM\TUM_GROUP_ECOSYSTEM.code-workspace`](file:///D:/TUM/TUM_GROUP_ECOSYSTEM.code-workspace)**
+   - เปิดหน้าต่างเดียว เห็นครบทุกบริษัทย่อยแบบอิสระ พร้อมระบบค้นหาและแยก Git Commit อัตโนมัติ
+2. **เครื่องมือสร้าง Repo ไอเดียใหม่ในคลิกเดียว:**
+   - สคริปต์: **[`New-TumIdeaRepo.ps1`](file:///D:/TUM/tum-trust-security/New-TumIdeaRepo.ps1)**
+   - คำสั่ง: `.\New-TumIdeaRepo.ps1 -Name "<idea-name>" -Description "<description>"`
+   - สร้างโฟลเดอร์ + `git init` + สร้าง GitHub Remote (`gh repo create`) + เปิดตั๋ว Jira `Idea` + เสียบเข้า `.code-workspace` ทันที!
+
+---
+
+## 4. ความพร้อมทางเทคนิคและการรับรองคุณภาพ (Technical Quality Gates)
 
 โครงสร้างโฟลเดอร์ใหม่ผ่านการตรวจสอบตามมาตรฐาน **Verification Loop** ครบถ้วน:
 - ✅ **Multi-Targeted Build:** `dotnet build --configuration Release` สำเร็จ **0 ข้อผิดพลาด (0 Errors)**
