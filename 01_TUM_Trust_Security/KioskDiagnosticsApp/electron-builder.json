@@ -1,0 +1,49 @@
+{
+  "appId": "com.tum.trust.kioskdiagnostics",
+  "productName": "TUM Kiosk Diagnostics",
+  "copyright": "Copyright © 2026 TUM Trust Security Co., Ltd. All rights reserved.",
+  "directories": {
+    "output": "dist",
+    "buildResources": "build"
+  },
+  "files": [
+    "src/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      {
+        "target": "msi",
+        "arch": ["x64"]
+      }
+    ],
+    "requestedExecutionLevel": "asInvoker"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "perMachine": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "TUM Kiosk Diagnostics"
+  },
+  "msi": {
+    "oneClick": false,
+    "perMachine": true
+  },
+  "mac": {
+    "target": ["dmg", "zip"],
+    "category": "public.app-category.developer-tools",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false
+  },
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "category": "Utility",
+    "maintainer": "TUM Trust Security Engineering <engineering@tum-trust.com>"
+  }
+}

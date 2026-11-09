@@ -1,0 +1,588 @@
+/* ====================================================================
+   TUM Trust Security — Kiosk HAL Diagnostics Console
+   Hallmark Console Design System v2.0.0 (Zero Slop / Zero Neon)
+   ==================================================================== */
+
+:root {
+  --bg-base: #0f1115;
+  --bg-surface: #16191f;
+  --bg-elevated: #1c212a;
+  --bg-input: #12151b;
+  
+  --border-subtle: #262c36;
+  --border-strong: #363e4d;
+  
+  --text-main: #f0f2f5;
+  --text-muted: #8b949e;
+  --text-dim: #57606a;
+  
+  --accent-amber: #d97706;
+  --accent-amber-dim: #78350f;
+  --status-emerald: #10b981;
+  --status-emerald-dim: #064e3b;
+  --status-red: #ef4444;
+  --status-red-dim: #7f1d1d;
+  --status-blue: #3b82f6;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.app-header {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-badge {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+
+.brand-text h1 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-main);
+}
+
+.brand-text .subtext {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
+.status-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--text-dim);
+}
+
+.status-badge.online .dot {
+  background-color: var(--status-emerald);
+}
+
+.status-badge.online {
+  border-color: var(--status-emerald-dim);
+  color: var(--status-emerald);
+}
+
+.status-badge.offline .dot {
+  background-color: var(--status-red);
+}
+
+.status-badge.offline {
+  border-color: var(--status-red-dim);
+  color: var(--status-red);
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  padding: 0 16px;
+  gap: 4px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+  background-color: var(--bg-elevated);
+}
+
+.tab-btn.active {
+  color: var(--text-main);
+  border-bottom-color: var(--accent-amber);
+  background-color: var(--bg-elevated);
+}
+
+/* Main Content */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.pane-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Card Component */
+.card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-main);
+}
+
+.card-body {
+  padding: 14px;
+  flex: 1;
+}
+
+/* Form Controls & Buttons */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.form-control {
+  width: 100%;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-amber);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  background-color: var(--bg-elevated);
+  color: var(--text-main);
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background-color: #232935;
+  border-color: #4b5563;
+}
+
+.btn-primary {
+  background-color: var(--accent-amber);
+  border-color: var(--accent-amber);
+  color: #000;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background-color: #b45309;
+  border-color: #b45309;
+}
+
+.btn-secondary {
+  background-color: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}
+
+.btn.full-width {
+  width: 100%;
+}
+
+/* Badges */
+.badge {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border-subtle);
+}
+
+.badge-emerald {
+  background-color: var(--status-emerald-dim);
+  border-color: var(--status-emerald);
+  color: #6ee7b7;
+}
+
+.badge-muted {
+  background-color: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.badge-red {
+  background-color: var(--status-red-dim);
+  border-color: var(--status-red);
+  color: #fca5a5;
+}
+
+/* Telemetry Grid */
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.telemetry-item {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 10px;
+  border-radius: 2px;
+}
+
+.telemetry-item.full-width {
+  grid-column: span 2;
+}
+
+.telemetry-item .label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+
+.telemetry-item .value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.hex-block {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #e2e8f0;
+  word-break: break-all;
+}
+
+/* Video & Camera Diagnostics */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background-color: #05070a;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#live-webcam {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+#overlay-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.camera-offline-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 20px;
+  gap: 10px;
+}
+
+.camera-offline-view .offline-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.camera-offline-view .offline-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+/* Biometric Framing Reticle */
+.video-overlay-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.reticle-box {
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  left: 25%;
+  right: 25%;
+  border: 1px dashed var(--accent-amber);
+  opacity: 0.6;
+  border-radius: 4px;
+}
+
+.reticle-eye-line {
+  position: absolute;
+  top: 40%;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.camera-hud-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(15, 17, 21, 0.85);
+  border: 1px solid var(--border-subtle);
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* Liveness Score Gauge */
+.gauge-container {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  padding: 16px;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.gauge-bar-outer {
+  height: 8px;
+  background-color: var(--bg-elevated);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.gauge-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--status-red), var(--accent-amber), var(--status-emerald));
+  transition: width 0.3s ease;
+}
+
+.gauge-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+
+.gauge-current {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.score-number {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
+.score-verdict {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.score-verdict.pass {
+  color: var(--status-emerald);
+}
+
+.score-verdict.fail {
+  color: var(--status-red);
+}
+
+/* Diagnostic Log / Telemetry Rows */
+.diag-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.diag-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.diag-table tr:last-child td {
+  border-bottom: none;
+}
+
+.diag-table .key {
+  color: var(--text-muted);
+  width: 35%;
+}
+
+.diag-table .val {
+  color: var(--text-main);
+  text-align: right;
+}
+
+/* LDS Tree in ePassport */
+.lds-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lds-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 12px;
+  border-radius: 2px;
+}
+
+.lds-row .file-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.lds-row .file-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Output Console */
+.console-log {
+  background-color: #0a0c10;
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  height: 160px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }

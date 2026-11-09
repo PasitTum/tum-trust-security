@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TUM Trust Security — Kiosk HAL Diagnostics Console</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-badge">TUM</div>
+      <div class="brand-text">
+        <h1>TRUST SECURITY // KIOSK FIELD DIAGNOSTICS</h1>
+        <span class="subtext">COMMERCIAL HARDWARE ABSTRACTION LAYER (HAL) INSPECTOR v1.4.0</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div id="service-status-badge" class="status-badge offline">
+        <span class="dot"></span>
+        <span id="service-status-text">INITIALIZING HAL...</span>
+      </div>
+      <button id="btn-self-test" class="btn btn-secondary">Run Self-Test</button>
+      <button id="btn-kiosk-toggle" class="btn btn-secondary">Toggle Kiosk</button>
+      <button id="btn-export-top" class="btn btn-primary">Export Report</button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-tab="tab-smartcard">
+      <span class="tab-label">Smartcard HAL (PC/SC)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-passport">
+      <span class="tab-label">ePassport Scanner (ICAO Doc 9303)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-biometrics">
+      <span class="tab-label">Biometric Camera & Liveness (ISO/IEC 30107)</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-usb">
+      <span class="tab-label">USB Bus & Peripheral Watchdog</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-report">
+      <span class="tab-label">Hardware Certification Report</span>
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="app-content">
+    
+    <!-- TAB 1: SMARTCARD HAL -->
+    <section id="tab-smartcard" class="tab-pane active">
+      <div class="pane-grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3>Connected Smartcard Readers (PC/SC)</h3>
+            <span class="badge badge-muted" id="smartcard-count">0 Readers</span>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="reader-select">Active Reader Peripheral:</label>
+              <select id="reader-select" class="form-control">
+                <option value="">Scanning PC/SC Subsystem...</option>
+              </select>
+            </div>
+            <div class="telemetry-grid">
+              <div class="telemetry-item">
+                <span class="label">Slot Status:</span>
+                <span class="value font-mono" id="card-present-text">NO CARD DETECTED</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="label">Protocol:</span>
+                <span class="value font-mono" id="card-protocol-text">ISO/IEC 7816-3 (T=0 / T=1)</span>
+              </div>
+              <div class="telemetry-item full-width">
+                <span class="label">ATR (Answer to Reset):</span>
+                <code class="hex-block" id="card-atr-hex">--</code>
+              </div>
+            </div>
+
+            <div class="button-group mt-3">
+              <button id="btn-read-thai-id" class="btn btn-primary full-width">
+                Read National ID Demographics & Photo
+              </button>
+            </div>
+
+            <div id="thai-id-card-view" class="mt-3" style="display: none;">
+              <table class="diag-table">
+                <tr><td class="key">Citizen ID</td><td class="val font-mono" id="tid-cid">--</td></tr>
+                <tr><td class="key">Full Name (TH)</td><td class="val" id="tid-name-th">--</td></tr>
+                <tr><td class="key">Full Name (EN)</td><td class="val font-mono" id="tid-name-en">--</td></tr>
+                <tr><td class="key">Date of Birth</td><td class="val font-mono" id="tid-dob">--</td></tr>
+                <tr><td class="key">Address</td><td class="val" id="tid-address">--</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Direct APDU Command Terminal</h3>
+            <span class="badge badge-muted">ISO 7816-4 APDU</span>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="apdu-preset">Command Preset:</label>
+              <select id="apdu-preset" class="form-control">
+                <option value="00 A4 04 00 08 A0 00 00 00 54 48 00 01">Select Thai ID Applet (AID: A000000054480001)</option>
+                <option value="80 B0 00 04 02 00 0D">Read Citizen ID (13 Bytes)</option>
+                <option value="00 A4 04 0C 07 A0 00 00 02 47 10 01">Select ICAO eMRTD Application (AID: A0000002471001)</option>
+                <option value="00 B0 00 00 1E">Read Binary EF.COM (Header)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="apdu-input">Raw APDU (Hex Bytes):</label>
+              <input type="text" id="apdu-input" class="form-control font-mono" value="00 A4 04 00 08 A0 00 00 00 54 48 00 01">
+            </div>
+            <button id="btn-send-apdu" class="btn btn-secondary full-width">Transmit APDU</button>
+            <div class="mt-3">
+              <label>APDU Response & Status Word:</label>
+              <div id="apdu-response-view" class="console-log font-mono">Ready for APDU transmission.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: EPASSPORT SCANNER -->
+    <section id="tab-passport" class="tab-pane">
+      <div class="pane-grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3>Optical & MRZ OCR Inspection</h3>
+            <span class="badge badge-muted">ICAO Doc 9303 TD3</span>
+          </div>
+          <div class="card-body">
+            <table class="diag-table">
+              <tr><td class="key">Issuing State</td><td class="val font-mono" id="mrz-state">UTO (Utopia Specimen)</td></tr>
+              <tr><td class="key">Document Number</td><td class="val font-mono" id="mrz-doc-num">L898902C3</td></tr>
+              <tr><td class="key">Holder Surname</td><td class="val font-mono" id="mrz-surname">ERIKSSON</td></tr>
+              <tr><td class="key">Given Names</td><td class="val font-mono" id="mrz-given-name">ANNA MARIA</td></tr>
+              <tr><td class="key">MRZ Check Digits</td><td class="val font-mono" id="mrz-check">PASS (100% VALID)</td></tr>
+            </table>
+            <button id="btn-inspect-passport" class="btn btn-primary full-width mt-3">
+              Inspect ePassport Chip (NFC LDS 1.7)
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>eMRTD Logical Data Structure (LDS)</h3>
+            <span class="badge badge-emerald">PA PASSED</span>
+          </div>
+          <div class="card-body">
+            <div class="lds-tree">
+              <div class="lds-row">
+                <div>
+                  <div class="file-name">EF.COM</div>
+                  <div class="file-desc">Common File (LDS 1.7, Tag List [DG1, DG2, DG14, DG15])</div>
+                </div>
+                <span class="badge badge-emerald">VERIFIED</span>
+              </div>
+              <div class="lds-row">
+                <div>
+                  <div class="file-name">EF.DG1</div>
+                  <div class="file-desc">Machine Readable Zone (OCR Match)</div>
+                </div>
+                <span class="badge badge-emerald">MATCHED</span>
+              </div>
+              <div class="lds-row">
+                <div>
+                  <div class="file-name">EF.DG2</div>
+                  <div class="file-desc">ISO/IEC 19794-5 Biometric Face Format</div>
+                </div>
+                <span class="badge badge-emerald">EXTRACTED</span>
+              </div>
+              <div class="lds-row">
+                <div>
+                  <div class="file-name">EF.SOD</div>
+                  <div class="file-desc">Security Object Document (RSA-SHA256 Digital Signature)</div>
+                </div>
+                <span class="badge badge-emerald">PA CERTIFIED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: BIOMETRIC CAMERA & LIVENESS -->
+    <section id="tab-biometrics" class="tab-pane">
+      <div class="pane-grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3>DirectShow / UVC Biometric Video Feed</h3>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="badge badge-muted" id="camera-fps-badge">0 FPS</span>
+              <button id="btn-toggle-camera" class="btn btn-secondary" style="padding: 2px 8px; font-size: 11px;">Start Video</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="camera-select">Video Input Source:</label>
+              <select id="camera-select" class="form-control">
+                <option value="">Scanning physical camera devices...</option>
+              </select>
+            </div>
+
+            <div class="video-wrapper">
+              <video id="live-webcam" autoplay playsinline muted></video>
+              <canvas id="overlay-canvas"></canvas>
+              <div id="camera-offline-view" class="camera-offline-view">
+                <div class="offline-title">DIRECTSHOW / UVC VIDEO CAPTURE INTERFACE</div>
+                <div class="offline-desc font-mono">
+                  No active video stream. Select a video device above and click "Start Video" to initialize live ISO/IEC 19794-5 capture.
+                </div>
+                <button id="btn-start-stream" class="btn btn-secondary mt-2">Activate Camera Stream</button>
+              </div>
+              <div class="video-overlay-hud" id="camera-hud-overlay" style="display: none;">
+                <div class="reticle-box"></div>
+                <div class="reticle-eye-line"></div>
+                <div class="camera-hud-badge">ISO/IEC 19794-5 CAPTURE APERTURE</div>
+              </div>
+            </div>
+
+            <div class="mt-3" style="display: flex; gap: 8px;">
+              <button id="btn-verify-frame" class="btn btn-primary full-width">Capture & Verify Frame</button>
+              <button id="btn-run-nist-benchmark" class="btn btn-secondary full-width">Run HIL Benchmark Suite</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>ISO/IEC 30107 Level 2 Face Liveness (PAD)</h3>
+            <span id="liveness-overall-badge" class="badge badge-muted">STANDBY</span>
+          </div>
+          <div class="card-body">
+            <div class="gauge-container">
+              <div class="gauge-bar-outer">
+                <div id="liveness-gauge-bar" class="gauge-bar-inner" style="width: 0%;"></div>
+              </div>
+              <div class="gauge-legend">
+                <span>0.00 (SPOOF)</span>
+                <span>Threshold: 0.85</span>
+                <span>1.00 (GENUINE)</span>
+              </div>
+              <div class="gauge-current">
+                <span class="score-number" id="liveness-score-val">--</span>
+                <span class="score-verdict" id="liveness-verdict-val">READY FOR VERIFICATION</span>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <label>Presentation Attack Detection Telemetry:</label>
+              <table class="diag-table mt-2">
+                <tr><td class="key">Target Metric</td><td class="val font-mono" id="pad-target">ISO/IEC 30107 Level 2</td></tr>
+                <tr><td class="key">Classification</td><td class="val font-mono" id="pad-class">--</td></tr>
+                <tr><td class="key">Edge Latency</td><td class="val font-mono" id="pad-latency">-- ms</td></tr>
+                <tr><td class="key">Inference Diagnostic</td><td class="val" id="pad-diag">Awaiting frame trigger.</td></tr>
+              </table>
+            </div>
+
+            <div class="mt-3">
+              <label>HIL Emulation & Dataset Benchmark Output:</label>
+              <div id="benchmark-console" class="console-log font-mono">HIL Benchmark Runner ready. Click "Run HIL Benchmark Suite" to evaluate against NIST FRVT & CASIA-FAS datasets.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: USB BUS & WATCHDOG -->
+    <section id="tab-usb" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <h3>USB Bus Health & Hardware Watchdog Engine</h3>
+          <span class="badge badge-emerald">Watchdog ACTIVE</span>
+        </div>
+        <div class="card-body">
+          <table class="diag-table" id="usb-device-table">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-strong);">
+                <th style="text-align: left; padding: 6px 8px; color: var(--text-dim);">Device Name</th>
+                <th style="text-align: left; padding: 6px 8px; color: var(--text-dim);">Type</th>
+                <th style="text-align: left; padding: 6px 8px; color: var(--text-dim);">VID/PID</th>
+                <th style="text-align: left; padding: 6px 8px; color: var(--text-dim);">Status</th>
+                <th style="text-align: right; padding: 6px 8px; color: var(--text-dim);">Recoveries</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-mono">ACS ACR1252U Contactless Smartcard Reader</td>
+                <td>SmartCard</td>
+                <td class="font-mono">072F:223B</td>
+                <td><span class="badge badge-emerald">ONLINE</span></td>
+                <td style="text-align: right;" class="font-mono">0</td>
+              </tr>
+              <tr>
+                <td class="font-mono">Regula 7024 Full-Page Passport Scanner</td>
+                <td>PassportScanner</td>
+                <td class="font-mono">0403:6001</td>
+                <td><span class="badge badge-emerald">ONLINE</span></td>
+                <td style="text-align: right;" class="font-mono">0</td>
+              </tr>
+              <tr>
+                <td class="font-mono">Sony IMX585 High-Definition Biometric Camera</td>
+                <td>BiometricCamera</td>
+                <td class="font-mono">05A9:0585</td>
+                <td><span class="badge badge-emerald">ONLINE</span></td>
+                <td style="text-align: right;" class="font-mono">0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: CERTIFICATION REPORT -->
+    <section id="tab-report" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <h3>Hardware Compliance Audit Report</h3>
+          <button id="btn-export-bottom" class="btn btn-secondary">Save Audit Log to Disk</button>
+        </div>
+        <div class="card-body">
+          <div id="report-view" class="console-log" style="height: 380px;">Generating compliance report...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

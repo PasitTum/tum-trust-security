@@ -1,0 +1,27 @@
+{
+  "profileId": "UTO_SPECIMEN_001",
+  "standard": "ICAO Doc 9303 Part 10 & Part 12 (LDS 1.7)",
+  "issuingState": "UTO",
+  "documentType": "P",
+  "documentNumber": "L898902C3",
+  "holder": {
+    "primaryIdentifier": "ERIKSSON",
+    "secondaryIdentifier": "ANNA MARIA",
+    "nationality": "UTO",
+    "dateOfBirth": "1974-08-12",
+    "gender": "F",
+    "expiryDate": "2032-04-15"
+  },
+  "mrz": "P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<L898902C36UTO7408122F1204159ZE184226B<<<<<10",
+  "hashes": {
+    "DG1": "432bc07d1c637793f4d77e0b756865f7aec3756f98d6ec6eb767eda371904651",
+    "DG2": "db5b0e62fe7d86bb54151817124f4bac87ce7e763ff6dac146097f9df1fdee06",
+    "DG14": "288e273ab1a2b7eb50458176c7327f32ff40afb772da97f0a7e9b5461479df68",
+    "DG15": "ad68365de066660dda9b8e2bea9cc6577c09e17edb5c673308d2e10c4ac9f37c"
+  },
+  "sod": {
+    "signer": "CN=Document Signer Utopia 01, O=ICAO Specimen Authority Utopia, C=UT",
+    "signatureAlgorithm": "SHA256withRSA",
+    "signatureLength": 256
+  }
+}

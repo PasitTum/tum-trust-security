@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WiX Toolset (v3.11 / v4.0 compatible) Installer Specification for TUM Trust Security Kiosk HAL Service
+  Configures automatic start, failure auto-restart actions, Windows Event Log, and loopback firewall rules.
+-->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+
+  <Product Id="*"
+           Name="TUM Trust Security Kiosk Service"
+           Language="1033"
+           Version="1.4.0.0"
+           Manufacturer="TUM Trust Security Co., Ltd."
+           UpgradeCode="4F82D390-8C61-454E-917C-7A9B932F1983">
+
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="TUM Trust Security Kiosk Hardware HAL Background Service with Auto-Recovery"
+             Comments="Provides low-level PC/SC smartcard, ePassport NFC, and biometric HAL integration for self-service kiosks." />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of TUM Trust Security Kiosk Service is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="TUM_FOLDER" Name="TUM Trust Security">
+          <Directory Id="INSTALLFOLDER" Name="KioskService" />
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="C_TumTrustKioskServiceExe" Guid="A762E901-7681-4321-9876-123456789ABC" Win64="yes">
+        <File Id="F_TumTrustKioskServiceExe"
+              Source="$(var.PublishDir)\Tum.Trust.KioskService.exe"
+              KeyPath="yes" />
+
+        <!-- Windows Service Installation -->
+        <ServiceInstall Id="ServiceInstaller"
+                        Type="ownProcess"
+                        Name="TumTrustKioskService"
+                        DisplayName="TUM Trust Security Kiosk HAL Service"
+                        Description="High-resilience hardware HAL service managing smartcard readers, ePassport scanners, and biometric cameras with USB auto-recovery."
+                        Start="auto"
+                        Account="LocalSystem"
+                        ErrorControl="normal"
+                        Vital="yes">
+
+          <!-- Service Failure Actions (Auto-Recovery Policy) -->
+          <util:ServiceConfig
+              FirstFailureActionType="restart"
+              SecondFailureActionType="restart"
+              ThirdFailureActionType="restart"
+              RestartServiceDelayInSeconds="2"
+              ResetPeriodInDays="1" />
+        </ServiceInstall>
+
+        <!-- Service Control -->
+        <ServiceControl Id="ServiceControl"
+                        Name="TumTrustKioskService"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Wait="yes" />
+
+        <!-- Firewall Exception (Localhost Loopback Only) -->
+        <fire:FirewallException Id="FW_KioskHalPort5890"
+                                Name="TUM Trust Kiosk HAL Service (Port 5890)"
+                                Description="Allow local IPC communication between Kiosk UI and HAL service"
+                                Port="5890"
+                                Protocol="tcp"
+                                Scope="localSubnet"
+                                IgnoreFailure="yes" />
+      </Component>
+
+      <!-- Event Log Source Registration -->
+      <Component Id="C_EventLogRegistration" Guid="98BCDE12-3456-7890-ABCD-EFA123456789" Win64="yes">
+        <util:EventSource Log="Application"
+                          Name="TumTrustSecurity"
+                          EventMessageFile="%SystemRoot%\Microsoft.NET\Framework64\v4.0.30319\EventLogMessages.dll" />
+      </Component>
+    </ComponentGroup>
+
+    <Feature Id="ProductFeature" Title="TUM Trust Kiosk HAL Service" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+  </Product>
+</Wix>

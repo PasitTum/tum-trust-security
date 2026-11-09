@@ -28,6 +28,12 @@
 
   <ItemGroup>
     <None Include="PACKAGE_README.md" Pack="true" PackagePath="\" />
+    <Compile Remove="KioskService\**" />
+    <None Remove="KioskService\**" />
+    <Compile Remove="Testbed\**" />
+    <None Remove="Testbed\**" />
+    <Compile Remove="KioskDiagnosticsApp\**" />
+    <None Remove="KioskDiagnosticsApp\**" />
   </ItemGroup>
 
   <ItemGroup>

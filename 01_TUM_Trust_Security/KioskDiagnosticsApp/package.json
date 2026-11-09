@@ -1,0 +1,22 @@
+{
+  "name": "tum-trust-kiosk-diagnostics",
+  "version": "1.4.0",
+  "description": "TUM Trust Security — Multi-Platform Kiosk Hardware HAL Diagnostics Desktop Console (Windows, macOS, Linux)",
+  "main": "src/main/index.js",
+  "author": "TUM Trust Security Co., Ltd. <engineering@tum-trust.com>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/app-syntax-check.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {}
+}
